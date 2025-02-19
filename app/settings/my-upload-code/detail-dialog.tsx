@@ -60,9 +60,6 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
             <div className="text-muted-foreground">传输码</div>
             <div className="font-mono">{data.code}</div>
             
-            <div className="text-muted-foreground">类型</div>
-            <div>{typeMap[data.type]}</div>
-            
             <div className="text-muted-foreground">状态</div>
             <div>
               <Badge variant={status === "active" ? "default" : "secondary"}>

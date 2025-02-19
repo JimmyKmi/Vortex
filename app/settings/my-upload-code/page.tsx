@@ -37,7 +37,7 @@ export default function MyUploadCodePage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const response = await axios.get("/api/transfer-codes")
+      const response = await axios.get("/api/transfer-codes?type=UPLOAD")
       if (response.data.code === "Success") setData(response.data.data)
     } catch (error) {
       console.error("Failed to fetch transfer codes:", error)

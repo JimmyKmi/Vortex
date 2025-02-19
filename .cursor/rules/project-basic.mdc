@@ -1,4 +1,8 @@
 ---
+description: 
+globs: *.tsx, *.css, *.scss
+---
+---
 description: basic
 globs: *.tsx, *.css, *.scss
 ---

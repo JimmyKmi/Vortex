@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Copy } from "lucide-react"
 import { format } from "date-fns"
 import { EditDialog } from "./edit-dialog"
 import { DetailDialog } from "./detail-dialog"
@@ -69,23 +69,25 @@ export function getColumns(actions: ColumnActions) {
     {
       accessorKey: "code",
       header: "传输码",
+      cell: ({ row }) => {
+        const code = row.getValue("code") as string
+        return (
+          <Button
+            variant="ghost"
+            className="p-0 font-mono hover:bg-transparent hover:underline"
+            onClick={() => {
+              navigator.clipboard.writeText(code)
+              toast.success("已复制到剪贴板")
+            }}
+          >
+            {code}
+          </Button>
+        )
+      }
     },
     {
       accessorKey: "comment",
       header: "描述",
-    },
-    {
-      accessorKey: "type",
-      header: "类型",
-      cell: ({ row }) => {
-        const type = row.getValue("type") as string
-        const typeMap = {
-          UPLOAD: "上传",
-          COLLECTION: "采集",
-          DOWNLOAD: "下载"
-        }
-        return typeMap[type as keyof typeof typeMap]
-      },
     },
     {
       accessorKey: "disableReason",

@@ -38,9 +38,6 @@ import axios from "axios"
 import { SPEED_LIMIT_OPTIONS } from "@/app/api/(user)/transfer-codes/[id]/route"
 
 const formSchema = z.object({
-  type: z.enum(["UPLOAD", "COLLECTION"], {
-    required_error: "请选择传输码类型",
-  }),
   comment: z.string().max(100, "描述最多100个字符").optional().nullable(),
   expires: z.string().optional(),
   speedLimit: z.string(),
@@ -60,7 +57,6 @@ export function CreateDialog({ onSuccess }: CreateDialogProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "UPLOAD",
       comment: "",
       expires: "",
       speedLimit: "0",
@@ -72,6 +68,7 @@ export function CreateDialog({ onSuccess }: CreateDialogProps) {
     try {
       const response = await axios.post("/api/transfer-codes", {
         ...data,
+        type: "UPLOAD" as const,
         expires: data.expires || null,
         speedLimit: data.speedLimit === "0" ? null : parseInt(data.speedLimit),
         usageLimit: data.usageLimit ? parseInt(data.usageLimit) : null,
@@ -112,30 +109,6 @@ export function CreateDialog({ onSuccess }: CreateDialogProps) {
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>传输类型</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="选择传输类型" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="UPLOAD">文件上传</SelectItem>
-                        <SelectItem value="COLLECTION">文件采集</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      选择传输码的用途类型
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="comment"

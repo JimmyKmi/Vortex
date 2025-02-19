@@ -1,4 +1,8 @@
 ---
+description: 
+globs: *.ts, src/app/api/*
+---
+---
 description: api
 globs: src/app/api/*
 ---
