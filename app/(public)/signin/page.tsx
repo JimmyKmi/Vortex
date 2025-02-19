@@ -102,7 +102,7 @@ export default function SignInPage() {
   }
 
   return (
-    <Layout width="min">
+    <Layout width="min" title="登录">
       <Title buttonType="back" title="登录" backPath="/"/>
       <div className="flex flex-col gap-4">
         {error && (

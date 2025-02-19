@@ -40,7 +40,7 @@ export default function UploadComplete({transferInfo}: { transferInfo: TransferI
   }
 
   return (
-    <Layout width="min">
+    <Layout width="min" title="上传完成">
       <div className="space-y-4">
         <Title buttonType="back" title="上传完成"/>
 

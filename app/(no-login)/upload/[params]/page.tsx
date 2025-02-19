@@ -1134,7 +1134,7 @@ export default function UploadPage({params}: PageProps) {
   if (transferInfo.status === "COMPLETED") return <UploadComplete transferInfo={transferInfo}/>
 
   return (
-    <Layout width="middle">
+    <Layout width="middle" title="文件上传">
       <div className="space-y-4">
         <Title buttonType="back" title="上传"/>
 

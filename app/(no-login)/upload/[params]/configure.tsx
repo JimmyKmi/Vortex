@@ -1,7 +1,7 @@
 /**
  * 文件上传配置页面组件
  * 用于配置下载码的相关设置，如使用次数限制、过期时间等
- * 配置完成后可以生成最终的下载码
+ * 配置完成后可以生成最终下载码
  */
 
 'use client'
@@ -121,7 +121,7 @@ export default function UploadConfigure({
   }
 
   return (
-    <Layout width="min">
+    <Layout width="min" title="下载码设置">
       <div className="space-y-4">
         <Title buttonType="back" title="下载码设置"/>
 

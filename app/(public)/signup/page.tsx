@@ -115,7 +115,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <Layout width="min">
+    <Layout width="min" title="注册">
       <Title buttonType="back" title="注册" backPath="/signin"/>
       <div className="flex flex-col gap-4">
         {errors.general && (
