@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { format } from "date-fns"
 import { EditDialog } from "./edit-dialog"
 import { DetailDialog } from "./detail-dialog"
@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner"
 import axios from "axios"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Shake } from "@/components/jimmy-ui/shake"
 
 export type UploadCode = {
   id: string
@@ -76,7 +77,7 @@ export function getColumns(actions: ColumnActions) {
     {
       accessorKey: "type",
       header: "类型",
-      cell: ({ row }: { row: Row<UploadCode> }) => {
+      cell: ({ row }) => {
         const type = row.getValue("type") as string
         const typeMap = {
           UPLOAD: "上传",
@@ -88,7 +89,35 @@ export function getColumns(actions: ColumnActions) {
     },
     {
       accessorKey: "disableReason",
-      header: "状态",
+      header: ({ column }) => {
+        return (
+          <div className="-mx-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => {
+                const currentSort = column.getIsSorted()
+                if (currentSort === false) {
+                  column.toggleSorting(true)
+                } else if (currentSort === "desc") {
+                  column.toggleSorting(false)
+                } else {
+                  column.clearSorting()
+                }
+              }}
+            >
+              状态
+              {column.getIsSorted() === "asc" ? (
+                <ArrowUp className="ml-2 h-4 w-4" />
+              ) : column.getIsSorted() === "desc" ? (
+                <ArrowDown className="ml-2 h-4 w-4" />
+              ) : (
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )
+      },
       cell: ({ row }: { row: Row<UploadCode> }) => {
         const disableReason = row.getValue("disableReason") as string | null
         const expires = row.original.expires as Date | null
@@ -113,16 +142,72 @@ export function getColumns(actions: ColumnActions) {
     },
     {
       accessorKey: "expires",
-      header: "过期时间",
-      cell: ({ row }: { row: Row<UploadCode> }) => {
+      header: ({ column }) => {
+        return (
+          <div className="-mx-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => {
+                const currentSort = column.getIsSorted()
+                if (currentSort === false) {
+                  column.toggleSorting(true)
+                } else if (currentSort === "desc") {
+                  column.toggleSorting(false)
+                } else {
+                  column.clearSorting()
+                }
+              }}
+            >
+              过期时间
+              {column.getIsSorted() === "asc" ? (
+                <ArrowUp className="ml-2 h-4 w-4" />
+              ) : column.getIsSorted() === "desc" ? (
+                <ArrowDown className="ml-2 h-4 w-4" />
+              ) : (
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )
+      },
+      cell: ({ row }) => {
         const expires = row.getValue("expires") as Date | null
         return expires ? format(new Date(expires), 'yyyy-MM-dd HH:mm') : '永不过期'
       }
     },
     {
       accessorKey: "createdAt",
-      header: "创建时间",
-      cell: ({ row }: { row: Row<UploadCode> }) => {
+      header: ({ column }) => {
+        return (
+          <div className="-mx-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={() => {
+                const currentSort = column.getIsSorted()
+                if (currentSort === false) {
+                  column.toggleSorting(true)
+                } else if (currentSort === "desc") {
+                  column.toggleSorting(false)
+                } else {
+                  column.clearSorting()
+                }
+              }}
+            >
+              创建时间
+              {column.getIsSorted() === "asc" ? (
+                <ArrowUp className="ml-2 h-4 w-4" />
+              ) : column.getIsSorted() === "desc" ? (
+                <ArrowDown className="ml-2 h-4 w-4" />
+              ) : (
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )
+      },
+      cell: ({ row }) => {
         return format(new Date(row.getValue("createdAt")), 'yyyy-MM-dd HH:mm')
       }
     },
@@ -227,7 +312,7 @@ export function getColumns(actions: ColumnActions) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>确认删除传输码？</AlertDialogTitle>
                   <AlertDialogDescription>
-                    删除后将无法恢复，相关的文件记录也会被删除。
+                    删除后将<b><Shake>无法恢复</Shake></b>，相关的文件及其生成的下载码<b><Shake>不会</Shake></b>被删除。
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

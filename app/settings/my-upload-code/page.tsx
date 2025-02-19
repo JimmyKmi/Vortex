@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { DataTable } from "@/components/ui/data-table"
-import { getColumns, type UploadCode } from "./columns"
-import { SettingsLayout } from '@/components/settings/settings-layout'
-import { SettingsTitle } from '@/components/settings/settings-title'
-import { CreateDialog } from "./create-dialog"
-import { Button } from "@/components/ui/button"
+import {useEffect, useState} from "react"
+import {DataTable} from "@/components/ui/data-table"
+import {getColumns, type UploadCode} from "./columns"
+import {SettingsLayout} from '@/components/settings/settings-layout'
+import {SettingsTitle} from '@/components/settings/settings-title'
+import {CreateDialog} from "./create-dialog"
+import {Button} from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,38 +18,39 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import axios from "axios"
-import { toast } from "sonner"
-import { getApiErrorMessage } from "@/lib/utils/error-messages"
+import {toast} from "sonner"
+import {getApiErrorMessage} from "@/lib/utils/error-messages"
+import {Skeleton} from "@/components/ui/skeleton"
+import {Input} from "@/components/ui/input"
 
 export default function MyUploadCodePage() {
-  const [data, setData] = useState<UploadCode[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedRows, setSelectedRows] = useState<UploadCode[]>([])
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isDisabling, setIsDisabling] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  // 状态管理
+  const [data, setData] = useState<UploadCode[]>([]) // 存储上传码数据
+  const [loading, setLoading] = useState(true) // 加载状态
+  const [selectedRows, setSelectedRows] = useState<UploadCode[]>([]) // 选中的行
+  const [isDeleting, setIsDeleting] = useState(false) // 删除状态
+  const [isDisabling, setIsDisabling] = useState(false) // 禁用状态
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false) // 删除对话框状态
+  const [searchQuery, setSearchQuery] = useState("")
 
+  // 获取上传码数据
   const fetchData = async () => {
     try {
       setLoading(true)
       const response = await axios.get("/api/transfer-codes")
-      if (response.data.code === "Success") {
-        setData(response.data.data)
-      }
+      if (response.data.code === "Success") setData(response.data.data)
     } catch (error) {
       console.error("Failed to fetch transfer codes:", error)
-      toast.error("获取数据失败", {
-        description: getApiErrorMessage(error)
-      })
+      toast.error("获取数据失败", {description: getApiErrorMessage(error)})
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    void fetchData()
-  }, [])
+  // 组件挂载时获取数据
+  useEffect(() => {void fetchData()}, [])
 
+  // 批量删除处理
   const handleBatchDelete = async () => {
     try {
       setIsDeleting(true)
@@ -62,14 +63,13 @@ export default function MyUploadCodePage() {
       await fetchData()
       setDeleteDialogOpen(false)
     } catch (error: any) {
-      toast.error("批量删除失败", {
-        description: getApiErrorMessage(error)
-      })
+      toast.error("批量删除失败", {description: getApiErrorMessage(error)})
     } finally {
       setIsDeleting(false)
     }
   }
 
+  // 批量禁用处理
   const handleBatchDisable = async () => {
     try {
       setIsDisabling(true)
@@ -80,17 +80,20 @@ export default function MyUploadCodePage() {
       toast.success("批量禁用成功")
       await fetchData()
     } catch (error: any) {
-      toast.error("批量禁用失败", {
-        description: getApiErrorMessage(error)
-      })
+      toast.error("批量禁用失败", {description: getApiErrorMessage(error)})
     } finally {
       setIsDisabling(false)
     }
   }
 
-  const columns = getColumns({
-    onRefresh: fetchData,
-  })
+  // 获取表格列配置
+  const columns = getColumns({onRefresh: fetchData,})
+
+  // 过滤数据
+  const filteredData = data.filter(item => 
+    item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.comment && item.comment.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
 
   return (
     <SettingsLayout title="我的上传码">
@@ -117,15 +120,34 @@ export default function MyUploadCodePage() {
               </Button>
             </>
           )}
-          <CreateDialog onSuccess={fetchData} />
+          <CreateDialog onSuccess={fetchData}/>
         </div>
       </SettingsTitle>
 
-      <DataTable 
-        columns={columns} 
-        data={data}
-        onRowSelectionChange={setSelectedRows}
-      />
+      <div>
+        <Input
+          placeholder="搜索传输码或描述..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-full"/>
+          <Skeleton className="h-12 w-full"/>
+          <Skeleton className="h-12 w-full"/>
+          <Skeleton className="h-12 w-full"/>
+          <Skeleton className="h-12 w-full"/>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filteredData}
+          onRowSelectionChange={setSelectedRows}
+        />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
