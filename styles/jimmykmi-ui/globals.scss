@@ -1,0 +1,47 @@
+/*
+ * Global styles
+ */
+
+* {
+  font-family: 'Noto Sans', 'Noto Sans SC', 'Noto Sans TC', 'Microsoft YaHei', '微软雅黑', 'PingFang SC', 'Hiragino Sans GB', 'SimHei',
+  '黑体', 'WenQuanYi Micro Hei', sans-serif, -apple-system, 'Segoe UI', SegoeUI, 'Helvetica Neue', Helvetica, Arial,
+  'Microsoft JhengHei', 'Poppins', 'Tahoma', 'Verdana', BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+  'Fira Sans', 'Droid Sans';
+
+  color-scheme: light dark; // slider dark mode
+
+  @apply appearance-none;
+}
+
+html {
+  @apply j-text-black;
+}
+
+option {
+  @apply dark:bg-black;
+}
+
+/*
+ TEXT COLOR
+ USAGE INSTRUCTIONS:
+ .j-text-black and .j-text-white classes are used to set text color, supporting automatic switching between light and dark modes.
+ .j-text-black/{opacity} and .j-text-white/{opacity} classes are used to set text color with opacity, where {opacity} ranges from 10 to 90 in steps of 10.
+*/
+
+.j-text-black {
+  @apply text-black dark:text-white;
+}
+
+.j-text-white {
+  @apply text-white dark:text-black;
+}
+
+@for $i from 1 through 9 {
+  $opacity: $i * 10;
+  .j-text-black\/#{$opacity} {
+    @apply text-black/#{$opacity} dark:text-white/#{$opacity};
+  }
+  .j-text-white\/#{$opacity} {
+    @apply text-white/#{$opacity} dark:text-black/#{$opacity};
+  }
+}

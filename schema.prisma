@@ -1,0 +1,236 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./data/data.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String              @id @default(cuid())
+  name           String?
+  email          String?             @unique
+  emailVerified  DateTime?
+  image          String?
+  role           String              @default("user")
+  accounts       Account[]
+  sessions       Session[]
+  // Optional for WebAuthn support
+  Authenticator  Authenticator[]
+  enabled        Boolean             @default(false)
+  // 用户创建的所有传输码
+  transferCodes  TransferCode[]
+  // 用户使用过的所有传输码记录（包括自己创建的和他人创建的）
+  transferUsages TransferCodeUsage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  password          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Optional for WebAuthn support
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model SystemSettings {
+  key   String @id @unique
+  value String
+}
+
+// 传输码模型：用于生成和管理文件快传的授权码
+model TransferCode {
+  id            String    @id @default(cuid())
+  code          String    @unique // 6位传输码，全局唯一
+  userId        String // 创建者ID
+  // 传输码类型：
+  // UPLOAD - 上传，允许其他用户上传文件
+  // COLLECTION - 采集，用于收集多人的文件
+  // DOWNLOAD - 下载，允许其他用户下载文件
+  type          String
+  // 禁用原因：
+  // null - 当前可用
+  // USER - 由创建者手动禁用
+  // LIMIT - 因达到使用限制自动禁用
+  disableReason String?
+  expires       DateTime? // 过期时间，null表示永不过期
+  speedLimit    Int? // 传输速度限制，单位 KB/s，null表示不限速
+  comment       String? // 传输码补充描述
+  sourceTransferCodeId String? // 如果是下载码，关联的源上传码ID
+  sourceTransferCode   TransferCode? @relation("SourceTransferCode", fields: [sourceTransferCodeId], references: [id], onDelete: SetNull)
+  downloadCodes        TransferCode[] @relation("SourceTransferCode")
+
+  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // 该传输码的所有使用记录
+  usages TransferCodeUsage[]
+  // 关联的文件列表
+  files  FileToTransferCode[]
+  // 关联的上传令牌
+  uploadTokens UploadToken[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  sessions TransferSession[] @relation("SessionTransferCode")
+  childSessions TransferSession[] @relation("SessionChildCode")
+
+  @@index([code]) // 用于快速查找传输码
+  @@index([userId]) // 用于查询用户创建的传输码
+  @@index([type]) // 用于按类型筛选传输码
+  @@index([sourceTransferCodeId]) // 用于查询源传输码
+}
+
+// 文件与传输码的多对多关联表
+model FileToTransferCode {
+  id             String @id @default(cuid())
+  fileId         String
+  transferCodeId String
+
+  file         File         @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  transferCode TransferCode @relation(fields: [transferCodeId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, transferCodeId])
+  @@index([fileId])
+  @@index([transferCodeId])
+}
+
+// 文件信息模型：用于存储上传文件的元数据
+model File {
+  id           String  @id @default(cuid())
+  name         String // 文件原始名称
+  mimeType     String // 文件MIME类型
+  size         Int // 文件大小（字节）
+  s3BasePath   String // 在S3中的基础路径（传输相关）
+  relativePath String  @default("") // 相对于上传根目录的路径，空字符串表示在根目录
+  isDirectory  Boolean @default(false) // 是否是目录
+  parentId     String? // 父文件夹ID，null表示在根目录
+  parent       File?   @relation("FileHierarchy", fields: [parentId], references: [id])
+  children     File[]  @relation("FileHierarchy")
+
+  // 关联的传输码
+  transferCodes FileToTransferCode[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([relativePath])
+}
+
+// 传输码使用记录：记录每次传输码被使用的详细信息
+model TransferCodeUsage {
+  id             String  @id @default(cuid())
+  transferCodeId String // 关联的传输码ID
+  userId         String // 使用者ID（可能与传输码创建者不同）
+  // 使用状态：
+  // SUCCESS - 使用成功
+  // FAILED - 使用失败（如超过限制、网络问题等）
+  status         String  @default("SUCCESS")
+  errorMessage   String? // 如果失败，记录具体的失败原因
+  ipAddress      String? // 使用者的IP地址，用于安全审计
+  userAgent      String? // 使用者的浏览器信息，用于安全审计
+
+  transferCode TransferCode @relation(fields: [transferCodeId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) // 使用时间
+  updatedAt DateTime @updatedAt // 最后更新时间（如状态变更）
+
+  @@index([transferCodeId]) // 用于查询传输码的使用记录
+  @@index([userId]) // 用于查询用户的使用记录
+  @@index([createdAt]) // 用于按时间查询使用记录
+}
+
+// 传输会话模型：用于管理文件传输的临时会话
+model TransferSession {
+  id             String   @id @default(cuid())
+  transferCodeId String // 关联的传输码ID（母码）
+  linkedTransferCodeId String? // 关联的子码ID
+  fingerprint    String // 设备指纹
+  status         String   @default("PICKING") // PICKING, UPLOADING, CONFIGURING, COMPLETED
+  ipAddress      String? // 用于安全审计
+  userAgent      String? // 用于安全审计
+  s3BasePath    String? // 存储会话关联的S3基础路径
+
+  transferCode TransferCode @relation("SessionTransferCode", fields: [transferCodeId], references: [id], onDelete: Cascade)
+  linkedTransferCode TransferCode? @relation("SessionChildCode", fields: [linkedTransferCodeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([transferCodeId])
+  @@index([linkedTransferCodeId])
+  @@index([fingerprint])
+  @@index([status])
+}
+
+// 上传令牌模型：用于验证上传的有效性
+model UploadToken {
+  id             String   @id @default(cuid())
+  token          String   @unique
+  s3BasePath     String
+  transferCodeId String
+  expiresAt      DateTime
+  used           Boolean  @default(false)
+
+  transferCode TransferCode @relation(fields: [transferCodeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token])
+  @@index([expiresAt])
+  @@index([transferCodeId])
+}
