@@ -99,7 +99,7 @@ export default function MyUploadCodePage() {
     <SettingsLayout title="我的上传码">
       <SettingsTitle
         title="我的上传码"
-        description="创建和管理您的上传码，用于收集他人上传的文件"
+        description="创建和管理您的上传码，使用上传码上传文件后会自动创建对应文件下载用的快传码"
       >
         <div className="flex items-center gap-2">
           {selectedRows.length > 0 && (
