@@ -18,15 +18,6 @@ const AUTH_PATHS_PREFIXES = [
 ] as const
 
 /**
- * 检查是否是内部API路径
- * @param pathname 路径
- * @returns 是否是内部API路径
- */
-export function isInternalApiPath(pathname: string): boolean {
-  return pathname.startsWith("/api/internal")
-}
-
-/**
  * 检查路径是否需要管理员权限
  * @param pathname 路径
  * @returns 是否需要管理员权限

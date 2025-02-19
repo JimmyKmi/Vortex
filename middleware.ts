@@ -4,8 +4,7 @@ import {UserRole} from "@/lib/roles"
 import {
   isAdminPath,
   isUserPath,
-  isAuthPath,
-  isInternalApiPath
+  isAuthPath
 } from "@/lib/utils/route"
 import {ResponseThrow} from "@/lib/utils/response";
 
@@ -18,27 +17,6 @@ function createErrorResponse(error: string, pathname: string, req: NextRequest) 
 }
 
 /**
- * 验证传输会话
- */
-// async function validateTransferSession(sessionId: string, pathname: string, req: NextRequest) {
-//   try {
-//     const response = await fetch('http://127.0.0.1:3000/api/internal/validate-transfer-session', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//         'Cookie': req.headers.get('cookie') || ''
-//       },
-//       body: JSON.stringify({sessionId, pathname})
-//     })
-//
-//     const result = await response.json()
-//     return result.valid
-//   } catch {
-//     return false
-//   }
-// }
-
-/**
  * 中间件配置说明：
  *
  * 1. 身份验证架构：
@@ -48,21 +26,14 @@ function createErrorResponse(error: string, pathname: string, req: NextRequest) 
  *      - 后端：API 鉴权
  *
  * 2. 访问控制：
- *    - 内部 API 访问限制：仅允许本地请求
+ *    - 权限控制：未登录用户禁止访问需要登录的页面
  *    - 登录状态控制：已登录用户禁止访问登录/注册页面
- *    - 权限控制：未登录用户禁止访问用户页面
  *    - 管理员权限：验证管理员角色访问权限
  */
 export default auth(async (req) => {
   const isLoggedIn = !!req.auth?.user
   const {pathname} = req.nextUrl
 
-  // 内部 API 访问限制
-  if (isInternalApiPath(pathname) && !req.headers.get('host')?.startsWith('127.0.0.1:')) {
-    return createErrorResponse("NotFound", pathname, req)
-  }
-
-  // 登录及用户页
   if (isLoggedIn && isAuthPath(pathname)) {
     return NextResponse.redirect(new URL('/', req.nextUrl.origin))
   }
