@@ -1,18 +1,3 @@
-// 上传路径
-const UPLOAD_PATH_PREFIXES = [
-  "/upload/"
-] as const
-
-// 下载路径
-const DOWNLOAD_PATH_PREFIXES = [
-  "/download/"
-] as const
-
-// 收集路径
-const COLLECT_PATH_PREFIXES = [
-  "/collect/"
-] as const
-
 // 管理员路径
 const ADMIN_PATH_PREFIXES = [
   '/api/management',
@@ -39,42 +24,6 @@ const AUTH_PATHS_PREFIXES = [
  */
 export function isInternalApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/internal")
-}
-
-/**
- * 检查路径是否需要传输会话验证
- * @param pathname 路径
- * @returns 是否需要验证
- */
-export function isTransferSessionPath(pathname: string): boolean {
-  return isUploadPath(pathname) || isDownloadPath(pathname) || isCollectPath(pathname)
-}
-
-/**
- * 检查路径是否是上传路径
- * @param pathname 路径
- * @returns 是否是上传路径
- */
-export function isUploadPath(pathname: string): boolean {
-  return UPLOAD_PATH_PREFIXES.some(prefix => pathname.startsWith(prefix))
-}
-
-/**
- * 检查路径是否是收集路径
- * @param pathname 路径
- * @returns 是否是收集路径
- */
-export function isCollectPath(pathname: string): boolean {
-  return COLLECT_PATH_PREFIXES.some(prefix => pathname.startsWith(prefix))
-}
-
-/**
- * 检查路径是否是下载路径
- * @param pathname 路径
- * @returns 是否是下载路径
- */
-export function isDownloadPath(pathname: string): boolean {
-  return DOWNLOAD_PATH_PREFIXES.some(prefix => pathname.startsWith(prefix))
 }
 
 /**
