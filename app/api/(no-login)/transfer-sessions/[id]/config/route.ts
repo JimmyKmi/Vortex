@@ -25,10 +25,14 @@ export async function PATCH(
     const result = transferSessionConfigSchema.safeParse(body)
     if (!result.success) return ResponseThrow("InvalidParams")
 
+    console.log("Update session config:", "2")
+
     // 验证会话
     const validationResult = await validateTransferSession(req, sessionId, ["CONFIGURING"], ["UPLOAD"])
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? "InvalidSession")
 
+
+    console.log("Update session config:", "3")
     // 获取会话信息
     const session = await prisma.transferSession.findUnique({
       where: {id: sessionId},
@@ -37,6 +41,7 @@ export async function PATCH(
       }
     })
 
+    console.log("Update session config:", "4")
     if (!session?.linkedTransferCode) return ResponseThrow("TransferCodeNotFound")
 
     // 开启事务，同时更新配置和状态
@@ -54,7 +59,7 @@ export async function PATCH(
       prisma.transferSession.update({
         where: {id: sessionId},
         data: {
-          status: "CONFIGURING"
+          status: "COMPLETE"
         }
       })
     ])

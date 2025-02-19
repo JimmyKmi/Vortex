@@ -21,7 +21,7 @@ export async function POST(
 
     // 使用事务确保操作的原子性
     const result = await prisma.$transaction(async (tx) => {
-      // 获取最新的会话信息
+      // 获取最新会话信息
       const session = await tx.transferSession.findUnique({
         where: {id: sessionId},
         include: {
@@ -67,7 +67,7 @@ export async function POST(
 
     if ('error' in result) return ResponseThrow(result.error ?? "InvalidSession")
 
-    return ResponseSuccess({downloadCode: result.session.linkedTransferCode!.code})
+    return ResponseSuccess()
   } catch (error) {
     console.error("Start upload error:", error)
     return ResponseThrow("InternalServerError")

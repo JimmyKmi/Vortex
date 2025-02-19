@@ -14,11 +14,11 @@ export async function POST(
     const validationResult = await validateTransferSession(req, sessionId, ["UPLOADING"], ["UPLOAD"])
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? "InvalidSession")
 
-    // 更新会话状态为COMPLETED
+    // 更新会话状态为 CONFIGURING
     await prisma.transferSession.update({
       where: {id: sessionId},
       data: {
-        status: "COMPLETED"
+        status: "CONFIGURING"
       }
     })
 
