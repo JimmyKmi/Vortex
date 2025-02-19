@@ -16,9 +16,15 @@ interface HeaderProps {
   onLoginClick: () => void;
   isLoggedIn: boolean;
   username?: string;
+  bgTransparent?: boolean;
 }
 
-export function Header({onLoginClick, isLoggedIn, username}: HeaderProps) {
+export function Header({
+                         onLoginClick,
+                         isLoggedIn,
+                         username,
+                         bgTransparent = false
+}: HeaderProps) {
   const {theme, toggleTheme} = useTheme();
   const pathname = usePathname();
 
@@ -26,7 +32,7 @@ export function Header({onLoginClick, isLoggedIn, username}: HeaderProps) {
   const isSettingsPage = pathname ? pathname.startsWith('/settings') : false;
 
   return (
-    <header className="flex justify-between items-center px-6 py-2 z-50 bg-background border-b border-border">
+    <header className={`flex justify-between items-center px-6 py-2 z-50 ${bgTransparent? "" : "bg-background/30 backdrop-blur-lg"}`}>
       <div className="text-xl font-bold text-foreground select-none">{NEXT_PUBLIC_APP_NAME}</div>
       <div className="flex items-center space-x-2">
         <Button variant="ghost" size="icon" onClick={toggleTheme}>

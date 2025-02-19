@@ -9,7 +9,7 @@ export function Footer() {
   const [text, url] = getFooterLink();
   return (
     <footer
-      className="bg-blue-950 dark:bg-blue-900 text-white/50 py-1 px-3 z-50 text-sm text-center border-t border-border flex justify-between select-none">
+      className="bg-blue-950 dark:bg-blue-900 text-white/50 py-1 px-3 z-50 text-sm text-center flex justify-between">
       <p>
         {NEXT_PUBLIC_FOOTER}
         {url && (

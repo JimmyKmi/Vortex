@@ -66,7 +66,8 @@ export default function Page() {
     <Layout
       onLoginClick={handleLoginClick}
       onLogout={handleLogout}
-      width="middle"
+      width="min"
+      bgTransparent
     >
       <div className="space-y-4">
         <div className="space-y-4">
