@@ -446,7 +446,7 @@ export default function UploadPage({params}: PageProps) {
 
     try {
       // 开始上传，获取下载码
-      const startResponse = await axios.post(`/api/transfer-sessions/${sessionId}/start-upload`)
+      const startResponse = await axios.post(`/api/transfer-sessions/${sessionId}/upload/start`)
       if (startResponse.data.code !== "Success") {
         if (startResponse.data.code === "AlreadyStarted") {
           // 如果已经开始上传，继续执行
@@ -700,7 +700,7 @@ export default function UploadPage({params}: PageProps) {
       }
 
       if (!hasError) {
-        const completeResponse = await axios.post(`/api/transfer-sessions/${sessionId}/upload-complete`)
+        const completeResponse = await axios.post(`/api/transfer-sessions/${sessionId}/upload/complete`)
         if (completeResponse.data.code !== 'Success') throw new Error(getApiErrorMessage(completeResponse.data))
 
         // 更新传输信息状态

@@ -53,7 +53,7 @@ export async function GET(
     })
 
     // 使用validateTransferSession进行验证，传入已查询的会话信息
-    const validationResult = await validateTransferSession(req, sessionId, [], ["UPLOAD"], session)
+    const validationResult = await validateTransferSession(req, sessionId, [], [], session)
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? "InvalidSession")
 
     // 由于验证通过，我们知道session和相关数据一定存在

@@ -10,7 +10,7 @@ import {generateTransferCode} from "@/lib/utils/generate-transfer-code"
  * 1. 更新会话状态为上传中
  * 2. 生成下载码（如果还没有）
  *
- * @route POST /api/transfer-sessions/[id]/start-upload
+ * @route POST /api/transfer-sessions/[id]/start
  */
 export async function POST(
   req: NextRequest,
