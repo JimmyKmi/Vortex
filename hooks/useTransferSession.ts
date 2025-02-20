@@ -7,107 +7,101 @@ import {toast} from "sonner"
 import {useRouter} from "next/navigation"
 
 interface UseTransferSessionProps {
-  sessionId: string
+  sessionId: string      // 传输会话ID
 }
 
 /**
  * 传输会话Hook
- * 用于维护文件传输过程中的会话状态，主要功能：
- * 1. 定期发送心跳保持会话活跃
- * 2. 监听用户活动时发送心跳
- * 3. 处理会话过期的情况
+ * 用于维护文件传输过程中的会话状态，通过心跳机制保持会话活跃
+ *
+ * @example
+ * ```typescript
+ * const { isActive } = useTransferSession({ sessionId: 'xxx' })
+ * ```
+ *
+ * 功能特性：
+ * 1. 用户活动时自动发送心跳（间隔30秒）
+ * 2. 用户20分钟无活动则停止心跳
+ * 3. 心跳失败自动重试，连续失败超过2分钟提示网络异常
  */
-export function useTransferSession({
-                                     sessionId
-                                   }: UseTransferSessionProps) {
-  const [isActive, setIsActive] = useState(false)        // 初始状态设为 false
-  const heartbeatTimeout = useRef<NodeJS.Timeout>()     // 心跳定时器
-  const retryTimeout = useRef<NodeJS.Timeout>()         // 重试定时器
-  const lastHeartbeatTime = useRef<number>(0)          // 上次发送心跳的时间
-  const lastFailureTime = useRef<number>(0)            // 首次失败的时间
+export function useTransferSession({sessionId}: UseTransferSessionProps) {
+  const [isActive, setIsActive] = useState(false)
+  const heartbeatTimeout = useRef<NodeJS.Timeout>()
+  const retryTimeout = useRef<NodeJS.Timeout>()
+  const lastHeartbeatTime = useRef<number>(0)
+  const lastFailureTime = useRef<number>(0)
   const router = useRouter()
 
-  /**
-   * 发送心跳请求
-   * @param force 是否强制发送心跳（忽略时间间隔限制）
-   */
   const sendHeartbeat = useCallback(async (force: boolean = false) => {
-    // 非强制模式下，检查发送条件
-    if (!force && (
-      !isActive ||
-      (Date.now() - lastHeartbeatTime.current) < 30 * 1000
-    )) return
+    // 非强制模式下的防抖检查
+    if (!force && (!isActive || (Date.now() - lastHeartbeatTime.current) < 5000)) return
 
     try {
       lastHeartbeatTime.current = Date.now()
       await axios.post(`/api/transfer-sessions/${sessionId}/heartbeat`)
-      // 心跳成功，激活会话
       setIsActive(true)
-      // 重置失败时间
       lastFailureTime.current = 0
-      // 清除重试定时器
+
       if (retryTimeout.current) {
         clearTimeout(retryTimeout.current)
         retryTimeout.current = undefined
       }
     } catch (error: any) {
       console.error("Failed to send heartbeat:", error)
-
-      // 记录首次失败时间
       const currentTime = Date.now()
       if (lastFailureTime.current === 0) lastFailureTime.current = currentTime
 
-      const errorCode = error?.response?.data?.code
-      // 主观错误：会话无效，标记会话失效并跳转
-      if (errorCode === "InvalidSession") {
+      // 处理会话失效
+      if (error?.response?.data?.code === "InvalidSession") {
         setIsActive(false)
         toast.error("会话已过期")
         router.push("/")
         return
       }
 
-      // 客观错误：网络错误、服务器错误等
-      if (currentTime - lastFailureTime.current >= 120 * 1000) toast.error("网络连接不稳定，请检查网络后刷新页面重试")
+      // 处理网络错误
+      if (currentTime - lastFailureTime.current >= 120 * 1000) {
+        toast.error("网络连接不稳定，请检查网络后刷新页面重试")
+      }
 
-      // 设置10秒后重试
       retryTimeout.current = setTimeout(() => sendHeartbeat(true), 10 * 1000)
     }
   }, [sessionId, isActive, router])
 
-  // 初始化验证
+  const startHeartbeat = useCallback(() => {
+    if (heartbeatTimeout.current) return
+    sendHeartbeat(true).then()
+    heartbeatTimeout.current = setInterval(() => sendHeartbeat(false), 30 * 1000)
+  }, [sendHeartbeat])
+
+  const stopHeartbeat = useCallback(() => {
+    if (heartbeatTimeout.current) {
+      clearInterval(heartbeatTimeout.current)
+      heartbeatTimeout.current = undefined
+    }
+  }, [])
+
+  // 初始化心跳
   useEffect(() => {
     if (sessionId) sendHeartbeat(true).then()
   }, [sessionId, sendHeartbeat])
 
-  // 设置定期心跳
-  useEffect(() => {
-    if (!isActive) return
-    heartbeatTimeout.current = setInterval(() => sendHeartbeat(false), 60 * 1000)
-    return () => {
-      if (heartbeatTimeout.current) clearInterval(heartbeatTimeout.current)
-      if (retryTimeout.current) clearTimeout(retryTimeout.current)
-    }
-  }, [isActive, sendHeartbeat])
-
+  // 用户活动检测
   useActivityDetector({
-    enabled: isActive,
-    onActivityAction: () => sendHeartbeat(false)
+    enabled: true,
+    onActivityAction: startHeartbeat,
+    onInactivity: stopHeartbeat,
+    inactivityTime: 20 * 60 * 1000  // 20分钟
   })
 
-  // 清理函数
+  // 组件卸载时清理
   const cleanup = useCallback(() => {
     setIsActive(false)
-    if (heartbeatTimeout.current) clearInterval(heartbeatTimeout.current)
+    stopHeartbeat()
     if (retryTimeout.current) clearTimeout(retryTimeout.current)
-  }, [])
+  }, [stopHeartbeat])
 
-  // 如果设置了自动清理，在组件卸载时自动清理
-  useEffect(() => {
-    return () => cleanup()
-  }, [cleanup])
+  useEffect(() => () => cleanup(), [cleanup])
 
-  return {
-    isActive,
-    cleanup
-  }
+  return {isActive, cleanup}
 } 
