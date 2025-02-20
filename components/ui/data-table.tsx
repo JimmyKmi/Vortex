@@ -45,6 +45,7 @@ export function DataTable<TData, TValue>({
   pageSize = 20, // 默认每页20条
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
+  const [rowSelection, setRowSelection] = useState({})
 
   const table = useReactTable({
     data,
@@ -53,6 +54,7 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    enableRowSelection: true,
     initialState: {
       pagination: {
         pageSize,
@@ -62,6 +64,7 @@ export function DataTable<TData, TValue>({
       const selectedRows = typeof updater === 'function'
         ? updater(table.getState().rowSelection)
         : updater
+      setRowSelection(selectedRows)
       const rows = table.getFilteredRowModel().rows
         .filter((row) => selectedRows[row.id])
         .map((row) => row.original)
@@ -69,6 +72,7 @@ export function DataTable<TData, TValue>({
     },
     state: {
       sorting,
+      rowSelection,
     },
   })
 

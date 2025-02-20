@@ -21,6 +21,7 @@ import {toast} from "sonner"
 import {getApiErrorMessage} from "@/lib/utils/error-messages"
 import {Skeleton} from "@/components/ui/skeleton"
 import {Input} from "@/components/ui/input"
+import { Trash2, CircleOff, RefreshCw } from "lucide-react"
 
 export default function MyQuickTransferPage() {
   // 状态管理
@@ -37,7 +38,10 @@ export default function MyQuickTransferPage() {
     try {
       setLoading(true)
       const response = await axios.get("/api/transfer-codes?type=DOWNLOAD")
-      if (response.data.code === "Success") setData(response.data.data)
+      if (response.data.code === "Success") {
+        setData(response.data.data)
+        setSelectedRows([]) // 重置选中状态
+      }
     } catch (error) {
       console.error("Failed to fetch transfer codes:", error)
       toast.error("获取数据失败", {description: getApiErrorMessage(error)})
@@ -53,7 +57,7 @@ export default function MyQuickTransferPage() {
   const handleBatchDelete = async () => {
     try {
       setIsDeleting(true)
-      await axios.delete("/api/transfer-codes/batch", {
+      await axios.delete("/api/transfer-codes", {
         data: {
           ids: selectedRows.map(row => row.id)
         }
@@ -72,7 +76,7 @@ export default function MyQuickTransferPage() {
   const handleBatchDisable = async () => {
     try {
       setIsDisabling(true)
-      await axios.put("/api/transfer-codes/batch", {
+      await axios.put("/api/transfer-codes", {
         ids: selectedRows.map(row => row.id),
         action: "disable"
       })
@@ -80,6 +84,23 @@ export default function MyQuickTransferPage() {
       await fetchData()
     } catch (error: any) {
       toast.error("批量禁用失败", {description: getApiErrorMessage(error)})
+    } finally {
+      setIsDisabling(false)
+    }
+  }
+
+  // 批量启用处理
+  const handleBatchEnable = async () => {
+    try {
+      setIsDisabling(true)
+      await axios.put("/api/transfer-codes", {
+        ids: selectedRows.map(row => row.id),
+        action: "enable"
+      })
+      toast.success("批量启用成功")
+      await fetchData()
+    } catch (error: any) {
+      toast.error("批量启用失败", {description: getApiErrorMessage(error)})
     } finally {
       setIsDisabling(false)
     }
@@ -99,36 +120,55 @@ export default function MyQuickTransferPage() {
       <SettingsTitle
         title="我的快传"
         description="管理您的快传码，查看已分享的文件"
-      >
-        <div className="flex items-center gap-2">
-          {selectedRows.length > 0 && (
-            <>
-              <Button
-                variant="destructive"
-                onClick={() => setDeleteDialogOpen(true)}
-                disabled={isDeleting || isDisabling}
-              >
-                {isDeleting ? "删除中..." : "批量删除"}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={handleBatchDisable}
-                disabled={isDeleting || isDisabling}
-              >
-                {isDisabling ? "禁用中..." : "批量禁用"}
-              </Button>
-            </>
-          )}
-        </div>
-      </SettingsTitle>
+      />
 
-      <div>
+      <div className="flex items-center gap-2">
         <Input
           placeholder="搜索传输码或描述..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
         />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={fetchData}
+          disabled={loading}
+          className="text-yellow-700 dark:text-yellow-500 hover:text-yellow-600 ml-3"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+        {selectedRows.length > 0 && (
+          <>
+            <Button
+              variant="ghost"
+              onClick={handleBatchDisable}
+              disabled={isDeleting || isDisabling}
+              size="sm"
+            >
+              <CircleOff className="h-4 w-4" />
+              禁用
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleBatchEnable}
+              disabled={isDeleting || isDisabling}
+              size="sm"
+            >
+              <CircleOff className="h-4 w-4" />
+              启用
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={isDeleting || isDisabling}
+              size="icon"
+              className="text-destructive hover:text-destructive dark:text-red-500 dark:hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </div>
 
       {loading ? (
