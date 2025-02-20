@@ -48,7 +48,7 @@ const Background: React.FC<BackgroundProps> = ({className}) => {
         positionX={0}
         positionY={theme === 'dark' ? -1.2 : 0}
         positionZ={0}
-        rotationX={0} rotationY={0} rotationZ={30}
+        rotationX={0} rotationY={0} rotationZ={theme === 'dark' ? 30 : 60}
       />
     </ShaderGradientCanvas>
   )

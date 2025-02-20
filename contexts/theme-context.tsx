@@ -1,45 +1,70 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 
 type Theme = 'light' | 'dark'
 
 interface ThemeContextType {
   theme: Theme
   toggleTheme: () => void
+  autoMode: boolean
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('light')
+  const [autoMode, setAutoMode] = useState(true)
+  const [manualTheme, setManualTheme] = useState<Theme | null>(null)
+  
+  // 使用 ref 跟踪最新状态
+  const stateRef = useRef({ autoMode, manualTheme })
+  useEffect(() => {
+    stateRef.current = { autoMode, manualTheme }
+  })
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme | null
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-
-    if (savedTheme) {
-      setTheme(savedTheme)
-    } else if (prefersDark) {
-      setTheme('dark')
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    
+    const handler = (e: MediaQueryListEvent) => {
+      const newSystemTheme = e.matches ? 'dark' : 'light'
+      const { autoMode, manualTheme } = stateRef.current
+      
+      // 自动模式直接同步
+      if (autoMode) {
+        setTheme(newSystemTheme)
+        return
+      }
+      
+      // 手动模式且系统主题与手动设置不同时恢复自动
+      if (manualTheme !== newSystemTheme) {
+        setAutoMode(true)
+        setManualTheme(null)
+        setTheme(newSystemTheme)
+      }
     }
-  }, [])
+
+    // 立即执行一次初始化
+    handler(mediaQuery as any)
+    mediaQuery.addEventListener('change', handler)
+    return () => mediaQuery.removeEventListener('change', handler)
+  }, []) // 空依赖数组，只运行一次
 
   useEffect(() => {
     localStorage.setItem('theme', theme)
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [theme])
+    localStorage.setItem('themeAuto', autoMode.toString())
+    localStorage.setItem('themeManual', autoMode ? '' : (manualTheme || ''))
+  }, [theme, autoMode, manualTheme])
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light')
+    const newTheme = theme === 'light' ? 'dark' : 'light'
+    setAutoMode(false)
+    setManualTheme(newTheme)
+    setTheme(newTheme)
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, autoMode }}>
       {children}
     </ThemeContext.Provider>
   )
