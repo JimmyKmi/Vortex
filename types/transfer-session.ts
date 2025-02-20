@@ -1,4 +1,4 @@
-import { TransferCode } from "@prisma/client"
+import {TransferCode} from "@prisma/client"
 
 // 传输码类型
 export type TransferCodeType = "UPLOAD" | "DOWNLOAD" | "COLLECTION"
@@ -8,7 +8,10 @@ export type TransferCodeType = "UPLOAD" | "DOWNLOAD" | "COLLECTION"
 // COMPLETED -   上传/下载/采集   配置完成/下载完成/上传成功
 // UPLOADING -   上传/采集        上传中/上传中
 // CONFIGURING - 上传            上传完成，配置下载
-export type TransferSessionStatus = "PICKING" | "UPLOADING" | "CONFIGURING" | "COMPLETED"
+// DOWNLOADING - 下载            下载中
+export type UploadSessionStatus = "PICKING" | "UPLOADING" | "CONFIGURING" | "COMPLETED"
+export type DownloadSessionStatus = "DOWNLOADING" | "COMPLETED"
+export type TransferSessionStatus = UploadSessionStatus | DownloadSessionStatus
 
 /**
  * 传输信息接口定义

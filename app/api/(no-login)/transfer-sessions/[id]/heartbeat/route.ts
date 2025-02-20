@@ -42,7 +42,7 @@ export async function POST(
     const {id: sessionId} = await Promise.resolve(params)
 
     // 验证会话
-    const validationResult = await validateTransferSession(req, sessionId, [], ["UPLOAD"])
+    const validationResult = await validateTransferSession(req, sessionId, [], [])
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? "InvalidSession")
 
     const session = validationResult.session!

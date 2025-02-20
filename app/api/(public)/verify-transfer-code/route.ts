@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
 
     // 验证传输码
     const transferCode = await prisma.transferCode.findUnique({
-      where: {code}
+      where: {code},
+      include: {
+        user: true,
+        sourceTransferCode: true
+      }
     })
 
     if (!transferCode) return NextResponse.json({code: "TransferCodeNotFound"})
@@ -27,6 +31,11 @@ export async function POST(req: NextRequest) {
     if (transferCode.disableReason) return NextResponse.json({code: "TransferCodeDisabled"})
 
     if (transferCode.expires && transferCode.expires < new Date()) return NextResponse.json({code: "TransferCodeExpired"})
+
+    // 如果是下载类型，但没有源传输码，返回错误
+    if (transferCode.type === "DOWNLOAD" && !transferCode.sourceTransferCodeId) {
+      return NextResponse.json({code: "InvalidTransferCode"})
+    }
 
     const clientIp = getClientIp(req)
     const userAgent = req.headers.get("user-agent")
@@ -37,9 +46,10 @@ export async function POST(req: NextRequest) {
       data: {
         transferCodeId: transferCode.id,
         fingerprint,
-        status: "PICKING",
+        status: transferCode.type === "UPLOAD" ? "PICKING" : "DOWNLOADING",
         ipAddress: clientIp,
-        userAgent: userAgent
+        userAgent: userAgent,
+        linkedTransferCodeId: transferCode.type === "DOWNLOAD" ? transferCode.sourceTransferCodeId : null
       }
     })
 
@@ -63,7 +73,7 @@ export async function POST(req: NextRequest) {
       data: {
         sessionId: transferSession.id,
         type: transferCode.type,
-        redirectTo: transferCode.type === "UPLOAD" || transferCode.type === "COLLECT"
+        redirectTo: transferCode.type === "UPLOAD"
           ? `/upload/${transferSession.id}`
           : `/download/${transferSession.id}`
       }

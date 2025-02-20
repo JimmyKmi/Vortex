@@ -9,6 +9,13 @@ const errorMessages: { [key: string]: string } = {
 
   // 会话相关
   'InvalidSession': '无效的会话',
+  'InvalidSession1': '无效的会话',
+  'InvalidSession2': '无效的会话',
+  'InvalidSession3': '无效的会话',
+  'InvalidSession4': '无效的会话',
+  'InvalidSession5': '无效的会话',
+  'InvalidSession6': '无效的会话',
+  'InvalidSession7': '源传输码不存在',
   'SessionExpired': '会话已过期',
 
   // 传输码相关
@@ -16,9 +23,11 @@ const errorMessages: { [key: string]: string } = {
   'TransferCodeDisabled': '传输码已被禁用',
   'TransferCodeExpired': '传输码已过期',
   'TransferCodeUsageExceeded': '该传输码已达到使用次数上限',
+  'InvalidTransferCode': '无效的传输码，该传输码可能不支持下载',
   'GetUploadUrlFailed': '获取上传 URL 失败',
   'CreateFileRecordFailed': '创建文件记录失败',
   'InvalidRequest': '无效的请求',
+  'InvalidFileList': '获取文件列表失败，该传输码可能没有关联任何文件',
 }
 
 /**

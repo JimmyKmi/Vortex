@@ -7,6 +7,7 @@ import {NextRequest} from "next/server"
 import {prisma} from "@/lib/prisma"
 import {validateTransferSession} from "@/lib/utils/transfer-session"
 import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
+import {TransferCodeType} from "@/types/transfer-session"
 
 interface StatusResponse {
   id: string
@@ -34,30 +35,34 @@ export async function GET(
 
     // 一次性获取所有需要的数据
     const session = await prisma.transferSession.findUnique({
-      where: { id: sessionId },
+      where: {id: sessionId},
       include: {
         transferCode: {
           include: {
             _count: {
-              select: { usages: true }
+              select: {usages: true}
             },
             user: {
-              select: { name: true }
+              select: {name: true}
             }
           }
         },
         linkedTransferCode: {
-          select: { code: true }
+          select: {code: true}
         }
       }
     })
 
+    if (!session?.transferCode) return ResponseThrow("InvalidSession")
+
     // 使用validateTransferSession进行验证，传入已查询的会话信息
-    const validationResult = await validateTransferSession(req, sessionId, [], [], session)
+    const validationResult = await validateTransferSession(
+      req, sessionId, [], [session.transferCode.type as TransferCodeType], session
+    )
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? "InvalidSession")
 
     // 由于验证通过，我们知道session和相关数据一定存在
-    const transferCode = session!.transferCode
+    const transferCode = session.transferCode
 
     // 传输码被禁用
     if (transferCode.disableReason) return ResponseThrow("TransferCodeDisabled")
@@ -75,8 +80,8 @@ export async function GET(
       createdAt: transferCode.createdAt,
       createdBy: transferCode.user?.name || null,
       usedCount: transferCode._count.usages,
-      downloadCode: session!.linkedTransferCode?.code || null,
-      status: session!.status
+      downloadCode: session.linkedTransferCode?.code || null,
+      status: session.status
     })
   } catch (error) {
     console.error("Get session status error:", error)
