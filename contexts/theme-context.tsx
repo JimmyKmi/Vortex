@@ -1,70 +1,74 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 
 type Theme = 'light' | 'dark'
 
 interface ThemeContextType {
   theme: Theme
   toggleTheme: () => void
-  autoMode: boolean
+  isSystemTheme: boolean
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+const THEME_KEY = 'preferredTheme'
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('light')
-  const [autoMode, setAutoMode] = useState(true)
-  const [manualTheme, setManualTheme] = useState<Theme | null>(null)
+  const [systemTheme, setSystemTheme] = useState<Theme>('light')
   
-  // 使用 ref 跟踪最新状态
-  const stateRef = useRef({ autoMode, manualTheme })
-  useEffect(() => {
-    stateRef.current = { autoMode, manualTheme }
-  })
-
+  // 初始化系统主题和监听系统主题变化
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     
-    const handler = (e: MediaQueryListEvent) => {
-      const newSystemTheme = e.matches ? 'dark' : 'light'
-      const { autoMode, manualTheme } = stateRef.current
+    const updateSystemTheme = (isDark: boolean) => {
+      const newSystemTheme = isDark ? 'dark' : 'light'
+      setSystemTheme(newSystemTheme)
       
-      // 自动模式直接同步
-      if (autoMode) {
-        setTheme(newSystemTheme)
-        return
-      }
-      
-      // 手动模式且系统主题与手动设置不同时恢复自动
-      if (manualTheme !== newSystemTheme) {
-        setAutoMode(true)
-        setManualTheme(null)
-        setTheme(newSystemTheme)
-      }
+      const storedTheme = localStorage.getItem(THEME_KEY)
+      if (storedTheme === newSystemTheme) localStorage.removeItem(THEME_KEY)
+      if (!storedTheme) setTheme(newSystemTheme)
     }
 
-    // 立即执行一次初始化
-    handler(mediaQuery as any)
+    updateSystemTheme(mediaQuery.matches)
+    const handler = (e: MediaQueryListEvent) => updateSystemTheme(e.matches)
     mediaQuery.addEventListener('change', handler)
     return () => mediaQuery.removeEventListener('change', handler)
-  }, []) // 空依赖数组，只运行一次
+  }, [])
 
+  // 监听 localStorage 变化
   useEffect(() => {
-    localStorage.setItem('theme', theme)
-    localStorage.setItem('themeAuto', autoMode.toString())
-    localStorage.setItem('themeManual', autoMode ? '' : (manualTheme || ''))
-  }, [theme, autoMode, manualTheme])
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key !== THEME_KEY) return
+      const newTheme = e.newValue as Theme | null
+      if (newTheme) setTheme(newTheme)
+      else setTheme(systemTheme)
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [systemTheme])
+
+  // 从 localStorage 恢复存储的主题设置
+  useEffect(() => {
+    const storedTheme = localStorage.getItem(THEME_KEY) as Theme | null
+    if (storedTheme) setTheme(storedTheme)
+    else setTheme(systemTheme)
+  }, [systemTheme])
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light'
-    setAutoMode(false)
-    setManualTheme(newTheme)
     setTheme(newTheme)
+    if (newTheme !== systemTheme) localStorage.setItem(THEME_KEY, newTheme)
+    else localStorage.removeItem(THEME_KEY)
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, autoMode }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      toggleTheme, 
+      isSystemTheme: !localStorage.getItem(THEME_KEY) 
+    }}>
       {children}
     </ThemeContext.Provider>
   )
@@ -72,9 +76,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 export const useTheme = () => {
   const context = useContext(ThemeContext)
-  if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider')
-  }
+  if (context === undefined) throw new Error('useTheme must be used within a ThemeProvider')
   return context
 }
 
