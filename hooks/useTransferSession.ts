@@ -59,17 +59,14 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
         return
       }
 
-      // 处理网络错误
-      if (currentTime - lastFailureTime.current >= 120 * 1000) {
-        toast.error("网络连接不稳定，请检查网络后刷新页面重试")
-      }
-
+      if (currentTime - lastFailureTime.current >= 120 * 1000) toast.error("网络连接不稳定，请检查网络后刷新页面重试")
       retryTimeout.current = setTimeout(() => sendHeartbeat(true), 10 * 1000)
     }
   }, [sessionId, isActive, router])
 
   const startHeartbeat = useCallback(() => {
     if (heartbeatTimeout.current) return
+    
     sendHeartbeat(true).then()
     heartbeatTimeout.current = setInterval(() => sendHeartbeat(false), 30 * 1000)
   }, [sendHeartbeat])
@@ -83,8 +80,8 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
 
   // 初始化心跳
   useEffect(() => {
-    if (sessionId) sendHeartbeat(true).then()
-  }, [sessionId, sendHeartbeat])
+    if (sessionId) startHeartbeat()
+  }, [sessionId, startHeartbeat])
 
   // 用户活动检测
   useActivityDetector({
@@ -98,7 +95,6 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
   const cleanup = useCallback(() => {
     setIsActive(false)
     stopHeartbeat()
-    if (retryTimeout.current) clearTimeout(retryTimeout.current)
   }, [stopHeartbeat])
 
   useEffect(() => () => cleanup(), [cleanup])
