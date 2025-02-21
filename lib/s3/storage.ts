@@ -76,23 +76,6 @@ export class S3StorageService {
   }
 
   /**
-   * 获取文件下载URL
-   * @param s3BasePath S3基础路径
-   * @param relativePath 文件相对路径
-   * @param fileName 下载时的文件名
-   * @returns 下载URL
-   */
-  async getDownloadUrl(s3BasePath: string, relativePath: string, fileName: string): Promise<string> {
-    const s3Key = this.getFullS3Key(s3BasePath, relativePath)
-    const command = new GetObjectCommand({
-      Bucket: S3_CONFIG.bucket,
-      Key: s3Key,
-      ResponseContentDisposition: `attachment; filename="${encodeURIComponent(fileName)}"`,
-    })
-    return await getSignedUrl(s3Client, command, {expiresIn: 3600})
-  }
-
-  /**
    * 删除单个文件
    * @param s3BasePath S3基础路径
    * @param relativePath 文件相对路径
@@ -104,44 +87,5 @@ export class S3StorageService {
       Key: s3Key,
     })
     await s3Client.send(command)
-  }
-
-  /**
-   * 批量删除文件
-   * @param files 文件列表，每个文件包含 s3BasePath 和 relativePath
-   */
-  async deleteFiles(files: Array<{ s3BasePath: string, relativePath: string }>): Promise<void> {
-    if (files.length === 0) return
-
-    const command = new DeleteObjectsCommand({
-      Bucket: S3_CONFIG.bucket,
-      Delete: {
-        Objects: files.map(({s3BasePath, relativePath}) => ({
-          Key: this.getFullS3Key(s3BasePath, relativePath)
-        })),
-        Quiet: true
-      },
-    })
-    await s3Client.send(command)
-  }
-
-  /**
-   * 检查文件是否存在
-   * @param s3BasePath S3基础路径
-   * @param relativePath 文件相对路径
-   * @returns 是否存在
-   */
-  async fileExists(s3BasePath: string, relativePath: string): Promise<boolean> {
-    try {
-      const s3Key = this.getFullS3Key(s3BasePath, relativePath)
-      const command = new GetObjectCommand({
-        Bucket: S3_CONFIG.bucket,
-        Key: s3Key,
-      })
-      await s3Client.send(command)
-      return true
-    } catch (error) {
-      return false
-    }
   }
 } 

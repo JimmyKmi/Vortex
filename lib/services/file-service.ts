@@ -217,26 +217,45 @@ export class FileService {
   }
 
   /**
-   * 递归删除目录
+   * 获取文件下载URL
    */
-  private async deleteDirectory(directoryId: string) {
-    const files = await prisma.file.findMany({
-      where: {parentId: directoryId},
-      include: {children: true},
-    })
+  async getDownloadUrl(params: {
+    name: string;
+    relativePath: string;
+    transferCodeId: string;
+  }): Promise<{ url: string }> {
+    try {
+      // 查找文件记录
+      const file = await prisma.file.findFirst({
+        where: {
+          name: params.name,
+          relativePath: params.relativePath,
+          transferCodes: {
+            some: {
+              transferCodeId: params.transferCodeId
+            }
+          }
+        }
+      })
 
-    // 递归删除子目录
-    for (const file of files) {
-      if (file.isDirectory) {
-        await this.deleteDirectory(file.id)
-      } else {
-        await this.s3Service.deleteFile(file.s3BasePath, file.relativePath)
-      }
+      if (!file) throw new Error("文件不存在")
+
+      // 获取预签名下载URL
+      const command = new GetObjectCommand({
+        Bucket: S3_CONFIG.bucket,
+        Key: `${file.s3BasePath}/${file.relativePath}`
+      })
+
+      const downloadUrlExpireSeconds = await getSystemSetting<number>('DOWNLOAD_URL_EXPIRE_SECONDS')
+      const url = await getSignedUrl(this.s3Client, command, {
+        expiresIn: downloadUrlExpireSeconds
+      })
+
+      return {url}
+
+    } catch (error) {
+      console.error("Get download URL error:", error)
+      throw error
     }
-
-    // 删除目录本身
-    await prisma.file.delete({
-      where: {id: directoryId},
-    })
   }
 } 

@@ -377,18 +377,67 @@ export default function DownloadPage({params}: PageProps) {
         // TODO: 实现打包下载逻辑
       } else {
         // 单文件下载逻辑
-        toast.info("准备下载以下文件：")
-        actualSelectedFiles.forEach(file => {
-          toast.info(`- ${file.relativePath || file.name}`)
-        })
-        // TODO: 实现单文件下载逻辑
+        const totalFiles = actualSelectedFiles.length
+        let downloadedCount = 0
+
+        // 分批处理文件，每批最多10个
+        const batchSize = 10
+        for (let batchIndex = 0; batchIndex < actualSelectedFiles.length; batchIndex += batchSize) {
+          const batch = actualSelectedFiles.slice(batchIndex, batchIndex + batchSize)
+          
+          try {
+            // 获取下载URL
+            const response = await axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
+              files: batch.map(file => ({
+                name: file.name,
+                relativePath: file.relativePath || file.name
+              }))
+            })
+
+            if (response.data.code !== "Success") {
+              throw new Error(getApiErrorMessage(response.data))
+            }
+
+            // 开始下载文件
+            const downloadUrls = response.data.data
+            for (let fileIndex = 0; fileIndex < downloadUrls.length; fileIndex++) {
+              const {url, filename} = downloadUrls[fileIndex]
+              // 创建下载链接
+              const link = document.createElement('a')
+              link.href = url
+              link.download = filename
+              link.style.display = 'none'  // 隐藏链接
+              document.body.appendChild(link)
+              link.click()
+              
+              // 延迟移除链接，确保下载已经开始
+              await new Promise(resolve => setTimeout(resolve, 100))
+              document.body.removeChild(link)
+              
+              // 每个文件下载之间添加短暂延迟
+              if (fileIndex < downloadUrls.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 500))
+              }
+            }
+
+            // 更新进度
+            downloadedCount += batch.length
+            setDownloadProgress(Math.round((downloadedCount / totalFiles) * 100))
+
+          } catch (error: any) {
+            console.error("Download batch error:", error)
+            toast.error(`部分文件下载失败: ${error.message || "未知错误"}`)
+          }
+
+          // 每批下载之间稍微暂停一下，避免浏览器压力太大
+          if (batchIndex + batchSize < actualSelectedFiles.length) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+          }
+        }
+
+        toast.success(`已开始下载 ${totalFiles} 个文件`)
       }
 
-      // 临时模拟成功状态
-      setTransferInfo((prev: TransferInfo | null) => ({
-        ...prev!,
-        status: "COMPLETED"
-      }))
     } catch (error: any) {
       console.error("Download error:", error)
       toast.error(getApiErrorMessage(error))
