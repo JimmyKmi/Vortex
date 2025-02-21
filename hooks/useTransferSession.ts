@@ -5,6 +5,8 @@ import {useActivityDetector} from "./useActivityDetector"
 import axios from "axios"
 import {toast} from "sonner"
 import {useRouter} from "next/navigation"
+import {getApiErrorMessage} from "@/lib/utils/error-messages"
+import {TransferInfo} from "@/types/transfer-session"
 
 interface UseTransferSessionProps {
   sessionId: string      // 传输会话ID
@@ -16,21 +18,44 @@ interface UseTransferSessionProps {
  *
  * @example
  * ```typescript
- * const { isActive } = useTransferSession({ sessionId: 'xxx' })
+ * const { isActive, transferInfo, isValidating } = useTransferSession({ sessionId: 'xxx' })
  * ```
  *
  * 功能特性：
  * 1. 用户活动时自动发送心跳（间隔30秒）
  * 2. 用户20分钟无活动则停止心跳
  * 3. 心跳失败自动重试，连续失败超过2分钟提示网络异常
+ * 4. 自动获取和维护传输会话信息
  */
 export function useTransferSession({sessionId}: UseTransferSessionProps) {
   const [isActive, setIsActive] = useState(false) // 会话活跃状态
+  const [isValidating, setIsValidating] = useState(true) // 会话验证状态
+  const [transferInfo, setTransferInfo] = useState<TransferInfo | null>(null) // 传输会话信息
   const heartbeatTimeout = useRef<NodeJS.Timeout>() // 心跳定时器
   const retryTimeout = useRef<NodeJS.Timeout>() // 重试定时器
   const lastHeartbeatTime = useRef<number>(0) // 最后心跳时间戳
   const lastFailureTime = useRef<number>(0) // 最后失败时间戳
   const router = useRouter()
+
+  // 获取传输会话信息
+  const fetchTransferInfo = useCallback(async () => {
+    try {
+      setIsValidating(true)
+      const response = await axios.get(`/api/transfer-sessions/${sessionId}/status`)
+      if (response.data.code === "Success") {
+        setTransferInfo(response.data.data)
+      } else {
+        toast.error(getApiErrorMessage(response.data))
+        router.push("/")
+      }
+    } catch (error: any) {
+      console.error("Get transfer info error:", error)
+      toast.error(getApiErrorMessage(error))
+      router.push("/")
+    } finally {
+      setIsValidating(false)
+    }
+  }, [sessionId, router])
 
   const sendHeartbeat = useCallback(async (force: boolean = false) => {
     // 修改判断条件：移除 isActive 状态检查
@@ -78,10 +103,13 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
     }
   }, [])
 
-  // 初始化心跳
+  // 初始化心跳和获取传输信息
   useEffect(() => {
-    if (sessionId) startHeartbeat()
-  }, [sessionId, startHeartbeat])
+    if (sessionId) {
+      startHeartbeat()
+      void fetchTransferInfo()
+    }
+  }, [sessionId, startHeartbeat, fetchTransferInfo])
 
   // 用户活动检测
   useActivityDetector({
@@ -99,5 +127,11 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
 
   useEffect(() => () => cleanup(), [cleanup])
 
-  return {isActive, cleanup}
+  return {
+    isActive,
+    isValidating,
+    transferInfo,
+    setTransferInfo,
+    cleanup
+  }
 } 

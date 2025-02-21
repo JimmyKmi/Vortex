@@ -66,41 +66,17 @@ export default function DownloadPage({params}: PageProps) {
   const router = useRouter()
   const resolvedParams = use(params)
   const sessionId = resolvedParams.params
-  const [isValidating, setIsValidating] = useState(true)
   const [isLoadingFiles, setIsLoadingFiles] = useState(false)
-  const [transferInfo, setTransferInfo] = useState<DownloadTransferInfo | null>(null)
   const [files, setFiles] = useState<DownloadFile[]>([])
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [isCopied, setIsCopied] = useState(false)
-  const {isActive} = useTransferSession({sessionId})
+  const {isActive, isValidating, transferInfo, setTransferInfo} = useTransferSession({sessionId})
 
   // 新增状态用于控制下载模式
   const [downloadMode, setDownloadMode] = useState<'single' | 'package'>('single')
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [showStructureWarning, setShowStructureWarning] = useState(false)
-
-  /**
-   * 获取传输会话信息
-   */
-  const fetchTransferInfo = async () => {
-    try {
-      setIsValidating(true)
-      const response = await axios.get(`/api/transfer-sessions/${sessionId}/status`)
-      if (response.data.code === "Success") {
-        setTransferInfo(response.data.data)
-      } else {
-        toast.error(getApiErrorMessage(response.data))
-        router.push("/")
-      }
-    } catch (error: any) {
-      console.error("Get transfer info error:", error)
-      toast.error(getApiErrorMessage(error))
-      router.push("/")
-    } finally {
-      setIsValidating(false)
-    }
-  }
 
   /**
    * 获取文件列表
@@ -129,7 +105,7 @@ export default function DownloadPage({params}: PageProps) {
 
   // 初始化加载
   useEffect(() => {
-    if (sessionId && isActive) void fetchTransferInfo()
+    if (sessionId && isActive) void fetchFileList()
   }, [sessionId, isActive])
 
   // 监听会话状态变化，当会话激活时获取文件列表
@@ -383,7 +359,7 @@ export default function DownloadPage({params}: PageProps) {
         const downloadUrl = response.data.data.downloadUrl
         window.open(downloadUrl, '_blank')
 
-        setTransferInfo(prev => ({
+        setTransferInfo((prev: TransferInfo | null) => ({
           ...prev!,
           status: "COMPLETED"
         }))

@@ -171,8 +171,6 @@ export default function UploadPage({params}: PageProps) {
   const router = useRouter()
   const resolvedParams = use(params)
   const sessionId = resolvedParams.params
-  const [isValidating, setIsValidating] = useState(true) // 是否正在验证传输码
-  const [transferInfo, setTransferInfo] = useState<TransferInfo | null>(null)
   const [files, setFiles] = useState<FileToUpload[]>([])
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set()) // 新增选中文件集合
   const [isUploading, setIsUploading] = useState(false)
@@ -180,38 +178,7 @@ export default function UploadPage({params}: PageProps) {
   const [isCopied, setIsCopied] = useState(false)
   const {enableDragDrop, disableDragDrop} = useDragDrop()
   const [showUploadConfirm, setShowUploadConfirm] = useState(false)
-  const {isActive} = useTransferSession({sessionId})
-
-  /**
-   * 获取传输码详细信息
-   * 包括：基本信息和会话状态
-   */
-  const fetchTransferInfo = async () => {
-    try {
-      setIsValidating(true)
-      const response = await axios.get(`/api/transfer-sessions/${sessionId}/status`)
-      if (response.data.code === "Success") {
-        setTransferInfo(response.data.data)
-      } else {
-        toast.error(getApiErrorMessage(response.data))
-        router.push("/")
-      }
-    } catch (error: any) {
-      console.error("Get transfer info error:", error)
-      toast.error(getApiErrorMessage(error))
-      router.push("/")
-    } finally {
-      setIsValidating(false)
-    }
-  }
-  useEffect(() => {
-    if (sessionId) fetchTransferInfo().then()
-  }, [sessionId])
-
-  // 监听状态变化，确保状态更新完成后再刷新页面
-  useEffect(() => {
-    if (transferInfo?.status === "CONFIGURING") router.refresh()
-  }, [transferInfo?.status, router])
+  const {isActive, isValidating, transferInfo, setTransferInfo} = useTransferSession({sessionId})
 
   /**
    * 检查文件是否重复
