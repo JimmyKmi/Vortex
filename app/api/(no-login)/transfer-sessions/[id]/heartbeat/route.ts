@@ -48,10 +48,14 @@ export async function POST(
     const session = validationResult.session!
 
     // 检查会话是否需要更新活动时间
-    if (session.updatedAt <= new Date(Date.now() - 60 * 1000)) await prisma.transferSession.update({
-      where: {id: sessionId},
-      data: {}
-    })
+    if (session.updatedAt <= new Date(Date.now() - 60 * 1000)) {
+      await prisma.transferSession.update({
+        where: {id: sessionId},
+        data: {
+          updatedAt: new Date() // 显式更新 updatedAt 字段
+        }
+      })
+    }
 
     return createHeartbeatResponse(session, req)
   } catch (error) {

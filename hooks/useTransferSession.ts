@@ -25,16 +25,16 @@ interface UseTransferSessionProps {
  * 3. 心跳失败自动重试，连续失败超过2分钟提示网络异常
  */
 export function useTransferSession({sessionId}: UseTransferSessionProps) {
-  const [isActive, setIsActive] = useState(false)
-  const heartbeatTimeout = useRef<NodeJS.Timeout>()
-  const retryTimeout = useRef<NodeJS.Timeout>()
-  const lastHeartbeatTime = useRef<number>(0)
-  const lastFailureTime = useRef<number>(0)
+  const [isActive, setIsActive] = useState(false) // 会话活跃状态
+  const heartbeatTimeout = useRef<NodeJS.Timeout>() // 心跳定时器
+  const retryTimeout = useRef<NodeJS.Timeout>() // 重试定时器
+  const lastHeartbeatTime = useRef<number>(0) // 最后心跳时间戳
+  const lastFailureTime = useRef<number>(0) // 最后失败时间戳
   const router = useRouter()
 
   const sendHeartbeat = useCallback(async (force: boolean = false) => {
-    // 非强制模式下的防抖检查
-    if (!force && (!isActive || (Date.now() - lastHeartbeatTime.current) < 5000)) return
+    // 修改判断条件：移除 isActive 状态检查
+    if (!force && (Date.now() - lastHeartbeatTime.current) < 5000) return
 
     try {
       lastHeartbeatTime.current = Date.now()
@@ -62,7 +62,7 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
       if (currentTime - lastFailureTime.current >= 120 * 1000) toast.error("网络连接不稳定，请检查网络后刷新页面重试")
       retryTimeout.current = setTimeout(() => sendHeartbeat(true), 10 * 1000)
     }
-  }, [sessionId, isActive, router])
+  }, [sessionId, router])
 
   const startHeartbeat = useCallback(() => {
     if (heartbeatTimeout.current) return
