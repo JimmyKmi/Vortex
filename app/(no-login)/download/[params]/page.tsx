@@ -24,7 +24,7 @@ import {Title} from "@/components/title"
 import {Button} from "@/components/ui/button"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {
-  FileIcon, ChevronRight, ChevronDown, FolderIcon, Copy, Clock, Calendar, Hash, User, Check
+  FileIcon, ChevronRight, ChevronDown, FolderIcon, Copy, Clock, Calendar, Hash, User, Check, FileDown, FolderDown
 } from 'lucide-react'
 import {Checkbox} from "@/components/ui/checkbox"
 import React from 'react'
@@ -32,9 +32,17 @@ import {toast} from "sonner"
 import {getApiErrorMessage} from "@/lib/utils/error-messages"
 import {TransferInfo} from "@/types/transfer-session"
 import {formatFileSize} from "@/lib/utils/file"
-import DownloadComplete from './complete'
 import {useTransferSession} from "@/hooks/useTransferSession"
 import {Skeleton} from "@/components/ui/skeleton"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import {Shake} from "@/components/jimmy-ui/shake"
 
 // 下载文件类型定义
 interface DownloadFile {
@@ -66,6 +74,11 @@ export default function DownloadPage({params}: PageProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [isCopied, setIsCopied] = useState(false)
   const {isActive} = useTransferSession({sessionId})
+
+  // 新增状态用于控制下载模式
+  const [downloadMode, setDownloadMode] = useState<'single' | 'package'>('single')
+  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
+  const [showStructureWarning, setShowStructureWarning] = useState(false)
 
   /**
    * 获取传输会话信息
@@ -116,22 +129,21 @@ export default function DownloadPage({params}: PageProps) {
 
   // 初始化加载
   useEffect(() => {
-    if (sessionId) {
-      fetchTransferInfo()
-    }
-  }, [sessionId])
+    if (sessionId && isActive) void fetchTransferInfo()
+  }, [sessionId, isActive])
 
   // 监听会话状态变化，当会话激活时获取文件列表
   useEffect(() => {
-    if (isActive && !isValidating && transferInfo) {
-      fetchFileList()
-    }
+    if (isActive && !isValidating && transferInfo) void fetchFileList()
   }, [isActive, isValidating])
 
-  // 监听状态变化，确保状态更新完成后再刷新页面
+  // 修改初始选中状态
   useEffect(() => {
-    if (transferInfo?.status === "COMPLETED") router.refresh()
-  }, [transferInfo?.status, router])
+    if (files.length > 0) {
+      const allFileIds = getAllFileIds(files)
+      setSelectedFiles(new Set(allFileIds))
+    }
+  }, [files])
 
   /**
    * 切换文件夹展开/折叠状态
@@ -319,35 +331,76 @@ export default function DownloadPage({params}: PageProps) {
               </div>
             </div>
           </TableCell>
-          <TableCell className="text-right">{file.size}</TableCell>
+          <TableCell className="text-right">{formatFileSize(file.sizeInBytes)}</TableCell>
         </TableRow>
         {isFolder && isExpanded && file.children?.map(child => renderFileItem(child, depth + 1))}
       </React.Fragment>
     )
   }
 
-  // 在 return 语句前添加完成处理函数
-  const handleComplete = async () => {
+  // 获取实际选中的文件（不包括文件夹）
+  const getActualSelectedFiles = (currentFiles: DownloadFile[]): DownloadFile[] => {
+    const actualFiles: DownloadFile[] = []
+    const traverse = (files: DownloadFile[]) => {
+      files.forEach(file => {
+        if (file.type === 'file' && selectedFiles.has(file.id)) {
+          actualFiles.push(file)
+        }
+        if (file.type === 'folder' && file.children) {
+          traverse(file.children)
+        }
+      })
+    }
+    traverse(currentFiles)
+    return actualFiles
+  }
+
+  // 处理下载确认
+  const handleDownloadConfirm = async () => {
     if (!isActive) {
       toast.error("会话已过期，请重新验证")
       return
     }
 
     try {
-      const response = await axios.post(`/api/transfer-sessions/${sessionId}/download-complete`)
+      const actualSelectedFiles = getActualSelectedFiles(files)
+
+      if (actualSelectedFiles.length === 0) {
+        toast.error("请选择至少一个文件")
+        return
+      }
+
+      const response = await axios.post(`/api/transfer-sessions/${sessionId}/download`, {
+        mode: downloadMode,
+        selectedFiles: actualSelectedFiles.map(file => ({
+          id: file.id,
+          name: file.name,
+          relativePath: file.relativePath
+        }))
+      })
+
       if (response.data.code === "Success") {
+        const downloadUrl = response.data.data.downloadUrl
+        window.open(downloadUrl, '_blank')
+
         setTransferInfo(prev => ({
           ...prev!,
           status: "COMPLETED"
         }))
-        toast.success("下载已完成")
+        toast.success(downloadMode === 'single' ? "下载已开始" : "打包下载已开始")
       } else {
         toast.error(getApiErrorMessage(response.data))
       }
     } catch (error: any) {
-      console.error("Complete download error:", error)
+      console.error("Download error:", error)
       toast.error(getApiErrorMessage(error))
     }
+  }
+
+  // 检查是否可以下载
+  const canDownload = () => {
+    const actualSelectedFiles = getActualSelectedFiles(files)
+    return actualSelectedFiles.length > 0
   }
 
   // 渲染骨架屏
@@ -374,6 +427,33 @@ export default function DownloadPage({params}: PageProps) {
     )
   }
 
+  // 修改下载按钮点击处理逻辑
+  const handleDownloadClick = (mode: 'single' | 'package') => {
+    const allIds = getAllFileIds(files)
+    const isFullSelection = selectedFiles.size === allIds.length
+
+    // 先检查目录结构（仅单文件模式）
+    if (mode === 'single') {
+      const hasNestedFiles = getActualSelectedFiles(files).some(file =>
+        file.relativePath?.includes('/') || file.relativePath?.includes('\\')
+      )
+
+      if (hasNestedFiles) {
+        setDownloadMode(mode)
+        setShowStructureWarning(true)
+        return
+      }
+    }
+
+    // 没有结构问题时：
+    if (isFullSelection) {
+      void handleDownloadConfirm() // 全选直接下载
+    } else {
+      setDownloadMode(mode)
+      setShowDownloadConfirm(true) // 非全选显示范围确认
+    }
+  }
+
   if (isValidating || !transferInfo) return (
     <Layout width="middle">
       <div className="flex items-center justify-center min-h-[200px]">
@@ -382,16 +462,11 @@ export default function DownloadPage({params}: PageProps) {
     </Layout>
   )
 
-  // 如果状态是已完成，显示完成页面
-  if (transferInfo.status === "COMPLETED") {
-    return <DownloadComplete transferInfo={transferInfo}/>
-  }
-
   return (
     <Layout width="middle" title="文件下载">
       <div className="space-y-4">
         <Title buttonType="back" title="下载"/>
-        
+
         {/* 传输信息展示区域 */}
         <div className="bg-muted p-4 rounded-lg">
           <div className="space-y-2">
@@ -478,15 +553,34 @@ export default function DownloadPage({params}: PageProps) {
                   已选择 {getSelectedFilesCount(files)} 个文件
                 </span>
               </div>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleComplete}
-                className="h-8"
-              >
-                <Check className="mr-2 h-4 w-4"/>
-                完成下载
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={!canDownload()}
+                  onClick={() => {
+                    setDownloadMode('single')
+                    handleDownloadClick('single')
+                  }}
+                  className="h-8 flex items-center gap-2"
+                >
+                  <FileDown className="h-4 w-4"/>
+                  下载
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={!canDownload()}
+                  onClick={() => {
+                    setDownloadMode('package')
+                    handleDownloadClick('package')
+                  }}
+                  className="h-8 flex items-center gap-2"
+                >
+                  <FolderDown className="h-4 w-4"/>
+                  打包下载
+                </Button>
+              </div>
             </div>
 
             <Table>
@@ -509,6 +603,72 @@ export default function DownloadPage({params}: PageProps) {
           </>
         )}
       </div>
+
+      <Dialog open={showDownloadConfirm} onOpenChange={setShowDownloadConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>下载范围确认</DialogTitle>
+            <DialogDescription>
+              即将{downloadMode === 'package' ? '打包' : ''}下载选中的文件，
+              未选中的文件<b><Shake>不会被下载</Shake></b>。是否继续？
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDownloadConfirm(false)}>取消</Button>
+            <Button onClick={() => {
+              setShowDownloadConfirm(false)
+              void handleDownloadConfirm() // 直接执行下载，不再二次检查结构
+            }}>
+              继续{downloadMode === 'package' ? '打包' : ''}下载
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showStructureWarning} onOpenChange={setShowStructureWarning}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>下载格式提示</DialogTitle>
+            <DialogDescription>
+              你选择了目录中的文件，文件下载不支持保留目录结构，
+              文件将会被<b><Shake>直接下载</Shake></b>。如需保留完整目录结构，
+              请选择打包下载。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowStructureWarning(false)}
+            >
+              取消
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                setDownloadMode('package')
+                setShowStructureWarning(false)
+                handleDownloadClick('package')
+              }}
+            >
+              打包下载
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                setShowStructureWarning(false)
+                const allIds = getAllFileIds(files)
+                if (selectedFiles.size === allIds.length) {
+                  void handleDownloadConfirm()
+                } else {
+                  setShowDownloadConfirm(true)
+                }
+              }}
+            >
+              继续下载
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   )
 } 
