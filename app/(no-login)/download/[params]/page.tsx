@@ -24,7 +24,7 @@ import {Title} from "@/components/title"
 import {Button} from "@/components/ui/button"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {
-  FileIcon, ChevronRight, ChevronDown, FolderIcon, Copy, Clock, Calendar, Hash, User, Check, FileDown, FolderDown
+  FileIcon, ChevronRight, ChevronDown, FolderIcon, Copy, Clock, Calendar, Hash, User, Check, FileDown, FolderDown, Trash2
 } from 'lucide-react'
 import {Checkbox} from "@/components/ui/checkbox"
 import React from 'react'
@@ -43,6 +43,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import {Shake} from "@/components/jimmy-ui/shake"
+import {Progress} from "@/components/ui/progress"
 
 // 下载文件类型定义
 interface DownloadFile {
@@ -71,12 +72,16 @@ export default function DownloadPage({params}: PageProps) {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [isCopied, setIsCopied] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const {isActive, isValidating, transferInfo, setTransferInfo} = useTransferSession({sessionId})
 
   // 新增状态用于控制下载模式
   const [downloadMode, setDownloadMode] = useState<'single' | 'package'>('single')
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [showStructureWarning, setShowStructureWarning] = useState(false)
+
+  // 添加进度条状态
+  const [downloadProgress, setDownloadProgress] = useState(0)
 
   /**
    * 获取文件列表
@@ -120,6 +125,24 @@ export default function DownloadPage({params}: PageProps) {
       setSelectedFiles(new Set(allFileIds))
     }
   }, [files])
+
+  // 模拟进度条动画（仅用于演示）
+  useEffect(() => {
+    if (isDownloading) {
+      const timer = setInterval(() => {
+        setDownloadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(timer)
+            return 100
+          }
+          return prev + 1
+        })
+      }, 100)
+      return () => clearInterval(timer)
+    } else {
+      setDownloadProgress(0)
+    }
+  }, [isDownloading])
 
   /**
    * 切换文件夹展开/折叠状态
@@ -346,30 +369,31 @@ export default function DownloadPage({params}: PageProps) {
         return
       }
 
-      const response = await axios.post(`/api/transfer-sessions/${sessionId}/download`, {
-        mode: downloadMode,
-        selectedFiles: actualSelectedFiles.map(file => ({
-          id: file.id,
-          name: file.name,
-          relativePath: file.relativePath
-        }))
-      })
+      setIsDownloading(true)
 
-      if (response.data.code === "Success") {
-        const downloadUrl = response.data.data.downloadUrl
-        window.open(downloadUrl, '_blank')
-
-        setTransferInfo((prev: TransferInfo | null) => ({
-          ...prev!,
-          status: "COMPLETED"
-        }))
-        toast.success(downloadMode === 'single' ? "下载已开始" : "打包下载已开始")
+      if (downloadMode === 'package') {
+        // 打包下载逻辑
+        toast.info("打包中...")
+        // TODO: 实现打包下载逻辑
       } else {
-        toast.error(getApiErrorMessage(response.data))
+        // 单文件下载逻辑
+        toast.info("准备下载以下文件：")
+        actualSelectedFiles.forEach(file => {
+          toast.info(`- ${file.relativePath || file.name}`)
+        })
+        // TODO: 实现单文件下载逻辑
       }
+
+      // 临时模拟成功状态
+      setTransferInfo((prev: TransferInfo | null) => ({
+        ...prev!,
+        status: "COMPLETED"
+      }))
     } catch (error: any) {
       console.error("Download error:", error)
       toast.error(getApiErrorMessage(error))
+    } finally {
+      setIsDownloading(false)
     }
   }
 
@@ -515,6 +539,15 @@ export default function DownloadPage({params}: PageProps) {
           </div>
         ) : (
           <>
+            {/* 添加进度条区域 */}
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">总体进度</span>
+                <span className="text-muted-foreground">{downloadProgress}%</span>
+              </div>
+              <Progress value={downloadProgress} className="h-2"/>
+            </div>
+
             <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
               <div className="flex gap-2 items-center">
                 <Button
@@ -533,7 +566,7 @@ export default function DownloadPage({params}: PageProps) {
                 <Button
                   variant="default"
                   size="sm"
-                  disabled={!canDownload()}
+                  disabled={!canDownload() || isDownloading}
                   onClick={() => {
                     setDownloadMode('single')
                     handleDownloadClick('single')
@@ -541,12 +574,12 @@ export default function DownloadPage({params}: PageProps) {
                   className="h-8 flex items-center gap-2"
                 >
                   <FileDown className="h-4 w-4"/>
-                  下载
+                  {isDownloading ? '下载中...' : '下载'}
                 </Button>
                 <Button
                   variant="default"
                   size="sm"
-                  disabled={!canDownload()}
+                  disabled={!canDownload() || isDownloading}
                   onClick={() => {
                     setDownloadMode('package')
                     handleDownloadClick('package')
@@ -554,7 +587,7 @@ export default function DownloadPage({params}: PageProps) {
                   className="h-8 flex items-center gap-2"
                 >
                   <FolderDown className="h-4 w-4"/>
-                  打包下载
+                  {isDownloading ? '打包中...' : '打包下载'}
                 </Button>
               </div>
             </div>
