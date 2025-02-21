@@ -463,7 +463,7 @@ export default function DownloadPage({params}: PageProps) {
   )
 
   return (
-    <Layout width="middle" title="文件下载">
+    <Layout width="middle" title="下载">
       <div className="space-y-4">
         <Title buttonType="back" title="下载"/>
 
