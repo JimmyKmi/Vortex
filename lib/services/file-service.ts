@@ -218,27 +218,24 @@ export class FileService {
 
   /**
    * 获取文件下载URL
+   * @param fileId 文件ID
+   * @param transferCodeId 传输码ID，用于验证文件访问权限
    */
-  async getDownloadUrl(params: {
-    name: string;
-    relativePath: string;
-    transferCodeId: string;
-  }): Promise<{ url: string }> {
+  async getDownloadUrl(fileId: string, transferCodeId: string): Promise<{ url: string }> {
     try {
-      // 查找文件记录
+      // 查找文件记录，同时验证文件是否属于指定的传输码
       const file = await prisma.file.findFirst({
         where: {
-          name: params.name,
-          relativePath: params.relativePath,
+          id: fileId,
           transferCodes: {
             some: {
-              transferCodeId: params.transferCodeId
+              transferCodeId
             }
           }
         }
       })
 
-      if (!file) throw new Error("文件不存在")
+      if (!file) throw new Error("文件不存在或无权访问")
 
       // 获取预签名下载URL
       const command = new GetObjectCommand({

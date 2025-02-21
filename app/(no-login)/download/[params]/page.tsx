@@ -389,8 +389,8 @@ export default function DownloadPage({params}: PageProps) {
             // 获取下载URL
             const response = await axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
               files: batch.map(file => ({
-                name: file.name,
-                relativePath: file.relativePath || file.name
+                fileId: file.id,
+                name: file.name
               }))
             })
 

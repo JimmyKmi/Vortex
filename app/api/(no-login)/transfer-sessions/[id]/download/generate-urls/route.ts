@@ -20,8 +20,8 @@ const fileService = new FileService()
  *
  * @body
  *   - files: Array<{
+ *       fileId: string - 文件ID
  *       name: string - 文件名称
- *       relativePath: string - 相对路径
  *     }>
  *
  * @returns
@@ -40,8 +40,8 @@ const fileService = new FileService()
 // 请求体验证模式
 const requestSchema = z.object({
   files: z.array(z.object({
-    name: z.string(),
-    relativePath: z.string()
+    fileId: z.string(),
+    name: z.string()  // 保留name用于返回文件名
   }))
 })
 
@@ -72,11 +72,7 @@ export async function POST(request: NextRequest, {params}: {params: {id: string}
     // 批量获取下载URL
     const downloadUrls = await Promise.all(
       validatedData.files.map(async (file) => {
-        const downloadData = await fileService.getDownloadUrl({
-          name: file.name,
-          relativePath: file.relativePath,
-          transferCodeId: session!.transferCodeId,
-        })
+        const downloadData = await fileService.getDownloadUrl(file.fileId, session!.transferCodeId)
         return {
           url: downloadData.url,
           filename: file.name
