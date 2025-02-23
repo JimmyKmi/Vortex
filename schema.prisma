@@ -113,6 +113,10 @@ model TransferCode {
   sourceTransferCode   TransferCode? @relation("SourceTransferCode", fields: [sourceTransferCodeId], references: [id], onDelete: SetNull)
   downloadCodes        TransferCode[] @relation("SourceTransferCode")
 
+  // 压缩相关字段
+  compressStatus String @default("IDLE") // IDLE, PROCESSING, COMPLETED, FAILED
+  compressProgress Int @default(0) // 压缩进度 0-100
+
   user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   // 该传输码的所有使用记录
   usages TransferCodeUsage[]

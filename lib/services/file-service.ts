@@ -3,9 +3,13 @@ import {S3StorageService} from "@/lib/s3/storage"
 import {s3Client} from "@/lib/s3/client"
 import {getSystemSetting} from "@/lib/config/system-settings"
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner"
-import {GetObjectCommand} from "@aws-sdk/client-s3"
+import {GetObjectCommand, PutObjectCommand} from "@aws-sdk/client-s3"
 import {S3_CONFIG} from "@/lib/config/env"
 import crypto from 'crypto'
+import archiver from 'archiver'
+import {Readable} from 'stream'
+import {PassThrough} from 'stream'
+import {Upload} from "@aws-sdk/lib-storage"
 
 interface FileParams {
   name: string;
@@ -252,6 +256,164 @@ export class FileService {
 
     } catch (error) {
       console.error("Get download URL error:", error)
+      throw error
+    }
+  }
+
+  /**
+   * 获取压缩包下载URL
+   * @param transferCodeId 传输码ID
+   */
+  async getCompressDownloadUrl(transferCodeId: string): Promise<{ url: string }> {
+    try {
+      // 获取预签名下载URL
+      const command = new GetObjectCommand({
+        Bucket: S3_CONFIG.bucket,
+        Key: `compress/${transferCodeId}/archive.zip`
+      })
+
+      const downloadUrlExpireSeconds = await getSystemSetting<number>('DOWNLOAD_URL_EXPIRE_SECONDS')
+      const url = await getSignedUrl(this.s3Client, command, {
+        expiresIn: downloadUrlExpireSeconds
+      })
+
+      return {url}
+    } catch (error) {
+      console.error("Get compress download URL error:", error)
+      throw error
+    }
+  }
+
+  /**
+   * 将文件添加到压缩包
+   * @param fileId 文件ID
+   * @param transferCodeId 传输码ID
+   */
+  async addFileToCompress(fileId: string, transferCodeId: string): Promise<void> {
+    try {
+      // 查找文件记录
+      const file = await prisma.file.findFirst({
+        where: {
+          id: fileId,
+          transferCodes: {
+            some: {
+              transferCodeId
+            }
+          }
+        }
+      })
+
+      if (!file) throw new Error("文件不存在或无权访问")
+
+      // 从S3下载文件
+      const getCommand = new GetObjectCommand({
+        Bucket: S3_CONFIG.bucket,
+        Key: `${file.s3BasePath}/${file.relativePath}`
+      })
+
+      const {Body} = await this.s3Client.send(getCommand)
+      if (!Body) throw new Error("无法获取文件内容")
+
+      // 创建压缩包
+      const archive = archiver('zip', {
+        zlib: {level: 5}  // 设置压缩级别
+      })
+
+      // 创建通道用于上传到S3
+      const passThrough = new PassThrough()
+      archive.pipe(passThrough)
+
+      // 添加文件到压缩包，保持目录结构
+      archive.append(Body as Readable, {
+        name: file.relativePath || file.name,
+        prefix: file.relativePath ? file.relativePath.split('/').slice(0, -1).join('/') : ''
+      })
+
+      // 完成压缩
+      await archive.finalize()
+
+      // 上传到S3
+      const upload = new Upload({
+        client: this.s3Client,
+        params: {
+          Bucket: S3_CONFIG.bucket,
+          Key: `compress/${transferCodeId}/archive.zip`,
+          Body: passThrough
+        }
+      })
+
+      await upload.done()
+    } catch (error) {
+      console.error("Add file to compress error:", error)
+      throw error
+    }
+  }
+
+  /**
+   * 完成压缩包
+   * @param transferCodeId 传输码ID
+   */
+  async finalizeCompress(transferCodeId: string): Promise<void> {
+    try {
+      // 获取所有文件列表
+      const files = await prisma.file.findMany({
+        where: {
+          transferCodes: {
+            some: {
+              transferCodeId
+            }
+          },
+          isDirectory: false  // 只获取文件,不包括文件夹
+        }
+      })
+
+      // 创建压缩包
+      const archive = archiver('zip', {
+        zlib: {level: 5}  // 设置压缩级别
+      })
+
+      // 创建通道用于上传到S3
+      const passThrough = new PassThrough()
+      archive.pipe(passThrough)
+
+      // 添加所有文件到压缩包
+      for (const file of files) {
+        try {
+          // 从S3下载文件
+          const getCommand = new GetObjectCommand({
+            Bucket: S3_CONFIG.bucket,
+            Key: `${file.s3BasePath}/${file.relativePath}`
+          })
+
+          const {Body} = await this.s3Client.send(getCommand)
+          if (!Body) continue
+
+          // 添加文件到压缩包，保持目录结构
+          archive.append(Body as Readable, {
+            name: file.name,
+            prefix: file.relativePath ? file.relativePath.split('/').slice(0, -1).join('/') : ''
+          })
+        } catch (error) {
+          console.error(`Error adding file ${file.id} to archive:`, error)
+        }
+      }
+
+      // 完成压缩
+      await archive.finalize()
+
+      // 上传到S3
+      const upload = new Upload({
+        client: this.s3Client,
+        params: {
+          Bucket: S3_CONFIG.bucket,
+          Key: `compress/${transferCodeId}/archive.zip`,
+          Body: passThrough
+        }
+      })
+
+      await upload.done()
+    } catch (error) {
+      console.error("Finalize compress error:", error)
       throw error
     }
   }

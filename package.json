@@ -11,6 +11,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
     "@aws-sdk/client-s3": "^3.738.0",
+    "@aws-sdk/lib-storage": "^3.750.0",
     "@aws-sdk/s3-presigned-post": "^3.738.0",
     "@aws-sdk/s3-request-presigner": "^3.738.0",
     "@hookform/resolvers": "^3.10.0",
@@ -46,7 +47,9 @@
     "@react-three/fiber": "^9.0.2",
     "@shadergradient/react": "^2.0.22",
     "@tanstack/react-table": "^8.20.6",
+    "@types/archiver": "^6.0.3",
     "@types/bcryptjs": "^2.4.6",
+    "archiver": "^7.0.1",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
