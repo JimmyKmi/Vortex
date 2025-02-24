@@ -16,8 +16,7 @@ interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-import {useEffect, useState, use} from 'react'
-import {useRouter} from 'next/navigation'
+import {useEffect, useState, useCallback, use} from 'react'
 import Layout from '@/components/layout'
 import axios from "axios"
 import {Title} from "@/components/title"
@@ -73,38 +72,46 @@ interface DownloadTransferInfo extends TransferInfoType {
 }
 
 export default function DownloadPage({params}: PageProps) {
-  const router = useRouter()
   const resolvedParams = use(params)
   const sessionId = resolvedParams.params
   const [isLoadingFiles, setIsLoadingFiles] = useState(false)
   const [files, setFiles] = useState<DownloadFile[]>([])
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-  const [isCopied, setIsCopied] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
   const {isActive, isValidating, transferInfo, setTransferInfo} = useTransferSession({sessionId})
 
   // 新增状态用于控制下载模式
-  const [downloadMode, setDownloadMode] = useState<'single' | 'package'>('single')
-  const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
-  const [showStructureWarning, setShowStructureWarning] = useState(false)
+  const [downloadMode, setDownloadMode] = useState<'single' | 'package' | null>(null)
 
   // 修改进度相关状态
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [downloadStatus, setDownloadStatus] = useState<string>('')
   const [showProgress, setShowProgress] = useState(false)
-  const [isCompleted, setIsCompleted] = useState(false)
   const [compressPollingInterval, setCompressPollingInterval] = useState<NodeJS.Timeout | null>(null)
+
+  // 在组件状态部分新增两个状态
+  const [dialogPromiseResolve, setDialogPromiseResolve] = useState<((value: boolean) => void) | null>(null);
+  const [currentDialogContent, setCurrentDialogContent] = useState<{
+    title: string;
+    description: React.ReactNode;
+    confirmText?: string;
+  } | null>(null);
+
+  // 创建通用确认对话框方法
+  const showConfirmDialog = (title: string, description: React.ReactNode, confirmText = "继续"): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setCurrentDialogContent({title, description, confirmText});
+      setDialogPromiseResolve(() => (result: boolean) => {
+        setCurrentDialogContent(null);
+        resolve(result);
+      });
+    });
+  };
 
   /**
    * 获取文件列表
    */
   const fetchFileList = async () => {
-    if (!isActive) {
-      toast.error("会话已过期，请重新验证")
-      return
-    }
-
     try {
       setIsLoadingFiles(true)
       const response = await axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`)
@@ -114,7 +121,7 @@ export default function DownloadPage({params}: PageProps) {
         toast.error(getApiErrorMessage(response.data))
       }
     } catch (error: any) {
-      console.error("Get file list error:", error)
+      console.warn("Get file list error:", error)
       toast.error(getApiErrorMessage(error))
     } finally {
       setIsLoadingFiles(false)
@@ -139,32 +146,10 @@ export default function DownloadPage({params}: PageProps) {
     }
   }, [files])
 
-  // 修改进度条动画逻辑
   useEffect(() => {
-    if (isDownloading && downloadMode === 'package') {
-      // 打包模式下直接设置进度值，不使用动画
-      setDownloadProgress(downloadProgress)
-      return
-    }
-    // 原有单文件下载的动画逻辑保持不变...
-  }, [isDownloading, downloadMode, downloadProgress])
-
-  // 修改下载状态文本
-  useEffect(() => {
-    if (isDownloading && downloadMode === 'package') {
-      // 打包模式下不自动更新状态文本，由接口返回的进度控制
-      return
-    }
-    // 原有单文件下载的状态文本逻辑保持不变...
-  }, [isDownloading, downloadMode, downloadProgress, downloadStatus])
-
-  // 修改完成状态处理
-  useEffect(() => {
-    if (downloadProgress === 100 && downloadMode !== 'package') {  // 仅单文件模式根据进度设置完成状态
-      setIsDownloading(false)
-      setIsCompleted(true)
-    }
-  }, [downloadProgress, downloadMode])
+    // 修改进度条动画逻辑
+    if (downloadMode === 'package') setDownloadProgress(downloadProgress)
+  }, [downloadMode, downloadProgress])
 
   /**
    * 切换文件夹展开/折叠状态
@@ -181,14 +166,11 @@ export default function DownloadPage({params}: PageProps) {
    * 获取文件夹的所有子文件ID（包括子文件夹的文件）
    */
   const getFolderChildrenIds = (folder: DownloadFile): string[] => {
-    const ids: string[] = []
-    if (folder.children) {
-      folder.children.forEach(child => {
-        ids.push(child.id)
-        if (child.type === 'folder') ids.push(...getFolderChildrenIds(child))
-      })
-    }
-    return ids
+    return folder.children?.reduce((ids: string[], child) => {
+      ids.push(child.id)
+      if (child.type === 'folder') ids.push(...getFolderChildrenIds(child))
+      return ids
+    }, []) || []
   }
 
   /**
@@ -236,8 +218,6 @@ export default function DownloadPage({params}: PageProps) {
   const handleFileSelect = (fileId: string, checked: boolean, file: DownloadFile) => {
     setSelectedFiles(prev => {
       const newSet = new Set(prev)
-
-      // 处理当前文件
       checked ? newSet.add(fileId) : newSet.delete(fileId)
 
       // 如果是文件夹，处理所有子文件
@@ -271,7 +251,7 @@ export default function DownloadPage({params}: PageProps) {
   }
 
   /**
-   * 处理全选/反选
+   * 处理全选
    */
   const handleSelectAll = (checked: boolean) => {
     setSelectedFiles(() => {
@@ -308,6 +288,16 @@ export default function DownloadPage({params}: PageProps) {
     return currentFiles.reduce((count, file) => {
       if (file.type === 'folder') return count + (file.children ? getSelectedFilesCount(file.children) : 0)
       return count + (selectedFiles.has(file.id) ? 1 : 0)
+    }, 0)
+  }
+
+  /**
+   * 获取实际文件总数（不包括文件夹）
+   */
+  const getTotalFileCount = (currentFiles: DownloadFile[]): number => {
+    return currentFiles.reduce((count, file) => {
+      if (file.type === 'folder') return count + (file.children ? getTotalFileCount(file.children) : 0)
+      return count + 1
     }, 0)
   }
 
@@ -372,168 +362,97 @@ export default function DownloadPage({params}: PageProps) {
     return actualFiles
   }
 
-  // 处理下载确认
-  const handleDownloadConfirm = async () => {
-    if (!isActive) {
-      toast.error("会话已过期，请重新验证")
-      return
-    }
-
+  /**
+   * 处理普通下载
+   */
+  const handleDefaultDownload = async () => {
     try {
       const actualSelectedFiles = getActualSelectedFiles(files)
 
-      // 打包下载模式下不检查选中文件数量
-      if (downloadMode === 'single' && actualSelectedFiles.length === 0) {
-        toast.error("请选择至少一个文件")
-        return
-      }
-
-      setIsDownloading(true)
       setShowProgress(true)
       setDownloadProgress(0)
-      setIsCompleted(false)
 
-      if (downloadMode === 'package') {
-        // 打包下载逻辑
-        setDownloadStatus('正在准备打包下载...')
-        toast.info("打包中...")
-        // TODO: 实现打包下载逻辑
-      } else {
-        // 单文件下载逻辑
-        const totalFiles = actualSelectedFiles.length
-        let downloadedCount = 0
+      // 单文件下载逻辑
+      const totalFiles = actualSelectedFiles.length
+      let downloadedCount = 0
 
-        // 分批处理文件，每批最多10个
-        const batchSize = 10
-        for (let batchIndex = 0; batchIndex < actualSelectedFiles.length; batchIndex += batchSize) {
-          const batch = actualSelectedFiles.slice(batchIndex, batchIndex + batchSize)
-          const batchFileNames = batch.map(f => f.name)
+      // 分批处理文件，每批最多10个
+      const batchSize = 10
+      for (let batchIndex = 0; batchIndex < actualSelectedFiles.length; batchIndex += batchSize) {
+        const batch = actualSelectedFiles.slice(batchIndex, batchIndex + batchSize)
+        const batchFileNames = batch.map(f => f.name)
 
-          try {
-            // 更新状态显示
-            setDownloadStatus(`正在生成 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''}等 ${totalFiles} 个文件的下载通道`)
+        try {
+          // 更新状态显示
+          setDownloadStatus(`正在生成 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''}等 ${totalFiles} 个文件的下载通道`)
 
-            // 获取下载URL
-            const response = await axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
-              files: batch.map(file => ({
-                fileId: file.id,
-                name: file.name
-              }))
-            })
+          // 获取下载URL
+          const response = await axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
+            files: batch.map(file => ({
+              fileId: file.id,
+              name: file.name
+            }))
+          })
 
-            if (response.data.code !== "Success") throw new Error(getApiErrorMessage(response.data))
+          if (response.data.code !== "Success") throw new Error(getApiErrorMessage(response.data))
 
-            // 开始下载文件
-            setDownloadStatus(`正在下载 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''} 等 ${totalFiles} 个文件`)
-            const downloadUrls = response.data.data
-            for (let fileIndex = 0; fileIndex < downloadUrls.length; fileIndex++) {
-              const {url, filename} = downloadUrls[fileIndex]
-              // 创建下载链接
-              const link = document.createElement('a')
-              link.href = url
-              link.download = filename
-              link.style.display = 'none'  // 隐藏链接
-              document.body.appendChild(link)
-              link.click()
+          // 开始下载文件
+          setDownloadStatus(`正在下载 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''} 等 ${totalFiles} 个文件`)
+          const downloadUrls = response.data.data
+          for (let fileIndex = 0; fileIndex < downloadUrls.length; fileIndex++) {
+            const {url, filename} = downloadUrls[fileIndex]
+            // 创建下载链接
+            const link = document.createElement('a')
+            link.href = url
+            link.download = filename
+            link.style.display = 'none'  // 隐藏链接
+            document.body.appendChild(link)
+            link.click()
 
-              // 延迟移除链接，确保下载已经开始
-              await new Promise(resolve => setTimeout(resolve, 100))
-              document.body.removeChild(link)
+            // 延迟移除链接，确保下载已经开始
+            await new Promise(resolve => setTimeout(resolve, 100))
+            document.body.removeChild(link)
 
-              // 更新进度
-              downloadedCount++
-              setDownloadProgress(Math.round((downloadedCount / totalFiles) * 100))
+            // 更新进度
+            downloadedCount++
+            setDownloadProgress(Math.round((downloadedCount / totalFiles) * 100))
 
-              // 每个文件下载之间添加短暂延迟
-              if (fileIndex < downloadUrls.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 500))
-              }
+            // 每个文件下载之间添加短暂延迟
+            if (fileIndex < downloadUrls.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 2000))
             }
-
-          } catch (error: any) {
-            console.error("Download batch error:", error)
-            toast.error(`部分文件下载失败: ${error.message || "未知错误"}`)
           }
 
-          // 每批下载之间稍微暂停一下，避免浏览器压力太大
-          if (batchIndex + batchSize < actualSelectedFiles.length) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-          }
+        } catch (error: any) {
+          console.error("Download batch error:", error)
+          toast.error(`部分文件下载失败: ${error.message || "未知错误"}`)
         }
 
-        setDownloadStatus('全部完成，请检查浏览器中文件下载进度')
-        setIsCompleted(true)
-        toast.success(`已开始下载 ${totalFiles} 个文件`)
+        // 每批下载之间稍微暂停一下，避免浏览器压力太大
+        if (batchIndex + batchSize < actualSelectedFiles.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
       }
+
+      setDownloadStatus('全部完成，请检查浏览器中文件下载进度')
+      toast.success(`已开始下载 ${totalFiles} 个文件`)
+
     } catch (error: any) {
       console.error("Download error:", error)
       toast.error(getApiErrorMessage(error))
     } finally {
-      setIsDownloading(false)
-    }
-  }
-
-  /**
-   * 处理压缩下载
-   */
-  const handleCompressDownload = async () => {
-    if (!isActive) {
-      toast.error("会话已过期，请重新验证")
-      return
-    }
-
-    try {
-      setIsDownloading(true)
-      setShowProgress(true)
-      setDownloadProgress(0)
-      setIsCompleted(false)
-      setDownloadStatus("正在建立通道...")
-
-      const response = await axios.post(`/api/download/${sessionId}/compress-download`)
-
-      if (response.data.code !== "Success") {
-        toast.error(getApiErrorMessage(response.data))
-        return
-      }
-
-      const {status, url, progress} = response.data.data
-
-      if (status === "COMPLETED" && url) {
-        setDownloadStatus("正在从缓存中下载，请从浏览器检查下载进度")
-        setDownloadProgress(100)
-        setIsCompleted(true)  // 在此处明确设置完成状态
-
-        // 创建下载链接
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${sessionId}.zip`  // 使用会话ID作为文件名
-        link.style.display = 'none'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      } else if (status === "PROCESSING") {
-        // 根据进度显示不同阶段
-        const phase = (progress || 0) >= 100 ? 2 : 1
-        setDownloadStatus(
-          `↻ （打包任务${phase}/2）${phase === 1 ? '正在打包...' : '正在建立缓存...'}`
-        )
-        setDownloadProgress(progress || 0)
-        startCompressPolling()
-      }
-
-    } catch (error: any) {
-      console.error("Compress download error:", error)
-      toast.error(getApiErrorMessage(error))
+      setDownloadMode(null)
     }
   }
 
   /**
    * 开始轮询压缩进度
    */
-  const startCompressPolling = () => {
+  const startCompressPolling = useCallback(() => {
     // 清除已有的轮询
     if (compressPollingInterval) {
       clearInterval(compressPollingInterval)
+      setCompressPollingInterval(null)
     }
 
     // 创建新的轮询
@@ -543,6 +462,7 @@ export default function DownloadPage({params}: PageProps) {
 
         if (response.data.code !== "Success") {
           clearInterval(interval)
+          setCompressPollingInterval(null)
           toast.error(getApiErrorMessage(response.data))
           return
         }
@@ -552,9 +472,6 @@ export default function DownloadPage({params}: PageProps) {
         if (status === "COMPLETED" && url) {
           setDownloadStatus("正在从缓存中下载，请从浏览器检查下载进度")
           setDownloadProgress(100)
-          setIsCompleted(true)  // 在此处明确设置完成状态
-
-          // 创建下载链接
           const link = document.createElement('a')
           link.href = url
           link.download = `${sessionId}.zip`
@@ -562,15 +479,22 @@ export default function DownloadPage({params}: PageProps) {
           document.body.appendChild(link)
           link.click()
           document.body.removeChild(link)
+
+          clearInterval(interval)
+          setCompressPollingInterval(null)
+          setDownloadMode(null)  // 重置下载模式
         } else if (status === "PROCESSING") {
-          // 根据进度显示不同阶段
           const phase = (progress || 0) >= 100 ? 2 : 1
           setDownloadStatus(`（打包任务${phase}/2）${phase === 1 ? '正在打包...' : '正在建立缓存...'}`)
           setDownloadProgress(progress || 0)
+        } else {
+          // 如果状态既不是 COMPLETED 也不是 PROCESSING，说明可能出现了问题
+          clearInterval(interval)
+          setCompressPollingInterval(null)
+          toast.error("压缩任务状态异常")
         }
-
       } catch (error: any) {
-        console.error("Poll compress status error:", error)
+        console.error("Compress status check error:", error)
         clearInterval(interval)
         setCompressPollingInterval(null)
         toast.error(getApiErrorMessage(error))
@@ -578,14 +502,32 @@ export default function DownloadPage({params}: PageProps) {
     }, 3000)  // 每 3 秒轮询一次
 
     setCompressPollingInterval(interval)
-  }
+  }, [sessionId, compressPollingInterval])
 
-  // 清理轮询
+  // 组件卸载时清理轮询
   useEffect(() => {
     return () => {
-      if (compressPollingInterval) clearInterval(compressPollingInterval)
+      if (compressPollingInterval) {
+        clearInterval(compressPollingInterval)
+        setCompressPollingInterval(null)
+      }
     }
   }, [compressPollingInterval])
+
+  /**
+   * 处理压缩下载
+   */
+  const handleCompressDownload = async () => {
+    try {
+      setShowProgress(true)
+      setDownloadProgress(0)
+      setDownloadStatus("正在建立通道...")
+      startCompressPolling()
+    } catch (error: any) {
+      console.error("Compress download error:", error)
+      toast.error(getApiErrorMessage(error))
+    }
+  }
 
   // 渲染骨架屏
   const renderSkeleton = () => {
@@ -594,16 +536,16 @@ export default function DownloadPage({params}: PageProps) {
         {[1, 2, 3].map((i) => (
           <TableRow key={i}>
             <TableCell className="w-[40px]">
-              <Skeleton className="h-4 w-4"/>
+              <Skeleton className="h-5 w-5"/>
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
-                <Skeleton className="h-4 w-4"/>
-                <Skeleton className="h-4 w-[200px]"/>
+                <Skeleton className="h-5 w-5"/>
+                <Skeleton className="h-5 w-[200px]"/>
               </div>
             </TableCell>
             <TableCell className="text-right">
-              <Skeleton className="h-4 w-[60px] ml-auto"/>
+              <Skeleton className="h-5 w-[60px] ml-auto"/>
             </TableCell>
           </TableRow>
         ))}
@@ -611,43 +553,80 @@ export default function DownloadPage({params}: PageProps) {
     )
   }
 
-  // 修改下载按钮点击处理逻辑
-  const handleDownloadClick = (mode: 'single' | 'package') => {
-    setDownloadMode(mode)
+  // 下载按钮点击
+  const handleDownloadClick = async (mode: 'single' | 'package') => {
+    try {
+      setDownloadMode(mode);
+      setDownloadProgress(0)
+      setDownloadStatus("")
+      const isFullSelection = selectedFiles.size === getAllFileIds(files).length;
+      const isNoSelection = selectedFiles.size === 0;
 
-    // 如果是单文件模式，检查目录结构
-    if (mode === 'single') {
-      const hasNestedFiles = getActualSelectedFiles(files).some(file =>
-        file.relativePath?.includes('/') || file.relativePath?.includes('\\')
-      )
+      switch (mode) {
+        case 'single': {
 
-      if (hasNestedFiles) {
-        setShowStructureWarning(true)
-        return
+          // 检查选中文件数量
+          if (getActualSelectedFiles(files).length === 0) {
+            toast.error("请选择至少一个文件")
+            setDownloadMode(null);
+            return
+          }
+
+          // 检查目录结构
+          const hasNestedFiles = getActualSelectedFiles(files).some(file =>
+            file.relativePath?.includes('/') || file.relativePath?.includes('\\')
+          );
+
+          // 显示结构警告对话框
+          if (hasNestedFiles) {
+            const confirm = await showConfirmDialog(
+              '下载路径提示',
+              <>你选择了目录中的文件，文件将会被<b><Shake>直接下载</Shake></b>，不会保留目录结构。如需保留完整目录结构，请选择打包下载。</>,
+              '直接下载')
+            if (!confirm) {
+              setDownloadMode(null)
+              return
+            }
+          }
+
+          // 处理下载范围确认
+          if (!isFullSelection) {
+            const confirm = await showConfirmDialog(
+              '下载范围提示',
+              <>即将下载选中的文件，未选中的文件<b><Shake>不会被下载</Shake></b>。是否继续？</>,
+              '继续')
+            if (!confirm) {
+              setDownloadMode(null)
+              return
+            }
+          }
+
+          await handleDefaultDownload()
+          break
+        }
+
+        case 'package': {
+          // 处理打包下载确认
+          if (!isFullSelection && !isNoSelection) {
+            const confirm = await showConfirmDialog(
+              '下载范围提示',
+              <>即将以<b><Shake>压缩包</Shake></b>的形式下载<b><Shake>全部</Shake></b>文件，要继续吗？</>,
+              '打包下载')
+            if (!confirm) {
+              setDownloadMode(null)
+              return
+            }
+          }
+
+          await handleCompressDownload()
+          break
+        }
       }
+    } catch (error) {
+      console.error("Download process error:", error);
+      toast.error(getApiErrorMessage(error));
     }
-
-    const allIds = getAllFileIds(files)
-    const isFullSelection = selectedFiles.size === allIds.length
-    const isNoSelection = selectedFiles.size === 0
-
-    // 如果是打包模式，调用压缩下载
-    if (mode === 'package') {
-      if (isFullSelection || isNoSelection) {
-        void handleCompressDownload()
-      } else {
-        setShowDownloadConfirm(true)
-      }
-      return
-    }
-
-    // 单文件模式下，如果是全选则直接下载，否则显示确认对话框
-    if (isFullSelection) {
-      void handleDownloadConfirm()
-    } else {
-      setShowDownloadConfirm(true)
-    }
-  }
+  };
 
   if (isValidating || !transferInfo) return (
     <Layout width="middle">
@@ -668,77 +647,46 @@ export default function DownloadPage({params}: PageProps) {
           <div className="text-center text-muted-foreground py-8">暂无文件</div>
         ) : (
           <>
-            {/* 修改进度条区域 */}
+            {/* 进度条区域 */}
             {showProgress && (
               <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-2">
-                    {!isCompleted && (
-                      <Loader2 className="h-4 w-4 animate-spin"/>
-                    )}
-                    <span className="text-muted-foreground">
-                      {downloadStatus}
-                      {downloadProgress < 100 &&
-                        downloadMode === 'package' &&
-                        downloadStatus !== '正在从缓存中下载，请从浏览器检查下载进度' &&
-                        downloadStatus !== '正在准备打包下载...'}
-                    </span>
+                    {downloadMode && <Loader2 className="h-4 w-4 animate-spin"/>}
+                    <span className="text-muted-foreground">{downloadStatus}</span>
                   </div>
-                  <span className="text-muted-foreground">
-                    {downloadStatus === '正在从缓存中下载，请从浏览器检查下载进度' ? '100' : downloadProgress}%
-                  </span>
+                  <span className="text-muted-foreground">{downloadProgress}%</span>
                 </div>
                 <Progress
-                  value={downloadStatus === '正在从缓存中下载，请从浏览器检查下载进度' ? 100 : downloadProgress}
-                  className="h-2"
-                />
+                  className={`transition-all duration-700 ${downloadMode ? "h-3 opacity-100" : "h-1 opacity-50"}`}
+                  value={downloadProgress}/>
               </div>
             )}
 
             <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
               <div className="flex gap-2 items-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleInvertSelection}
-                  className="h-8"
-                >反选</Button>
-                <span className="text-sm text-muted-foreground">已选择 {getSelectedFilesCount(files)} 个文件</span>
+                <Button variant="outline" size="sm" onClick={handleInvertSelection} className="h-8">反选</Button>
+                <span
+                  className="text-sm text-muted-foreground">共 {getTotalFileCount(files)} 个文件，已选择 {getSelectedFilesCount(files)} 个</span>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
-                <Button
-                  variant="default"
-                  size="sm"
-                  disabled={getActualSelectedFiles(files).length === 0 || isDownloading && downloadMode === 'single' || !!compressPollingInterval}
-                  onClick={() => {
-                    setDownloadMode('single')
-                    handleDownloadClick('single')
-                  }}
-                  className="h-8 flex items-center gap-2"
-                >
-                  {(isDownloading && downloadMode === 'single') ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileDown className="h-4 w-4" />
-                  )}
-                  下载
+                <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
+                        disabled={getActualSelectedFiles(files).length === 0 || !!downloadMode}
+                        onClick={() => {
+                          void handleDownloadClick('single')
+                        }}>
+                  {(downloadMode === 'single') ?
+                    (<Loader2 className="h-4 w-4 animate-spin"/>) :
+                    <FileDown className="h-4 w-4"/>} 下载
                 </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  disabled={files.length === 0 || (isDownloading && downloadMode === 'package') || !!compressPollingInterval}
-                  onClick={() => {
-                    setDownloadMode('package')
-                    handleDownloadClick('package')
-                  }}
-                  className="h-8 flex items-center gap-2"
-                >
-                  {(isDownloading && downloadMode === 'package') || compressPollingInterval ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FolderDown className="h-4 w-4" />
-                  )}
-                  全部打包下载
+                <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
+                        disabled={files.length === 0 || !!downloadMode}
+                        onClick={() => {
+                          void handleDownloadClick('package')
+                        }}>
+                  {(downloadMode === 'package') ?
+                    <Loader2 className="h-4 w-4 animate-spin"/> :
+                    <FolderDown className="h-4 w-4"/>} 全部打包下载
                 </Button>
               </div>
             </div>
@@ -764,56 +712,34 @@ export default function DownloadPage({params}: PageProps) {
         )}
       </div>
 
-      {/* 下载路径提示 */}
-      <Dialog open={showStructureWarning} onOpenChange={setShowStructureWarning}>
+      {/* 通用确认对话框 */}
+      <Dialog open={!!currentDialogContent} onOpenChange={(open) => {
+        if (!open && dialogPromiseResolve) {
+          dialogPromiseResolve(false);
+        }
+      }}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>下载路径提示</DialogTitle>
-            <DialogDescription>
-              你选择了目录中的文件，文件将会被<b><Shake>直接下载</Shake></b>，不会保留目录结构。如需保留完整目录结构，请选择打包下载。
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowStructureWarning(false)}
-            >取消</Button>
-            <Button
-              variant="default"
-              onClick={() => {
-                setShowStructureWarning(false)
-                if (selectedFiles.size === getAllFileIds(files).length) {
-                  void handleDownloadConfirm()
-                } else {
-                  setShowDownloadConfirm(true)
-                }
-              }}
-            >继续下载</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 下载范围提示 */}
-      <Dialog open={showDownloadConfirm} onOpenChange={setShowDownloadConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>下载范围提示</DialogTitle>
-            <DialogDescription>
-              {downloadMode === 'package'
-                ? <>即将以<b><Shake>压缩包</Shake></b>的形式下载<b><Shake>全部</Shake></b>文件，要继续吗？</>
-                : <>即将下载选中的文件，未选中的文件<b><Shake>不会被下载</Shake></b>。是否继续？</>
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDownloadConfirm(false)}>取消</Button>
-            <Button onClick={() => {
-              setShowDownloadConfirm(false)
-              void handleDownloadConfirm()
-            }}>
-              继续{downloadMode === 'package' ? '打包' : ''}下载
-            </Button>
-          </DialogFooter>
+          {currentDialogContent && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{currentDialogContent.title}</DialogTitle>
+                <DialogDescription>
+                  {currentDialogContent.description}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => dialogPromiseResolve?.(false)}>
+                  取消
+                </Button>
+                <Button
+                  variant="default"
+                  onClick={() => dialogPromiseResolve?.(true)}
+                >
+                  {currentDialogContent.confirmText}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>
