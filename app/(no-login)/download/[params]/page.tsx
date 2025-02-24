@@ -637,80 +637,75 @@ export default function DownloadPage({params}: PageProps) {
   )
 
   return (
-    <Layout width="middle" title="下载">
-      <div className="space-y-4">
-        <Title buttonType="back" title="下载"/>
-
-        <TransferInfo transferInfo={transferInfo}/>
-
-        {files.length === 0 && !isLoadingFiles ? (
-          <div className="text-center text-muted-foreground py-8">暂无文件</div>
-        ) : (
-          <>
-            {/* 进度条区域 */}
-            {showProgress && (
-              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <div className="flex items-center gap-2">
-                    {downloadMode && <Loader2 className="h-4 w-4 animate-spin"/>}
-                    <span className="text-muted-foreground">{downloadStatus}</span>
-                  </div>
-                  <span className="text-muted-foreground">{downloadProgress}%</span>
+    <Layout width="middle" title="下载" buttonType="back">
+      <TransferInfo transferInfo={transferInfo}/>
+      {files.length === 0 && !isLoadingFiles ? (
+        <div className="text-center text-muted-foreground py-8">暂无文件</div>
+      ) : (
+        <>
+          {/* 进度条区域 */}
+          {showProgress && (
+            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  {downloadMode && <Loader2 className="h-4 w-4 animate-spin"/>}
+                  <span className="text-muted-foreground">{downloadStatus}</span>
                 </div>
-                <Progress
-                  className={`transition-all duration-700 ${downloadMode ? "h-3 opacity-100" : "h-1 opacity-50"}`}
-                  value={downloadProgress}/>
+                <span className="text-muted-foreground">{downloadProgress}%</span>
               </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
-              <div className="flex gap-2 items-center">
-                <Button variant="outline" size="sm" onClick={handleInvertSelection} className="h-8">反选</Button>
-                <span
-                  className="text-sm text-muted-foreground">共 {getTotalFileCount(files)} 个文件，已选择 {getSelectedFilesCount(files)} 个</span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
-                        disabled={getActualSelectedFiles(files).length === 0 || !!downloadMode}
-                        onClick={() => {
-                          void handleDownloadClick('single')
-                        }}>
-                  {(downloadMode === 'single') ?
-                    (<Loader2 className="h-4 w-4 animate-spin"/>) :
-                    <FileDown className="h-4 w-4"/>} 下载
-                </Button>
-                <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
-                        disabled={files.length === 0 || !!downloadMode}
-                        onClick={() => {
-                          void handleDownloadClick('package')
-                        }}>
-                  {(downloadMode === 'package') ?
-                    <Loader2 className="h-4 w-4 animate-spin"/> :
-                    <FolderDown className="h-4 w-4"/>} 全部打包下载
-                </Button>
-              </div>
+              <Progress
+                className={`transition-all duration-700 ${downloadMode ? "h-3 opacity-100" : "h-1 opacity-50"}`}
+                value={downloadProgress}/>
             </div>
+          )}
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={files.length > 0 && selectedFiles.size === getAllFileIds(files).length}
-                      onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
-                    />
-                  </TableHead>
-                  <TableHead>文件名</TableHead>
-                  <TableHead className="text-right">大小</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoadingFiles ? renderSkeleton() : files.map(file => renderFileItem(file))}
-              </TableBody>
-            </Table>
-          </>
-        )}
-      </div>
+          <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
+            <div className="flex gap-2 items-center">
+              <Button variant="outline" size="sm" onClick={handleInvertSelection} className="h-8">反选</Button>
+              <span
+                className="text-sm text-muted-foreground">共 {getTotalFileCount(files)} 个文件，已选择 {getSelectedFilesCount(files)} 个</span>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
+                      disabled={getActualSelectedFiles(files).length === 0 || !!downloadMode}
+                      onClick={() => {
+                        void handleDownloadClick('single')
+                      }}>
+                {(downloadMode === 'single') ?
+                  (<Loader2 className="h-4 w-4 animate-spin"/>) :
+                  <FileDown className="h-4 w-4"/>} 下载
+              </Button>
+              <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
+                      disabled={files.length === 0 || !!downloadMode}
+                      onClick={() => {
+                        void handleDownloadClick('package')
+                      }}>
+                {(downloadMode === 'package') ?
+                  <Loader2 className="h-4 w-4 animate-spin"/> :
+                  <FolderDown className="h-4 w-4"/>} 全部打包下载
+              </Button>
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={files.length > 0 && selectedFiles.size === getAllFileIds(files).length}
+                    onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                  />
+                </TableHead>
+                <TableHead>文件名</TableHead>
+                <TableHead className="text-right">大小</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoadingFiles ? renderSkeleton() : files.map(file => renderFileItem(file))}
+            </TableBody>
+          </Table>
+        </>
+      )}
 
       {/* 通用确认对话框 */}
       <Dialog open={!!currentDialogContent} onOpenChange={(open) => {

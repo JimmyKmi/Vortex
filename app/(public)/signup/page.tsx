@@ -48,7 +48,7 @@ export default function SignUpPage() {
     try {
       // 使用 zod 验证
       const validatedData = registerSchema.parse(formData)
-      
+
       setIsRegistering(true)
       setErrors({})
 
@@ -86,7 +86,7 @@ export default function SignUpPage() {
           ? (errorMap[errorCode] || errorMap['default'])
           : errorMap['default']
 
-        setErrors({ general: errorMessage })
+        setErrors({general: errorMessage})
       }
     } finally {
       setIsRegistering(false)
@@ -108,75 +108,73 @@ export default function SignUpPage() {
     }))
     // 清除对应字段的错误
     setErrors(prev => {
-      const newErrors = { ...prev }
+      const newErrors = {...prev}
       delete newErrors[field as keyof typeof errors]
       return newErrors
     })
   }
 
   return (
-    <Layout width="min" title="注册">
-      <Title buttonType="back" title="注册" backPath="/signin"/>
-      <div className="flex flex-col gap-4">
-        {errors.general && (
-          <Alert variant="destructive">
-            <AlertTitle>注册失败</AlertTitle>
-            <AlertDescription>
-              {errors.general}
-            </AlertDescription>
-          </Alert>
+    <Layout width="min" buttonType="back" title="注册" backPath="/signin">
+      {errors.general && (
+        <Alert variant="destructive">
+          <AlertTitle>注册失败</AlertTitle>
+          <AlertDescription>
+            {errors.general}
+          </AlertDescription>
+        </Alert>
+      )}
+      <div className="space-y-2">
+        <Label>昵称</Label>
+        <Input
+          type="text"
+          placeholder="请输入您的昵称"
+          value={formData.name}
+          onKeyDown={handleKeyDown}
+          onChange={handleInputChange('name')}
+          className={errors.name ? 'border-red-500' : ''}
+        />
+        {errors.name && (
+          <div className="text-red-500 text-sm">{errors.name}</div>
         )}
-        <div className="space-y-2">
-          <Label>昵称</Label>
-          <Input
-            type="text"
-            placeholder="请输入您的昵称"
-            value={formData.name}
-            onKeyDown={handleKeyDown}
-            onChange={handleInputChange('name')}
-            className={errors.name ? 'border-red-500' : ''}
-          />
-          {errors.name && (
-            <div className="text-red-500 text-sm">{errors.name}</div>
-          )}
-        </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label>邮箱</Label>
-          <Input
-            type="email"
-            placeholder="请输入您的邮箱"
-            value={formData.email}
-            onKeyDown={handleKeyDown}
-            onChange={handleInputChange('email')}
-            className={errors.email ? 'border-red-500' : ''}
-          />
-          {errors.email && (
-            <div className="text-red-500 text-sm">{errors.email}</div>
-          )}
-        </div>
+      <div className="space-y-2">
+        <Label>邮箱</Label>
+        <Input
+          type="email"
+          placeholder="请输入您的邮箱"
+          value={formData.email}
+          onKeyDown={handleKeyDown}
+          onChange={handleInputChange('email')}
+          className={errors.email ? 'border-red-500' : ''}
+        />
+        {errors.email && (
+          <div className="text-red-500 text-sm">{errors.email}</div>
+        )}
+      </div>
 
-        <div className="space-y-2">
-          <Label>密码</Label>
-          <Input
-            type="password"
-            placeholder="请输入8-32位密码"
-            value={formData.password}
-            onKeyDown={handleKeyDown}
-            onChange={handleInputChange('password')}
-            className={errors.password ? 'border-red-500' : ''}
-          />
-          {errors.password && (
-            <div className="text-red-500 text-sm">{errors.password}</div>
-          )}
-        </div>
-        <Button
-          onClick={handleRegister}
-          disabled={isRegistering}
-          className="w-full"
-        >
-          {isRegistering ? (
-            <span className="flex items-center justify-center">
+      <div className="space-y-2">
+        <Label>密码</Label>
+        <Input
+          type="password"
+          placeholder="请输入8-32位密码"
+          value={formData.password}
+          onKeyDown={handleKeyDown}
+          onChange={handleInputChange('password')}
+          className={errors.password ? 'border-red-500' : ''}
+        />
+        {errors.password && (
+          <div className="text-red-500 text-sm">{errors.password}</div>
+        )}
+      </div>
+      <Button
+        onClick={handleRegister}
+        disabled={isRegistering}
+        className="w-full"
+      >
+        {isRegistering ? (
+          <span className="flex items-center justify-center">
               <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none"
                    viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -184,15 +182,14 @@ export default function SignUpPage() {
               </svg>
               注册中...
             </span>
-          ) : '注册'}
-        </Button>
+        ) : '注册'}
+      </Button>
 
-        <div className="text-center text-sm text-gray-500">
-          已有账号？
-          <Link href="/signin" className="text-primary hover:underline ml-1">
-            立即登录
-          </Link>
-        </div>
+      <div className="text-center text-sm text-gray-500">
+        已有账号？
+        <Link href="/signin" className="text-primary hover:underline ml-1">
+          立即登录
+        </Link>
       </div>
     </Layout>
   )

@@ -490,7 +490,7 @@ export default function UploadPage({params}: PageProps) {
               mimeType: 'inode/directory',
               size: 0
             }, sessionId);
-            
+
             // 更新文件夹状态
             setFiles(prev => updateFileInList(prev, file.id, {
               status: 'completed',
@@ -1065,7 +1065,9 @@ export default function UploadPage({params}: PageProps) {
     if (!isValidating && transferInfo && isActive && ["PICKING"].includes(transferInfo.status)) {
       console.log('Enabling drag drop')
       enableDragDrop(processAddFiles)
-      return () => {disableDragDrop()}
+      return () => {
+        disableDragDrop()
+      }
     }
     disableDragDrop()
   }, [isValidating, transferInfo, isActive, enableDragDrop, disableDragDrop, processAddFiles])
@@ -1093,7 +1095,7 @@ export default function UploadPage({params}: PageProps) {
   )
 
   // 根据会话状态显示不同页面
-  if (transferInfo.status === "CONFIGURING") return <UploadConfigure 
+  if (transferInfo.status === "CONFIGURING") return <UploadConfigure
     transferInfo={transferInfo}
     onStatusChange={(info) => setTransferInfo(info)}
   />
@@ -1101,106 +1103,103 @@ export default function UploadPage({params}: PageProps) {
   if (transferInfo.status === "COMPLETED") return <UploadComplete transferInfo={transferInfo}/>
 
   return (
-    <Layout width="middle" title="文件上传">
-      <div className="space-y-4">
-        <Title buttonType="back" title="上传"/>
+    <Layout width="middle" title="文件上传" buttonType="back">
 
-        <TransferInfo transferInfo={transferInfo}/>
+      <TransferInfo transferInfo={transferInfo}/>
 
-        <input
-          type="file"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-          id="file-upload"
-        />
+      <input
+        type="file"
+        multiple
+        onChange={handleFileChange}
+        className="hidden"
+        id="file-upload"
+      />
 
-        {files.length === 0 && (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <label htmlFor="file-upload" className="cursor-pointer">
-              <div className="text-gray-500">
-                先添加文件再上传，可拖拽文件到页面添加
-              </div>
-            </label>
-          </div>
-        )}
+      {files.length === 0 && (
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+          <label htmlFor="file-upload" className="cursor-pointer">
+            <div className="text-gray-500">
+              先添加文件再上传，可拖拽文件到页面添加
+            </div>
+          </label>
+        </div>
+      )}
 
-        {files.length > 0 && (
-          <>
-            <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
-              <div className="flex gap-2 items-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleInvertSelection}
-                  className="h-8"
-                >
-                  反选
-                </Button>
-                <span className="text-sm text-muted-foreground">
+      {files.length > 0 && (
+        <>
+          <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
+            <div className="flex gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleInvertSelection}
+                className="h-8"
+              >
+                反选
+              </Button>
+              <span className="text-sm text-muted-foreground">
                   已选择 {getSelectedFilesCount(files)} 个文件
                 </span>
-              </div>
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={handleBatchDelete}
-                disabled={selectedFiles.size === 0 || isUploading}
-                className="h-8 w-8 bg-red-600/90 dark:bg-red-800/90 hover:bg-red-700 dark:hover:bg-red-900 transition-colors"
-              >
-                <Trash2 className="h-4 w-4"/>
-              </Button>
             </div>
-
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={files.length > 0 && selectedFiles.size === getAllFileIds(files).length}
-                      onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
-                    />
-                  </TableHead>
-                  <TableHead>文件名</TableHead>
-                  <TableHead className="text-right">大小</TableHead>
-                  <TableHead className="text-right">状态</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {files.map(file => renderFileItem(file))}
-              </TableBody>
-            </Table>
-          </>
-        )}
-
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex-1 flex flex-col sm:flex-row gap-2">
             <Button
-              variant="outline"
-              className="flex-1"
-              onClick={createFileInputHandler(false)}
+              variant="destructive"
+              size="icon"
+              onClick={handleBatchDelete}
+              disabled={selectedFiles.size === 0 || isUploading}
+              className="h-8 w-8 bg-red-600/90 dark:bg-red-800/90 hover:bg-red-700 dark:hover:bg-red-900 transition-colors"
             >
-              <Plus className="w-4 h-4 mr-2"/>
-              添加文件
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={createFileInputHandler(true)}
-            >
-              <FolderIcon className="w-4 h-4 mr-2"/>
-              添加文件夹
+              <Trash2 className="h-4 w-4"/>
             </Button>
           </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={files.length > 0 && selectedFiles.size === getAllFileIds(files).length}
+                    onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                  />
+                </TableHead>
+                <TableHead>文件名</TableHead>
+                <TableHead className="text-right">大小</TableHead>
+                <TableHead className="text-right">状态</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {files.map(file => renderFileItem(file))}
+            </TableBody>
+          </Table>
+        </>
+      )}
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex-1 flex flex-col sm:flex-row gap-2">
           <Button
-            onClick={checkUploadConfirmation}
-            disabled={isUploading || files.length === 0}
-            className="w-full sm:w-auto"
+            variant="outline"
+            className="flex-1"
+            onClick={createFileInputHandler(false)}
           >
-            <Upload className="mr-2 h-4 w-4"/>
-            {isUploading ? '上传中...' : '开始上传'}
+            <Plus className="w-4 h-4 mr-2"/>
+            添加文件
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={createFileInputHandler(true)}
+          >
+            <FolderIcon className="w-4 h-4 mr-2"/>
+            添加文件夹
           </Button>
         </div>
+        <Button
+          onClick={checkUploadConfirmation}
+          disabled={isUploading || files.length === 0}
+          className="w-full sm:w-auto"
+        >
+          <Upload className="mr-2 h-4 w-4"/>
+          {isUploading ? '上传中...' : '开始上传'}
+        </Button>
       </div>
 
       <Dialog open={showUploadConfirm} onOpenChange={setShowUploadConfirm}>

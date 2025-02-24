@@ -102,39 +102,37 @@ export default function SignInPage() {
   }
 
   return (
-    <Layout width="min" title="登录">
-      <Title buttonType="back" title="登录" backPath="/"/>
-      <div className="flex flex-col gap-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertTitle>登录失败</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <form action={onSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>邮箱</Label>
-            <Input
-              name="email"
-              type="email"
-              placeholder="请输入邮箱"
-              required
-              disabled={isPending}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>密码</Label>
-            <Input
-              name="password"
-              type="password"
-              placeholder="请输入密码"
-              required
-              disabled={isPending}
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? (
-              <span className="flex items-center">
+    <Layout width="min" title="登录" buttonType="home" backPath="/">
+      {error && (
+        <Alert variant="destructive">
+          <AlertTitle>登录失败</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <form action={onSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label>邮箱</Label>
+          <Input
+            name="email"
+            type="email"
+            placeholder="请输入邮箱"
+            required
+            disabled={isPending}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>密码</Label>
+          <Input
+            name="password"
+            type="password"
+            placeholder="请输入密码"
+            required
+            disabled={isPending}
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? (
+            <span className="flex items-center">
                 处理中
                 <svg className="animate-spin h-5 w-5 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none"
                      viewBox="0 0 24 24">
@@ -142,48 +140,45 @@ export default function SignInPage() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
               </span>
-            ) : '登录'}
-          </Button>
-        </form>
+          ) : '登录'}
+        </Button>
+      </form>
 
-        {(allowZitadel || allowRegistration) && (
-          <div className="my-4 flex items-center">
-            <div className="flex-grow border-t border-gray-300"></div>
-            <span className="px-4 text-gray-500">或</span>
-            <div className="flex-grow border-t border-gray-300"></div>
-          </div>
+      {(allowZitadel || allowRegistration) && (<div className="my-4 flex items-center">
+        <div className="flex-grow border-t border-gray-300"></div>
+        <span className="px-4 text-gray-500">或</span>
+        <div className="flex-grow border-t border-gray-300"></div>
+      </div>)}
+
+      <div className="space-y-4">
+        {allowRegistration && (
+          <Link href="/signup" className="w-full">
+            <Button variant="outline" className="w-full">
+              创建新账号
+            </Button>
+          </Link>
         )}
 
-        <div className="space-y-4">
-          {allowRegistration && (
-            <Link href="/signup" className="w-full">
-              <Button variant="outline" className="w-full">
-                创建新账号
-              </Button>
-            </Link>
-          )}
-
-          {allowZitadel && (
-            <Button
-              onClick={handleZitadelLogin}
-              variant="outline"
-              className="w-full"
-              disabled={isZitadelLoading}
-            >
-              {isZitadelLoading ? (
-                <span className="flex items-center justify-center">
+        {allowZitadel && (
+          <Button
+            onClick={handleZitadelLogin}
+            variant="outline"
+            className="w-full"
+            disabled={isZitadelLoading}
+          >
+            {isZitadelLoading ? (
+              <span className="flex items-center justify-center">
                   <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none"
                        viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                             strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
-                  {zitadelIdpName} 登录中...
+                {zitadelIdpName} 登录中...
                 </span>
-              ) : `使用 ${zitadelIdpName} 登录`}
-            </Button>
-          )}
-        </div>
+            ) : `使用 ${zitadelIdpName} 登录`}
+          </Button>
+        )}
       </div>
     </Layout>
   )

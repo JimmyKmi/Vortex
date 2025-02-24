@@ -7,6 +7,7 @@ import {useTheme} from '@/contexts/theme-context'
 import {useSession, signOut} from 'next-auth/react'
 import {NEXT_PUBLIC_APP_NAME} from '@/lib/config/env'
 import Background from './background'
+import {Title} from "@/components/title";
 
 interface LayoutProps {
   children: React.ReactNode
@@ -16,6 +17,8 @@ interface LayoutProps {
   title?: string
   metaDescription?: string
   bgTransparent?: boolean
+  buttonType?: 'back' | 'home' | null
+  backPath?: string
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -25,7 +28,9 @@ const Layout: React.FC<LayoutProps> = ({
                                          onLogout = () => signOut({redirectTo: '/signin'}),
                                          width = 'full',
                                          title,
-                                         bgTransparent=false,
+                                         bgTransparent = false,
+                                         buttonType = null,
+                                         backPath
                                        }) => {
   const {theme} = useTheme();
   const {data: session} = useSession();
@@ -42,7 +47,7 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-      <Background />
+      <Background/>
       <Header
         onLoginClick={onLoginClick}
         isLoggedIn={!!session}
@@ -52,8 +57,15 @@ const Layout: React.FC<LayoutProps> = ({
       {width === 'full' ? children : (
         <main
           className={`flex-grow flex items-center justify-center self-center px-4 py-8 ${width === 'middle' ? "max-w-5xl w-full" : ""}${width === 'min' ? "max-w-lg w-full" : ""}`}>
-          <div className={`w-full max-w-4xl rounded-lg text-card-foreground p-6 ${bgTransparent? "" : "bg-white/95 dark:bg-black/95 backdrop-blur-lg"}`}>
-            {children}
+          <div
+            className={`w-full max-w-4xl rounded-lg text-card-foreground p-6 ${bgTransparent ? "" : "bg-white/95 dark:bg-black/95 backdrop-blur-lg"}`}>
+            {buttonType ?
+              (
+                <div className="flex flex-col space-y-4">
+                  <Title buttonType={buttonType} title={title} backPath={backPath}/>
+                  {children}
+                </div>
+              ) : children}
           </div>
         </main>
       )}

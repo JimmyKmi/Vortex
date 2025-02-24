@@ -44,9 +44,9 @@ interface TransferInfo {
  * @param {(info: TransferInfo) => void} props.onStatusChange - 状态变更回调函数
  */
 export default function UploadConfigure({
-  transferInfo: initialTransferInfo,
-  onStatusChange
-}: {
+                                          transferInfo: initialTransferInfo,
+                                          onStatusChange
+                                        }: {
   transferInfo: TransferInfo;
   onStatusChange: (info: TransferInfo) => void;
 }) {
@@ -121,86 +121,83 @@ export default function UploadConfigure({
   }
 
   return (
-    <Layout width="min" title="下载码设置">
+    <Layout width="min" title="下载码设置" buttonType="back">
+
       <div className="space-y-4">
-        <Title buttonType="back" title="下载码设置"/>
+        {/* 下载码显示区域 */}
+        <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <span className="text-xl font-mono">{transferInfo.downloadCode}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleCopyCode}
+            className="shrink-0"
+          >
+            {isCopied ? (<Check className="h-4 w-4"/>) : (<Copy className="h-4 w-4"/>)}
+          </Button>
+        </div>
 
+        {/* 设置表单区域 */}
         <div className="space-y-4">
-          {/* 下载码显示区域 */}
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-            <span className="text-xl font-mono">{transferInfo.downloadCode}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCopyCode}
-              className="shrink-0"
-            >
-              {isCopied ? (<Check className="h-4 w-4"/>) : (<Copy className="h-4 w-4"/>)}
-            </Button>
+          {/* 使用次数限制设置 */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="usageLimit" className="text-right">
+              使用次数
+            </Label>
+            <Input
+              id="usageLimit"
+              type="number"
+              className="col-span-3"
+              placeholder="留空表示不限制"
+              value={settings.usageLimit}
+              onChange={(e) => setSettings(prev => ({...prev, usageLimit: e.target.value}))}
+            />
           </div>
-
-          {/* 设置表单区域 */}
-          <div className="space-y-4">
-            {/* 使用次数限制设置 */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="usageLimit" className="text-right">
-                使用次数
-              </Label>
-              <Input
-                id="usageLimit"
-                type="number"
-                className="col-span-3"
-                placeholder="留空表示不限制"
-                value={settings.usageLimit}
-                onChange={(e) => setSettings(prev => ({...prev, usageLimit: e.target.value}))}
-              />
-            </div>
-            {/* 速度限制设置 */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="speedLimit" className="text-right">
-                速度限制
-              </Label>
-              <Input
-                id="speedLimit"
-                type="number"
-                className="col-span-3"
-                placeholder="KB/s，留空表示不限制"
-                value={settings.speedLimit}
-                onChange={(e) => setSettings(prev => ({...prev, speedLimit: e.target.value}))}
-              />
-            </div>
-            {/* 过期时间设置 */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="expires" className="text-right">
-                过期时间
-              </Label>
-              <Input
-                id="expires"
-                type="datetime-local"
-                className="col-span-3"
-                value={settings.expires}
-                onChange={(e) => setSettings(prev => ({...prev, expires: e.target.value}))}
-              />
-            </div>
-            {/* 描述信息设置 */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="comment" className="text-right">
-                描述信息
-              </Label>
-              <Textarea
-                id="comment"
-                className="col-span-3"
-                placeholder="可选的描述信息"
-                value={settings.comment}
-                onChange={(e) => setSettings(prev => ({...prev, comment: e.target.value}))}
-              />
-            </div>
-            {/* 底部按钮区域 */}
-            <div className="flex justify-end gap-2 mt-4">
-              <Button onClick={handleSubmit} disabled={isLoading || !transferInfo.downloadCode}>
-                {isLoading ? '保存中...' : '保存设置'}
-              </Button>
-            </div>
+          {/* 速度限制设置 */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="speedLimit" className="text-right">
+              速度限制
+            </Label>
+            <Input
+              id="speedLimit"
+              type="number"
+              className="col-span-3"
+              placeholder="KB/s，留空表示不限制"
+              value={settings.speedLimit}
+              onChange={(e) => setSettings(prev => ({...prev, speedLimit: e.target.value}))}
+            />
+          </div>
+          {/* 过期时间设置 */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="expires" className="text-right">
+              过期时间
+            </Label>
+            <Input
+              id="expires"
+              type="datetime-local"
+              className="col-span-3"
+              value={settings.expires}
+              onChange={(e) => setSettings(prev => ({...prev, expires: e.target.value}))}
+            />
+          </div>
+          {/* 描述信息设置 */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="comment" className="text-right">
+              描述信息
+            </Label>
+            <Textarea
+              id="comment"
+              className="col-span-3"
+              placeholder="可选的描述信息"
+              value={settings.comment}
+              onChange={(e) => setSettings(prev => ({...prev, comment: e.target.value}))}
+            />
+          </div>
+          {/* 底部按钮区域 */}
+          <div className="flex justify-end gap-2 mt-4">
+            <Button onClick={handleSubmit} disabled={isLoading || !transferInfo.downloadCode}>
+              {isLoading ? '保存中...' : '保存设置'}
+            </Button>
           </div>
         </div>
       </div>
