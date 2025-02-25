@@ -18,22 +18,25 @@ export function Title({
   const router = useRouter()
 
   const handleButtonClick = () => {
-    if (buttonType === 'back') {
-      if (backPath) {
-        router.push(backPath)
-      } else {
+    switch (buttonType) {
+      case 'back':
+        if (backPath) {
+          router.push(backPath)
+          break
+        }
         router.back()
-      }
-    } else if (buttonType === 'home') {
-      router.push('/')
+        break
+      case 'home':
+        router.push('/')
+        break
     }
   };
 
   return (
-    <div className="flex justify-between items-center mb-4">
+    <div className="flex justify-between items-center">
       {buttonType && (
         <Button variant="outline" size="sm" onClick={handleButtonClick}>
-          <ArrowLeft className="mr-2 h-4 w-4"/> {buttonType === 'back' ? '返回' : '主页'}
+          <ArrowLeft className="h-4 w-4"/> {buttonType === 'back' ? '返回' : '主页'}
         </Button>
       )}
       <h1 className={`${!buttonType ? "text-3xl" : "text-xl"} font-bold`}>{title}</h1>

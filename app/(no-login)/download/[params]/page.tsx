@@ -659,14 +659,14 @@ export default function DownloadPage({params}: PageProps) {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
+          <div className="flex flex-col-reverse items-stretch sm:flex-row justify-between gap-2 bg-muted/50 p-2 rounded-lg">
             <div className="flex gap-2 items-center">
               <Button variant="outline" size="sm" onClick={handleInvertSelection} className="h-8">反选</Button>
               <span
                 className="text-sm text-muted-foreground">共 {getTotalFileCount(files)} 个文件，已选择 {getSelectedFilesCount(files)} 个</span>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
+            <div className="flex flex-row gap-2">
+              <Button variant="default" size="sm" className="h-8 flex items-center gap-2 flex-1"
                       disabled={getActualSelectedFiles(files).length === 0 || !!downloadMode}
                       onClick={() => {
                         void handleDownloadClick('single')
@@ -675,7 +675,7 @@ export default function DownloadPage({params}: PageProps) {
                   (<Loader2 className="h-4 w-4 animate-spin"/>) :
                   <FileDown className="h-4 w-4"/>} 下载
               </Button>
-              <Button variant="default" size="sm" className="h-8 flex items-center gap-2"
+              <Button variant="default" size="sm" className="h-8 flex items-center gap-2 flex-1"
                       disabled={files.length === 0 || !!downloadMode}
                       onClick={() => {
                         void handleDownloadClick('package')

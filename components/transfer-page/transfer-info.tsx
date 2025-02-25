@@ -41,7 +41,7 @@ export function TransferInfo({transferInfo, className}: TransferInfoProps) {
             className="text-sm text-muted-foreground hover:text-foreground p-0 flex items-center gap-1"
           >
             <Copy className="h-4 w-4"/>
-            {isCopied ? "复制成功" : "点击此处复制传输码"}
+            {isCopied ? "复制成功" : "复制传输码"}
           </Button>
         </div>
         <div className="grid gap-y-2 gap-x-5 text-sm grid-cols-1 sm:grid-cols-2">

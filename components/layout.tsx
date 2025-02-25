@@ -54,21 +54,21 @@ const Layout: React.FC<LayoutProps> = ({
         username={session?.user?.name || ''}
         bgTransparent={bgTransparent}
       />
-      {width === 'full' ? children : (
-        <main
-          className={`flex-grow flex items-center justify-center self-center px-4 py-8 ${width === 'middle' ? "max-w-5xl w-full" : ""}${width === 'min' ? "max-w-lg w-full" : ""}`}>
+      {width === 'full' ? children :
+        (<main
+          className={`flex-grow flex items-center justify-center self-center p-0 sm:p-4 md:p-6 ${width === 'middle' ? "max-w-5xl w-full" : ""}${width === 'min' ? "max-w-lg w-full" : ""}`}>
           <div
-            className={`w-full max-w-4xl rounded-lg text-card-foreground p-6 ${bgTransparent ? "" : "bg-white/95 dark:bg-black/95 backdrop-blur-lg"}`}>
+            className={`w-full max-w-4xl rounded-none sm:rounded-lg text-card-foreground p-4 sm:p-4 md:p-6 ${bgTransparent ? "" : "bg-white/95 dark:bg-black/95 backdrop-blur-lg"}`}>
             {buttonType ?
-              (
-                <div className="flex flex-col space-y-4">
-                  <Title buttonType={buttonType} title={title} backPath={backPath}/>
-                  {children}
-                </div>
-              ) : children}
+              (<div className="flex flex-col space-y-4">
+                <Title buttonType={buttonType} title={title} backPath={backPath}/>
+                {children}
+              </div>) :
+              children
+            }
           </div>
-        </main>
-      )}
+        </main>)
+      }
       <Footer/>
     </div>
   )
