@@ -85,49 +85,35 @@ const handleApiCall = async <T,>(
     onSuccess,
     onError,
     finallyAction
-  } = options;
+  } = options
 
   try {
-    const response = await apiCall;
+    const response = await apiCall
     
     if (response.data.code !== "Success") {
-      const apiError = new Error(getApiErrorMessage(response.data));
-      apiError.name = response.data.code || "ApiError";
+      const apiError = new Error(getApiErrorMessage(response.data))
+      apiError.name = response.data.code || "ApiError"
       
-      if (showErrorToast) {
-        toast.error(errorMessage || getApiErrorMessage(response.data));
-      }
+      if (showErrorToast) toast.error(errorMessage || getApiErrorMessage(response.data))
+      if (onError) onError(apiError)
       
-      if (onError) {
-        onError(apiError);
-      }
-      
-      return null;
+      return null
     }
     
-    if (onSuccess) {
-      onSuccess(response.data.data);
-    }
+    if (onSuccess) onSuccess(response.data.data)
     
-    return response.data.data as T;
+    return response.data.data as T
   } catch (error: any) {
-    console.error("API call error:", error);
+    console.error("API call error:", error)
     
-    if (showErrorToast) {
-      toast.error(errorMessage || getApiErrorMessage(error));
-    }
+    if (showErrorToast) toast.error(errorMessage || getApiErrorMessage(error))
+    if (onError) onError(error)
     
-    if (onError) {
-      onError(error);
-    }
-    
-    return null;
+    return null
   } finally {
-    if (finallyAction) {
-      finallyAction();
-    }
+    if (finallyAction) finallyAction()
   }
-};
+}
 
 export default function DownloadPage({params}: PageProps) {
   const resolvedParams = use(params)
@@ -158,19 +144,19 @@ export default function DownloadPage({params}: PageProps) {
   // 创建通用确认对话框方法
   const showConfirmDialog = (title: string, description: React.ReactNode, confirmText = "继续"): Promise<boolean> => {
     return new Promise((resolve) => {
-      setCurrentDialogContent({title, description, confirmText});
+      setCurrentDialogContent({title, description, confirmText})
       setDialogPromiseResolve(() => (result: boolean) => {
-        setCurrentDialogContent(null);
-        resolve(result);
-      });
-    });
-  };
+        setCurrentDialogContent(null)
+        resolve(result)
+      })
+    })
+  }
 
   /**
    * 获取文件列表
    */
   const fetchFileList = async () => {
-    setIsLoadingFiles(true);
+    setIsLoadingFiles(true)
     
     await handleApiCall<DownloadFile[]>(
       axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`),
@@ -179,8 +165,8 @@ export default function DownloadPage({params}: PageProps) {
         onSuccess: (data) => setFiles(data),
         finallyAction: () => setIsLoadingFiles(false)
       }
-    );
-  };
+    )
+  }
 
   useEffect(() => {
     // 初始化加载
@@ -446,9 +432,7 @@ export default function DownloadPage({params}: PageProps) {
           }),
           {
             errorMessage: "生成下载链接失败",
-            onError: () => {
-              console.error("Failed to generate download URLs for batch")
-            }
+            onError: () => console.error("Failed to generate download URLs for batch")
           }
         )
 
@@ -507,8 +491,8 @@ export default function DownloadPage({params}: PageProps) {
   const startCompressPolling = useCallback(() => {
     // 清除已有的轮询
     if (compressPollingInterval) {
-      clearInterval(compressPollingInterval);
-      setCompressPollingInterval(null);
+      clearInterval(compressPollingInterval)
+      setCompressPollingInterval(null)
     }
 
     // 定义压缩状态接口
@@ -525,73 +509,71 @@ export default function DownloadPage({params}: PageProps) {
         {
           errorMessage: "获取压缩状态失败",
           onError: () => {
-            clearInterval(interval);
-            setCompressPollingInterval(null);
+            clearInterval(interval)
+            setCompressPollingInterval(null)
           },
           showErrorToast: true
         }
-      );
+      )
 
-      if (!compressionStatus) {
-        return; // 已在handleApiCall中处理错误
-      }
+      if (!compressionStatus) return // 已在handleApiCall中处理错误
 
-      const {status, url, progress} = compressionStatus;
+      const {status, url, progress} = compressionStatus
 
       if (status === "COMPLETED" && url) {
-        setDownloadStatus("正在从缓存中下载，请从浏览器检查下载进度");
-        setDownloadProgress(100);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${sessionId}.zip`;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        setDownloadStatus("正在从缓存中下载，请从浏览器检查下载进度")
+        setDownloadProgress(100)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${sessionId}.zip`
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
 
-        clearInterval(interval);
-        setCompressPollingInterval(null);
-        setDownloadMode(null);  // 重置下载模式
+        clearInterval(interval)
+        setCompressPollingInterval(null)
+        setDownloadMode(null)  // 重置下载模式
       } else if (status === "PROCESSING") {
-        const phase = (progress || 0) >= 100 ? 2 : 1;
+        const phase = (progress || 0) >= 100 ? 2 : 1
         setDownloadStatus(`（打包任务${phase}/2）${phase === 1 ? '正在打包...' : '正在建立缓存...'}`)
-        setDownloadProgress(progress || 0);
+        setDownloadProgress(progress || 0)
       } else {
         // 如果状态既不是 COMPLETED 也不是 PROCESSING，说明可能出现了问题
-        clearInterval(interval);
-        setCompressPollingInterval(null);
-        toast.error("压缩任务状态异常");
+        clearInterval(interval)
+        setCompressPollingInterval(null)
+        toast.error("压缩任务状态异常")
       }
-    }, 3000);  // 每 3 秒轮询一次
+    }, 3000)  // 每 3 秒轮询一次
 
-    setCompressPollingInterval(interval);
-  }, [sessionId, compressPollingInterval]);
+    setCompressPollingInterval(interval)
+  }, [sessionId, compressPollingInterval])
 
   // 组件卸载时清理轮询
   useEffect(() => {
     return () => {
       if (compressPollingInterval) {
-        clearInterval(compressPollingInterval);
-        setCompressPollingInterval(null);
+        clearInterval(compressPollingInterval)
+        setCompressPollingInterval(null)
       }
-    };
-  }, [compressPollingInterval]);
+    }
+  }, [compressPollingInterval])
 
   /**
    * 处理压缩下载
    */
   const handleCompressDownload = async () => {
     try {
-      setShowProgress(true);
-      setDownloadProgress(0);
-      setDownloadStatus("正在建立通道...");
-      startCompressPolling();
+      setShowProgress(true)
+      setDownloadProgress(0)
+      setDownloadStatus("正在建立通道...")
+      startCompressPolling()
     } catch (error: any) {
-      console.error("Compress download error:", error);
-      toast.error(getApiErrorMessage(error));
-      setDownloadMode(null); // 确保错误时重置下载模式
+      console.error("Compress download error:", error)
+      toast.error(getApiErrorMessage(error))
+      setDownloadMode(null) // 确保错误时重置下载模式
     }
-  };
+  }
 
   // 渲染骨架屏
   const renderSkeleton = () => {
@@ -620,26 +602,25 @@ export default function DownloadPage({params}: PageProps) {
   // 下载按钮点击
   const handleDownloadClick = async (mode: 'single' | 'package') => {
     try {
-      setDownloadMode(mode);
+      setDownloadMode(mode)
       setDownloadProgress(0)
       setDownloadStatus("")
-      const isFullSelection = selectedFiles.size === getAllFileIds(files).length;
-      const isNoSelection = selectedFiles.size === 0;
+      const isFullSelection = selectedFiles.size === getAllFileIds(files).length
+      const isNoSelection = selectedFiles.size === 0
 
       switch (mode) {
         case 'single': {
-
           // 检查选中文件数量
           if (getActualSelectedFiles(files).length === 0) {
             toast.error("请选择至少一个文件")
-            setDownloadMode(null);
+            setDownloadMode(null)
             return
           }
 
           // 检查目录结构
           const hasNestedFiles = getActualSelectedFiles(files).some(file =>
             file.relativePath?.includes('/') || file.relativePath?.includes('\\')
-          );
+          )
 
           // 显示结构警告对话框
           if (hasNestedFiles) {
@@ -687,10 +668,10 @@ export default function DownloadPage({params}: PageProps) {
         }
       }
     } catch (error) {
-      console.error("Download process error:", error);
-      toast.error(getApiErrorMessage(error));
+      console.error("Download process error:", error)
+      toast.error(getApiErrorMessage(error))
     }
-  };
+  }
 
   if (isValidating || !transferInfo) return (
     <Layout width="middle">
@@ -773,9 +754,7 @@ export default function DownloadPage({params}: PageProps) {
 
       {/* 通用确认对话框 */}
       <Dialog open={!!currentDialogContent} onOpenChange={(open) => {
-        if (!open && dialogPromiseResolve) {
-          dialogPromiseResolve(false);
-        }
+        if (!open && dialogPromiseResolve) dialogPromiseResolve(false)
       }}>
         <DialogContent>
           {currentDialogContent && (
