@@ -69,7 +69,7 @@ export default function DownloadPage({params}: PageProps) {
   const [files, setFiles] = useState<DownloadFile[]>([])
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-  const {isActive, isValidating, transferInfo} = useTransferSession({sessionId})
+  const {isActive, isValidating, transferInfo, checkSessionActive} = useTransferSession({sessionId})
   const {call} = useApi() // 使用自定义API Hook
 
   // 新增状态用于控制下载模式
@@ -104,6 +104,8 @@ export default function DownloadPage({params}: PageProps) {
    * 获取文件列表
    */
   const fetchFileList = async () => {
+    if (!checkSessionActive()) return
+    
     setIsLoadingFiles(true)
     
     await call<DownloadFile[]>(
@@ -121,7 +123,7 @@ export default function DownloadPage({params}: PageProps) {
     if (sessionId && isActive) void fetchFileList()
     // 监听会话状态变化，当会话激活时获取文件列表
     if (isActive && !isValidating && transferInfo) void fetchFileList()
-  }, [sessionId, isActive, isValidating])
+  }, [sessionId, isActive, isValidating, transferInfo, fetchFileList])
 
   // 修改初始选中状态
   useEffect(() => {
@@ -351,6 +353,8 @@ export default function DownloadPage({params}: PageProps) {
    * 处理普通下载
    */
   const handleDefaultDownload = async () => {
+    if (!checkSessionActive()) return
+    
     try {
       const actualSelectedFiles = getActualSelectedFiles(files)
 
@@ -437,6 +441,8 @@ export default function DownloadPage({params}: PageProps) {
    * 开始轮询压缩进度
    */
   const startCompressPolling = useCallback(() => {
+    if (!checkSessionActive()) return
+    
     // 清除已有的轮询
     if (compressPollingInterval) {
       clearInterval(compressPollingInterval)
@@ -495,7 +501,7 @@ export default function DownloadPage({params}: PageProps) {
     }, 3000)  // 每 3 秒轮询一次
 
     setCompressPollingInterval(interval)
-  }, [sessionId, compressPollingInterval, call])
+  }, [sessionId, compressPollingInterval, call, checkSessionActive])
 
   // 组件卸载时清理轮询
   useEffect(() => {
@@ -511,6 +517,8 @@ export default function DownloadPage({params}: PageProps) {
    * 处理压缩下载
    */
   const handleCompressDownload = async () => {
+    if (!checkSessionActive()) return
+    
     try {
       setShowProgress(true)
       setDownloadProgress(0)
@@ -549,6 +557,8 @@ export default function DownloadPage({params}: PageProps) {
 
   // 下载按钮点击
   const handleDownloadClick = async (mode: 'single' | 'package') => {
+    if (!checkSessionActive()) return
+    
     try {
       setDownloadMode(mode)
       setDownloadProgress(0)

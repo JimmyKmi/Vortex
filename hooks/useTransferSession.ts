@@ -18,7 +18,14 @@ interface UseTransferSessionProps {
  *
  * @example
  * ```typescript
- * const { isActive, transferInfo, isValidating } = useTransferSession({ sessionId: 'xxx' })
+ * const { isActive, transferInfo, isValidating, checkSessionActive } = useTransferSession({ sessionId: 'xxx' })
+ * 
+ * // 使用检查方法来判断会话是否活跃
+ * const handleSomeAction = () => {
+ *   if (checkSessionActive()) {
+ *     // 会话活跃，继续操作
+ *   }
+ * }
  * ```
  *
  * 功能特性：
@@ -26,6 +33,8 @@ interface UseTransferSessionProps {
  * 2. 用户20分钟无活动则停止心跳
  * 3. 心跳失败自动重试，连续失败超过2分钟提示网络异常
  * 4. 自动获取和维护传输会话信息
+ * 5. 提供会话状态检查方法，自动处理过期提示
+ * 6. 会话状态变化时自动提示
  */
 export function useTransferSession({sessionId}: UseTransferSessionProps) {
   const [isActive, setIsActive] = useState(false) // 会话活跃状态
@@ -35,6 +44,7 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
   const retryTimeout = useRef<NodeJS.Timeout>() // 重试定时器
   const lastHeartbeatTime = useRef<number>(0) // 最后心跳时间戳
   const lastFailureTime = useRef<number>(0) // 最后失败时间戳
+  const previousActiveState = useRef<boolean>(false) // 保存上一个活跃状态
   const router = useRouter()
 
   // 获取传输会话信息
@@ -126,12 +136,44 @@ export function useTransferSession({sessionId}: UseTransferSessionProps) {
   }, [stopHeartbeat])
 
   useEffect(() => () => cleanup(), [cleanup])
+  
+  /**
+   * 检查会话是否活跃，如果不活跃则显示提示
+   * @returns 会话是否活跃
+   */
+  const checkSessionActive = useCallback(() => {
+    if (isValidating || !transferInfo) return false
+    
+    if (!isActive) {
+      toast.error("会话已过期，请重新验证")
+      return false
+    }
+    
+    return true
+  }, [isActive, isValidating, transferInfo])
+  
+  // 监控会话状态变化，当会话从活跃变为非活跃时自动显示提示
+  useEffect(() => {
+    // 初始化或正在验证时不处理
+    if (isValidating || !transferInfo) {
+      previousActiveState.current = isActive
+      return
+    }
+    
+    // 当状态从活跃变为非活跃时显示提示
+    if (previousActiveState.current && !isActive) {
+      toast.error("会话已过期，请重新验证")
+    }
+    
+    previousActiveState.current = isActive
+  }, [isActive, isValidating, transferInfo])
 
   return {
     isActive,
     isValidating,
     transferInfo,
     setTransferInfo,
-    cleanup
+    cleanup,
+    checkSessionActive
   }
 } 

@@ -18,22 +18,21 @@ interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-import {useEffect, useState, useCallback, use} from 'react'
+import React, {use, useCallback, useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
 import Layout from '@/components/layout'
-import axios, {AxiosRequestConfig, AxiosProgressEvent} from "axios"
+import axios, {AxiosProgressEvent, AxiosRequestConfig} from "axios"
 import {Button} from "@/components/ui/button"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
-import {Upload, FileIcon, ChevronRight, ChevronDown, FolderIcon, Plus, Trash2} from 'lucide-react'
+import {ChevronDown, ChevronRight, FileIcon, FolderIcon, Plus, Trash2, Upload} from 'lucide-react'
 import {Checkbox} from "@/components/ui/checkbox"
-import React from 'react'
 import {toast} from "sonner"
 import UploadConfigure from './configure'
 import UploadComplete from './complete'
 import {useDragDrop} from '@/contexts/drag-drop-context'
-import {getApiErrorMessage} from "@/lib/utils/error-messages"
 import {formatFileSize} from "@/lib/utils/file"
 import {useTransferSession} from "@/hooks/useTransferSession"
+import {useApi} from "@/hooks/useApi"
 import {
   Dialog,
   DialogContent,
@@ -133,6 +132,7 @@ const updateFileInList = (
  * @param {string} [params.mimeType] - 文件类型
  * @param {number} [params.size] - 文件大小
  * @param {string} sessionId - 会话ID
+ * @param api
  * @returns {Promise<{uploadUrl: string, uploadFields: Record<string, string>, s3BasePath: string, uploadToken: string, id: string}>}
  */
 const generateUploadUrl = async (params: {
@@ -141,28 +141,32 @@ const generateUploadUrl = async (params: {
   isDirectory: boolean;
   mimeType?: string;
   size?: number;
-}, sessionId: string): Promise<{
+}, sessionId: string, api: ReturnType<typeof useApi>): Promise<{
   uploadUrl: string;
   uploadFields: Record<string, string>;
   s3BasePath: string;
   uploadToken: string;
   id: string
-}> => {
-  try {
-    const response = await axios.post(
-      `/api/transfer-sessions/${sessionId}/upload/generate-upload-url`, params);
-    if (response.data.code !== 'Success') throw new Error(getApiErrorMessage(response.data));
-    return response.data.data;
-  } catch (error: any) {
-    console.error('Generate upload URL error:', {
-      error,
-      params,
-      message: error?.message,
-      response: error?.response?.data
-    });
-    throw new Error(error?.response?.data?.message || error?.message || '获取上传URL失败');
-  }
-};
+} | null> => {
+  return await api.call<{
+    uploadUrl: string;
+    uploadFields: Record<string, string>;
+    s3BasePath: string;
+    uploadToken: string;
+    id: string
+  }>(
+    axios.post(`/api/transfer-sessions/${sessionId}/upload/generate-upload-url`, params),
+    {
+      errorMessage: '获取上传URL失败',
+      onError: (error) => console.error('Generate upload URL error:', {
+        error,
+        params,
+        message: error?.message,
+        response: error?.response?.data
+      })
+    }
+  )
+}
 
 export default function UploadPage({params}: PageProps) {
   const router = useRouter()
@@ -174,7 +178,8 @@ export default function UploadPage({params}: PageProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const {enableDragDrop, disableDragDrop} = useDragDrop()
   const [showUploadConfirm, setShowUploadConfirm] = useState(false)
-  const {isActive, isValidating, transferInfo, setTransferInfo} = useTransferSession({sessionId})
+  const {isActive, isValidating, transferInfo, setTransferInfo, checkSessionActive} = useTransferSession({sessionId})
+  const api = useApi()
 
   /**
    * 检查文件是否重复
@@ -394,10 +399,7 @@ export default function UploadPage({params}: PageProps) {
    * 6. 处理上传完成后的状态更新
    */
   const handleUpload = async () => {
-    if (!isActive) {
-      toast.error("会话已过期，请重新验证")
-      return
-    }
+    if (!checkSessionActive()) return
 
     if (files.length === 0) {
       toast.error("请先选择要上传的文件")
@@ -409,15 +411,23 @@ export default function UploadPage({params}: PageProps) {
 
     try {
       // 开始上传，获取下载码
-      const startResponse = await axios.post(`/api/transfer-sessions/${sessionId}/upload/start`)
-      if (startResponse.data.code !== "Success") {
-        if (startResponse.data.code === "AlreadyStarted") {
-          // 如果已经开始上传，继续执行
-          console.log("Upload already started, continuing...")
-        } else {
-          throw new Error(getApiErrorMessage(startResponse.data))
+      await api.call(
+        axios.post(`/api/transfer-sessions/${sessionId}/upload/start`),
+        {
+          errorMessage: "启动上传失败",
+          onError: (error) => {
+            // 如果返回已经开始上传的错误，则忽略继续执行
+            if (error?.name === "AlreadyStarted") {
+              console.log("Upload already started, continuing...")
+              return
+            }
+            hasError = true
+          }
         }
-      }
+      )
+
+      // 如果开始上传失败且不是AlreadyStarted，则直接返回
+      if (hasError) return
 
       // 设置所有文件的初始状态为等待
       setFiles(prev => {
@@ -434,26 +444,26 @@ export default function UploadPage({params}: PageProps) {
 
       // 新的展平文件方法（仅获取文件）
       const flattenFiles = (files: FileToUpload[]): FileToUpload[] => {
-        const allFiles: FileToUpload[] = [];
+        const allFiles: FileToUpload[] = []
         const traverse = (items: FileToUpload[]) => {
           items.forEach(item => {
-            allFiles.push(item);
-            if (item.children) traverse(item.children);
-          });
-        };
-        traverse(files);
-        return allFiles;
-      };
+            allFiles.push(item)
+            if (item.children) traverse(item.children)
+          })
+        }
+        traverse(files)
+        return allFiles
+      }
 
-      const allFiles = flattenFiles(files);
+      const allFiles = flattenFiles(files)
 
       // 创建一个函数来处理单个文件的上传
       const processUpload = async (file: FileToUpload) => {
         const retryUpload = async (stage: 'preparing' | 'uploading' | 'verifying', error: any): Promise<boolean> => {
-          const stageConfig = retryConfig.stages[stage];
-          const currentRetryCount = (file.error?.retryCount || 0) + 1;
+          const stageConfig = retryConfig.stages[stage]
+          const currentRetryCount = (file.error?.retryCount || 0) + 1
 
-          if (currentRetryCount > stageConfig.maxRetries) return false;
+          if (currentRetryCount > stageConfig.maxRetries) return false
 
           // 更新状态为重试中
           setFiles(prev => updateFileInList(prev, file.id, {
@@ -464,17 +474,17 @@ export default function UploadPage({params}: PageProps) {
               retryCount: currentRetryCount,
               lastError: error
             }
-          }));
+          }))
 
           // 计算延迟时间
           const delay = retryConfig.exponentialBackoff
             ? stageConfig.retryDelay * Math.pow(2, currentRetryCount - 1)
-            : stageConfig.retryDelay;
+            : stageConfig.retryDelay
 
           // 等待一段时间后重试
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return true;
-        };
+          await new Promise(resolve => setTimeout(resolve, delay))
+          return true
+        }
 
         try {
           // 先处理文件夹创建
@@ -483,8 +493,8 @@ export default function UploadPage({params}: PageProps) {
             setFiles(prev => updateFileInList(prev, file.id, {
               status: 'completed',
               progress: 100
-            }));
-            return;
+            }))
+            return
           }
 
           // 更新文件状态为准备中
@@ -494,7 +504,8 @@ export default function UploadPage({params}: PageProps) {
             error: undefined
           }))
 
-          let uploadData;
+          let uploadData
+          // 1. 生成上传URL阶段
           while (true) {
             try {
               uploadData = await generateUploadUrl({
@@ -503,10 +514,22 @@ export default function UploadPage({params}: PageProps) {
                 size: file.file?.size || 0,
                 relativePath: file.relativePath || '',
                 isDirectory: false,
-              }, sessionId);
-              break;
+              }, sessionId, api)
+              
+              if (!uploadData) {
+                setFiles(prev => updateFileInList(prev, file.id, {
+                  status: 'error_preparing',
+                  error: {
+                    stage: 'preparing',
+                    message: '准备上传失败',
+                    retryCount: (file.error?.retryCount || 0) + 1
+                  }
+                }))
+                return
+              }
+              break
             } catch (error: any) {
-              const canRetry = await retryUpload('preparing', error);
+              const canRetry = await retryUpload('preparing', error)
               if (!canRetry) {
                 setFiles(prev => updateFileInList(prev, file.id, {
                   status: 'error_preparing',
@@ -516,8 +539,8 @@ export default function UploadPage({params}: PageProps) {
                     retryCount: (file.error?.retryCount || 0) + 1,
                     lastError: error
                   }
-                }));
-                throw error;
+                }))
+                return
               }
             }
           }
@@ -529,6 +552,7 @@ export default function UploadPage({params}: PageProps) {
             error: undefined
           }))
 
+          // 2. 执行文件上传阶段
           while (true) {
             try {
               const formData = new FormData()
@@ -550,9 +574,9 @@ export default function UploadPage({params}: PageProps) {
                   }))
                 }
               } as AxiosRequestConfig)
-              break;
+              break
             } catch (error: any) {
-              const canRetry = await retryUpload('uploading', error);
+              const canRetry = await retryUpload('uploading', error)
               if (!canRetry) {
                 setFiles(prev => updateFileInList(prev, file.id, {
                   status: 'error_uploading',
@@ -562,8 +586,8 @@ export default function UploadPage({params}: PageProps) {
                     retryCount: (file.error?.retryCount || 0) + 1,
                     lastError: error
                   }
-                }));
-                throw error;
+                }))
+                return
               }
             }
           }
@@ -575,22 +599,44 @@ export default function UploadPage({params}: PageProps) {
             error: undefined
           }))
 
+          // 3. 记录上传信息阶段
           while (true) {
             try {
               // 记录上传
-              await axios.post(`/api/transfer-sessions/${sessionId}/upload/record`, {
-                name: file.name,
-                mimeType: file.file?.type || 'application/octet-stream',
-                size: file.file?.size || 0,
-                relativePath: file.relativePath || '',
-                isDirectory: false,
-                s3BasePath: uploadData.s3BasePath,
-                uploadToken: uploadData.uploadToken,
-                userId: transferInfo!.createdBy || undefined
-              })
-              break;
+              const recordResponse = await api.call(
+                axios.post(`/api/transfer-sessions/${sessionId}/upload/record`, {
+                  name: file.name,
+                  mimeType: file.file?.type || 'application/octet-stream',
+                  size: file.file?.size || 0,
+                  relativePath: file.relativePath || '',
+                  isDirectory: false,
+                  s3BasePath: uploadData.s3BasePath,
+                  uploadToken: uploadData.uploadToken,
+                  userId: transferInfo!.createdBy || undefined
+                }),
+                { errorMessage: '记录上传失败' }
+              )
+              
+              if (!recordResponse) {
+                const error = new Error('记录上传失败')
+                const canRetry = await retryUpload('verifying', error)
+                if (!canRetry) {
+                  setFiles(prev => updateFileInList(prev, file.id, {
+                    status: 'error_verifying',
+                    error: {
+                      stage: 'verifying',
+                      message: '记录上传失败',
+                      retryCount: (file.error?.retryCount || 0) + 1,
+                      lastError: error
+                    }
+                  }))
+                  return
+                }
+                continue
+              }
+              break
             } catch (error: any) {
-              const canRetry = await retryUpload('verifying', error);
+              const canRetry = await retryUpload('verifying', error)
               if (!canRetry) {
                 setFiles(prev => updateFileInList(prev, file.id, {
                   status: 'error_verifying',
@@ -600,8 +646,8 @@ export default function UploadPage({params}: PageProps) {
                     retryCount: (file.error?.retryCount || 0) + 1,
                     lastError: error
                   }
-                }));
-                throw error;
+                }))
+                return
               }
             }
           }
@@ -618,9 +664,9 @@ export default function UploadPage({params}: PageProps) {
             file: file.name,
             message: error?.message,
             response: error?.response?.data
-          });
-          hasError = true;
-          toast.error(`上传 ${file.name} 失败: ${error?.response?.data?.message || error?.message || '未知错误'}`);
+          })
+          hasError = true
+          toast.error(`上传 ${file.name} 失败: ${error?.response?.data?.message || error?.message || '未知错误'}`)
         }
       }
 
@@ -653,27 +699,36 @@ export default function UploadPage({params}: PageProps) {
       }
 
       if (!hasError) {
-        const completeResponse = await axios.post(`/api/transfer-sessions/${sessionId}/upload/complete`)
-        if (completeResponse.data.code !== 'Success') throw new Error(getApiErrorMessage(completeResponse.data))
+        // 类型定义返回数据结构
+        interface CompleteUploadResponse {
+          downloadCode: string;
+        }
+        
+        const completeResponse = await api.call<CompleteUploadResponse>(
+          axios.post(`/api/transfer-sessions/${sessionId}/upload/complete`),
+          { errorMessage: "完成上传失败" }
+        )
+        
+        if (completeResponse) {
+          // 更新传输信息状态
+          setTransferInfo(prev => ({
+            ...prev!,
+            status: "CONFIGURING",
+            downloadCode: completeResponse.downloadCode
+          }))
 
-        // 更新传输信息状态
-        setTransferInfo(prev => ({
-          ...prev!,
-          status: "CONFIGURING",
-          downloadCode: completeResponse.data.data.downloadCode
-        }))
+          toast.success("所有文件上传成功！")
 
-        toast.success("所有文件上传成功！")
-
-        // 等待状态更新完成后再刷新页面
-        await new Promise(resolve => setTimeout(resolve, 500))
-        router.refresh()
+          // 等待状态更新完成后再刷新页面
+          await new Promise(resolve => setTimeout(resolve, 500))
+          router.refresh()
+        }
       }
     } catch (error: any) {
       console.error('Upload process error:', error)
       toast.error(error.message || "上传过程中发生错误")
     } finally {
-      if (hasError) setIsUploading(false)
+      setIsUploading(false)
     }
   }
 
@@ -696,10 +751,7 @@ export default function UploadPage({params}: PageProps) {
    * @param {React.ChangeEvent<HTMLInputElement>} event - 文件选择事件
    */
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isActive) {
-      toast.error("会话已过期，请重新验证")
-      return
-    }
+    if (!checkSessionActive()) return
     try {
       const fileList = event.target.files
       if (!fileList?.length) return
@@ -728,24 +780,22 @@ export default function UploadPage({params}: PageProps) {
    * @returns {() => void} 文件选择处理函数
    */
   const createFileInputHandler = (isDirectory: boolean): () => void => () => {
-    if (!isActive) {
-      toast.error("会话已过期，请重新验证")
-      return
-    }
+    if (!checkSessionActive()) return
+    
     const input = document.createElement('input')
     input.type = 'file'
     input.multiple = true
     if (isDirectory) input.webkitdirectory = true
+    
     input.onchange = (e: Event) => {
       handleFileChange({
         target: e.target as HTMLInputElement,
-        preventDefault: () => {
-        },
-        stopPropagation: () => {
-        },
+        preventDefault: () => {},
+        stopPropagation: () => {},
         nativeEvent: e,
       } as React.ChangeEvent<HTMLInputElement>).then()
     }
+    
     input.click()
   }
 
@@ -753,15 +803,15 @@ export default function UploadPage({params}: PageProps) {
    * 获取文件夹的所有子文件ID（包括子文件夹的文件）
    */
   const getFolderChildrenIds = (folder: FileToUpload): string[] => {
-    const ids: string[] = []
-    if (folder.children) {
-      folder.children.forEach(child => {
-        ids.push(child.id)
-        if (child.type === 'folder') ids.push(...getFolderChildrenIds(child))
-      })
-    }
-    return ids
+    if (!folder.children) return []
+    
+    return folder.children.reduce((ids: string[], child) => {
+      ids.push(child.id)
+      if (child.type === 'folder') ids.push(...getFolderChildrenIds(child))
+      return ids
+    }, [])
   }
+  
   /**
    * 获取文件夹的选中状态
    */
@@ -821,6 +871,7 @@ export default function UploadPage({params}: PageProps) {
         }
         processChildren(file)
       }
+      
       // 更新所有父文件夹的状态
       updateParentFoldersState(fileId, newSet)
       return newSet
@@ -830,15 +881,11 @@ export default function UploadPage({params}: PageProps) {
   /**
    * 获取所有文件ID（包括文件夹内的文件）
    */
-  const getAllFileIds = (files: FileToUpload[]): string[] => {
-    return files.reduce((acc: string[], file) => {
-      acc.push(file.id)
-      if (file.type === 'folder' && file.children) {
-        acc.push(...getAllFileIds(file.children))
-      }
-      return acc
-    }, [])
-  }
+  const getAllFileIds = (files: FileToUpload[]): string[] => files.reduce((acc: string[], file) => {
+    acc.push(file.id)
+    if (file.type === 'folder' && file.children) acc.push(...getAllFileIds(file.children))
+    return acc
+  }, [])
 
   /**
    * 处理全选/反选
@@ -846,19 +893,17 @@ export default function UploadPage({params}: PageProps) {
    */
   const handleSelectAll = (checked: boolean) => {
     setSelectedFiles(() => {
+      if (!checked) return new Set<string>()
+      
+      // 获取所有文件和文件夹的ID
       const newSet = new Set<string>()
-      if (checked) {
-        // 获取所有文件和文件夹的ID
-        const getAllIds = (items: FileToUpload[]): void => {
-          items.forEach(item => {
-            newSet.add(item.id)
-            if (item.type === 'folder' && item.children) {
-              getAllIds(item.children)
-            }
-          })
-        }
-        getAllIds(files)
+      const getAllIds = (items: FileToUpload[]): void => {
+        items.forEach(item => {
+          newSet.add(item.id)
+          if (item.type === 'folder' && item.children) getAllIds(item.children)
+        })
       }
+      getAllIds(files)
       return newSet
     })
   }
@@ -964,7 +1009,7 @@ export default function UploadPage({params}: PageProps) {
         case 'uploading':
           return (
             <span className="text-blue-500">
-              {file.uploadedSize ? `${formatFileSize(file.uploadedSize)}` : ``} ({file.progress}%)
+              {file.uploadedSize ? `${formatFileSize(file.uploadedSize)}` : ''} ({file.progress}%)
             </span>
           )
         case 'verifying':
@@ -972,16 +1017,21 @@ export default function UploadPage({params}: PageProps) {
         case 'completed':
           return <span className="text-green-500">完成</span>
         case 'error_preparing':
-          return <span
-            className="text-red-500">准备失败 ({file.error?.retryCount || 0}/{retryConfig.stages.preparing.maxRetries})</span>
+          return <span className="text-red-500">
+            准备失败 ({file.error?.retryCount || 0}/{retryConfig.stages.preparing.maxRetries})
+          </span>
         case 'error_uploading':
-          return <span
-            className="text-red-500">上传失败 ({file.error?.retryCount || 0}/{retryConfig.stages.uploading.maxRetries})</span>
+          return <span className="text-red-500">
+            上传失败 ({file.error?.retryCount || 0}/{retryConfig.stages.uploading.maxRetries})
+          </span>
         case 'error_verifying':
-          return <span
-            className="text-red-500">校验失败 ({file.error?.retryCount || 0}/{retryConfig.stages.verifying.maxRetries})</span>
+          return <span className="text-red-500">
+            校验失败 ({file.error?.retryCount || 0}/{retryConfig.stages.verifying.maxRetries})
+          </span>
         case 'retrying':
           return <span className="text-yellow-500">重试中...</span>
+        default:
+          return <span className="text-muted-foreground">未知状态</span>
       }
     }
 
@@ -1034,13 +1084,15 @@ export default function UploadPage({params}: PageProps) {
       shouldEnableDrop: !isValidating && transferInfo && isActive && ["PICKING"].includes(transferInfo.status)
     })
 
-    if (!isValidating && transferInfo && isActive && ["PICKING"].includes(transferInfo.status)) {
+    // 只在会话处于PICKING状态且活跃时启用拖放功能
+    const shouldEnableDrop = !isValidating && transferInfo && isActive && ["PICKING"].includes(transferInfo.status)
+    
+    if (shouldEnableDrop) {
       console.log('Enabling drag drop')
       enableDragDrop(processAddFiles)
-      return () => {
-        disableDragDrop()
-      }
+      return () => disableDragDrop()
     }
+    
     disableDragDrop()
   }, [isValidating, transferInfo, isActive, enableDragDrop, disableDragDrop, processAddFiles])
 
@@ -1049,30 +1101,39 @@ export default function UploadPage({params}: PageProps) {
    */
   const checkUploadConfirmation = () => {
     const allFileIds = getAllFileIds(files)
-    // 如果全选或全不选，直接上传
-    if (selectedFiles.size === 0 || selectedFiles.size === allFileIds.length) {
-      void handleUpload()
-    } else {
-      // 否则显示确认对话框
-      setShowUploadConfirm(true)
-    }
+    
+    // 全选或未选择任何文件时直接上传
+    selectedFiles.size === 0 || selectedFiles.size === allFileIds.length
+      ? void handleUpload()
+      : setShowUploadConfirm(true)
   }
 
-  if (isValidating || !transferInfo) return (
-    <Layout width="middle">
-      <div className="flex items-center justify-center min-h-[200px]">
-        <p className="text-muted-foreground">{isValidating ? "正在验证会话..." : "会话异常，请刷新重试"}</p>
-      </div>
-    </Layout>
-  )
+  // 根据验证状态显示加载页面
+  if (isValidating || !transferInfo) {
+    return (
+      <Layout width="middle">
+        <div className="flex items-center justify-center min-h-[200px]">
+          <p className="text-muted-foreground">
+            {isValidating ? "正在验证会话..." : "会话异常，请刷新重试"}
+          </p>
+        </div>
+      </Layout>
+    )
+  }
 
   // 根据会话状态显示不同页面
-  if (transferInfo.status === "CONFIGURING") return <UploadConfigure
-    transferInfo={transferInfo}
-    onStatusChange={(info) => setTransferInfo(info)}
-  />
+  if (transferInfo.status === "CONFIGURING") {
+    return (
+      <UploadConfigure
+        transferInfo={transferInfo}
+        onStatusChange={(info) => setTransferInfo(info)}
+      />
+    )
+  }
 
-  if (transferInfo.status === "COMPLETED") return <UploadComplete transferInfo={transferInfo}/>
+  if (transferInfo.status === "COMPLETED") {
+    return <UploadComplete transferInfo={transferInfo}/>
+  }
 
   return (
     <Layout width="middle" title="文件上传" buttonType="back">
