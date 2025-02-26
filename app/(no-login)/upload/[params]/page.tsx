@@ -22,12 +22,9 @@ import {useEffect, useState, useCallback, use} from 'react'
 import {useRouter} from 'next/navigation'
 import Layout from '@/components/layout'
 import axios, {AxiosRequestConfig, AxiosProgressEvent} from "axios"
-import {Title} from "@/components/title"
 import {Button} from "@/components/ui/button"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
-import {
-  Upload, FileIcon, ChevronRight, ChevronDown, FolderIcon, Copy, Clock, Calendar, Hash, User, Plus, Trash2
-} from 'lucide-react'
+import {Upload, FileIcon, ChevronRight, ChevronDown, FolderIcon, Plus, Trash2} from 'lucide-react'
 import {Checkbox} from "@/components/ui/checkbox"
 import React from 'react'
 import {toast} from "sonner"
@@ -175,7 +172,6 @@ export default function UploadPage({params}: PageProps) {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set()) // 新增选中文件集合
   const [isUploading, setIsUploading] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-  const [isCopied, setIsCopied] = useState(false)
   const {enableDragDrop, disableDragDrop} = useDragDrop()
   const [showUploadConfirm, setShowUploadConfirm] = useState(false)
   const {isActive, isValidating, transferInfo, setTransferInfo} = useTransferSession({sessionId})
@@ -483,14 +479,6 @@ export default function UploadPage({params}: PageProps) {
         try {
           // 先处理文件夹创建
           if (file.type === 'folder') {
-            const folderData = await generateUploadUrl({
-              name: file.name,
-              relativePath: file.relativePath || '',
-              isDirectory: true,
-              mimeType: 'inode/directory',
-              size: 0
-            }, sessionId);
-
             // 更新文件夹状态
             setFiles(prev => updateFileInList(prev, file.id, {
               status: 'completed',
@@ -686,20 +674,6 @@ export default function UploadPage({params}: PageProps) {
       toast.error(error.message || "上传过程中发生错误")
     } finally {
       if (hasError) setIsUploading(false)
-    }
-  }
-
-  /**
-   * 复制传输码到剪贴板
-   */
-  const handleCopyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(transferInfo?.code || '')
-      setIsCopied(true)
-      toast.success("传输码已复制到剪贴板")
-      setTimeout(() => setIsCopied(false), 2000)
-    } catch (err) {
-      toast.error("复制失败，请手动复制")
     }
   }
 

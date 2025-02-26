@@ -19,7 +19,6 @@ interface PageProps {
 import {useEffect, useState, useCallback, use} from 'react'
 import Layout from '@/components/layout'
 import axios from "axios"
-import {Title} from "@/components/title"
 import {Button} from "@/components/ui/button"
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {
@@ -35,7 +34,6 @@ import {Checkbox} from "@/components/ui/checkbox"
 import React from 'react'
 import {toast} from "sonner"
 import {getApiErrorMessage} from "@/lib/utils/error-messages"
-import {TransferInfo as TransferInfoType} from "@/types/transfer-session"
 import {formatFileSize} from "@/lib/utils/file"
 import {useTransferSession} from "@/hooks/useTransferSession"
 import {Skeleton} from "@/components/ui/skeleton"
@@ -63,14 +61,6 @@ interface DownloadFile {
   selected?: boolean;
 }
 
-// 限制传输会话状态类型
-interface DownloadTransferInfo extends TransferInfoType {
-  status: 'DOWNLOADING' | 'COMPLETED';  // 下载只需要这两个状态
-  type: 'DOWNLOAD';  // 限制类型为下载
-  compressStatus: 'IDLE' | 'PROCESSING' | 'COMPLETED' | 'FAILED';  // 压缩状态
-  compressProgress: number;  // 压缩进度
-}
-
 export default function DownloadPage({params}: PageProps) {
   const resolvedParams = use(params)
   const sessionId = resolvedParams.params
@@ -78,7 +68,7 @@ export default function DownloadPage({params}: PageProps) {
   const [files, setFiles] = useState<DownloadFile[]>([])
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-  const {isActive, isValidating, transferInfo, setTransferInfo} = useTransferSession({sessionId})
+  const {isActive, isValidating, transferInfo} = useTransferSession({sessionId})
 
   // 新增状态用于控制下载模式
   const [downloadMode, setDownloadMode] = useState<'single' | 'package' | null>(null)

@@ -3,7 +3,6 @@
 import {useState, useEffect} from 'react'
 import {useRouter, useSearchParams} from 'next/navigation'
 import Layout from '@/components/layout'
-import {Title} from '@/components/title'
 import {Input} from '@/components/ui/input'
 import {Button} from '@/components/ui/button'
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert'
@@ -90,7 +89,7 @@ export default function SignInPage() {
       setError('')
       await signIn('zitadel', {
         redirect: true,
-        callbackUrl: window.location.origin
+        redirectTo: window.location.origin
       })
     } catch (error) {
       toast.error("Zitadel登录失败", {

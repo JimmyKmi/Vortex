@@ -5,7 +5,6 @@ import {useRouter} from 'next/navigation'
 import Layout from '@/components/layout'
 import {Input} from "@/components/ui/input"
 import {Button} from "@/components/ui/button"
-import {Title} from "@/components/title"
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert"
 import {Label} from "@/components/ui/label"
 import {useSession} from 'next-auth/react'
@@ -14,7 +13,6 @@ import Link from 'next/link'
 import {toast} from "sonner"
 import {useAuthSettings} from '@/hooks/use-auth-settings'
 import {registerSchema} from '@/lib/zod'
-import {getApiErrorMessage} from "@/lib/utils/error-messages"
 
 export default function SignUpPage() {
   const router = useRouter()
