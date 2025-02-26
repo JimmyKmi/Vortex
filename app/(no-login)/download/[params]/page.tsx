@@ -48,6 +48,7 @@ import {
 import {Shake} from "@/components/jimmy-ui/shake"
 import {Progress} from "@/components/ui/progress"
 import {TransferInfo} from "@/components/transfer-page/transfer-info"
+import {useApi} from "@/hooks/useApi"
 
 // 下载文件类型定义
 interface DownloadFile {
@@ -61,60 +62,6 @@ interface DownloadFile {
   selected?: boolean;
 }
 
-/**
- * 统一的API响应处理函数
- * @param apiCall - API调用函数
- * @param options - 选项配置
- * @returns 处理后的响应数据或抛出错误
- */
-interface ApiCallOptions {
-  errorMessage?: string; // 自定义错误消息
-  showErrorToast?: boolean; // 是否显示错误提示
-  onSuccess?: (data: any) => void; // 成功回调
-  onError?: (error: any) => void; // 错误回调
-  finallyAction?: () => void; // 最终执行的操作
-}
-
-const handleApiCall = async <T,>(
-  apiCall: Promise<any>,
-  options: ApiCallOptions = {}
-): Promise<T | null> => {
-  const {
-    errorMessage,
-    showErrorToast = true,
-    onSuccess,
-    onError,
-    finallyAction
-  } = options
-
-  try {
-    const response = await apiCall
-    
-    if (response.data.code !== "Success") {
-      const apiError = new Error(getApiErrorMessage(response.data))
-      apiError.name = response.data.code || "ApiError"
-      
-      if (showErrorToast) toast.error(errorMessage || getApiErrorMessage(response.data))
-      if (onError) onError(apiError)
-      
-      return null
-    }
-    
-    if (onSuccess) onSuccess(response.data.data)
-    
-    return response.data.data as T
-  } catch (error: any) {
-    console.error("API call error:", error)
-    
-    if (showErrorToast) toast.error(errorMessage || getApiErrorMessage(error))
-    if (onError) onError(error)
-    
-    return null
-  } finally {
-    if (finallyAction) finallyAction()
-  }
-}
-
 export default function DownloadPage({params}: PageProps) {
   const resolvedParams = use(params)
   const sessionId = resolvedParams.params
@@ -123,6 +70,7 @@ export default function DownloadPage({params}: PageProps) {
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const {isActive, isValidating, transferInfo} = useTransferSession({sessionId})
+  const {call} = useApi() // 使用自定义API Hook
 
   // 新增状态用于控制下载模式
   const [downloadMode, setDownloadMode] = useState<'single' | 'package' | null>(null)
@@ -158,7 +106,7 @@ export default function DownloadPage({params}: PageProps) {
   const fetchFileList = async () => {
     setIsLoadingFiles(true)
     
-    await handleApiCall<DownloadFile[]>(
+    await call<DownloadFile[]>(
       axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`),
       {
         errorMessage: "获取文件列表失败",
@@ -423,7 +371,7 @@ export default function DownloadPage({params}: PageProps) {
         setDownloadStatus(`正在生成 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''}等 ${totalFiles} 个文件的下载通道`)
 
         // 获取下载URL
-        const downloadUrls = await handleApiCall<{url: string, filename: string}[]>(
+        const downloadUrls = await call<{url: string, filename: string}[]>(
           axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
             files: batch.map(file => ({
               fileId: file.id,
@@ -432,7 +380,7 @@ export default function DownloadPage({params}: PageProps) {
           }),
           {
             errorMessage: "生成下载链接失败",
-            onError: () => console.error("Failed to generate download URLs for batch")
+            onError: () => console.error("下载URL生成失败")
           }
         )
 
@@ -504,7 +452,7 @@ export default function DownloadPage({params}: PageProps) {
 
     // 创建新的轮询
     const interval = setInterval(async () => {
-      const compressionStatus = await handleApiCall<CompressionStatus>(
+      const compressionStatus = await call<CompressionStatus>(
         axios.post(`/api/transfer-sessions/${sessionId}/download/compress-download`),
         {
           errorMessage: "获取压缩状态失败",
@@ -547,7 +495,7 @@ export default function DownloadPage({params}: PageProps) {
     }, 3000)  // 每 3 秒轮询一次
 
     setCompressPollingInterval(interval)
-  }, [sessionId, compressPollingInterval])
+  }, [sessionId, compressPollingInterval, call])
 
   // 组件卸载时清理轮询
   useEffect(() => {
