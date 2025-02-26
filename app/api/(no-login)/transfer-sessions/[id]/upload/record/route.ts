@@ -57,8 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const body = await req.json().catch(() => null)
     if (!body) return ResponseThrow("InvalidRequest")
 
-    const sessionId = params.id
-    if (!sessionId) return ResponseThrow("InvalidParams")
+    const {id: sessionId} = await Promise.resolve(params)
 
     // 获取会话信息
     const session = await prisma.transferSession.findUnique({
