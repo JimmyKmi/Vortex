@@ -15,9 +15,9 @@ const fileService = new FileService()
  * 2. 创建传输码使用记录
  * 3. 更新会话活动时间
  *
- * @route POST /api/files/upload/record
+ * @route POST /api/transfer-sessions/[id]/upload/record
  * @params
- *   - sessionId: string - 传输会话 ID
+ *   - id: string - 传输会话 ID（路径参数）
  *
  * @body
  *   - name: string - 文件名称
@@ -51,13 +51,13 @@ const requestSchema = z.object({
   uploadToken: z.string()
 })
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     // 验证请求体是否为空
     const body = await req.json().catch(() => null)
     if (!body) return ResponseThrow("InvalidRequest")
 
-    const sessionId = req.nextUrl.searchParams.get('sessionId')
+    const sessionId = params.id
     if (!sessionId) return ResponseThrow("InvalidParams")
 
     // 获取会话信息

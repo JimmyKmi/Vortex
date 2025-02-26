@@ -153,7 +153,7 @@ const generateUploadUrl = async (params: {
 }> => {
   try {
     const response = await axios.post(
-      '/api/files/upload/generate-upload-url', params, {params: {sessionId}});
+      `/api/transfer-sessions/${sessionId}/upload/generate-upload-url`, params);
     if (response.data.code !== 'Success') throw new Error(getApiErrorMessage(response.data));
     return response.data.data;
   } catch (error: any) {
@@ -590,7 +590,7 @@ export default function UploadPage({params}: PageProps) {
           while (true) {
             try {
               // 记录上传
-              await axios.post('/api/files/upload/record', {
+              await axios.post(`/api/transfer-sessions/${sessionId}/upload/record`, {
                 name: file.name,
                 mimeType: file.file?.type || 'application/octet-stream',
                 size: file.file?.size || 0,
@@ -599,8 +599,6 @@ export default function UploadPage({params}: PageProps) {
                 s3BasePath: uploadData.s3BasePath,
                 uploadToken: uploadData.uploadToken,
                 userId: transferInfo!.createdBy || undefined
-              }, {
-                params: {sessionId}
               })
               break;
             } catch (error: any) {

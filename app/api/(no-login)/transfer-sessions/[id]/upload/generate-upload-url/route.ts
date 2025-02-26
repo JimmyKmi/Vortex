@@ -3,7 +3,6 @@ import {FileService} from "@/lib/services/file-service"
 import {prisma} from "@/lib/prisma"
 import {z} from "zod"
 import {validateTransferSession} from "@/lib/utils/transfer-session"
-import {generateTransferCode} from "@/lib/utils/generate-transfer-code"
 import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
 
 const fileService = new FileService()
@@ -15,9 +14,9 @@ const fileService = new FileService()
  * 1. 为文件上传操作生成预签名 URL
  * 2. 创建文件/文件夹记录
  *
- * @route POST /api/files/upload/generate-upload-url
+ * @route POST /api/transfer-sessions/[id]/upload/generate-upload-url
  * @params
- *   - sessionId: string - 传输会话 ID
+ *   - id: string - 传输会话 ID（路径参数）
  *
  * @body
  *   - name: string - 文件/文件夹名称
@@ -48,12 +47,11 @@ const requestSchema = z.object({
 })
 
 // 创建文件记录
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
     const validatedData = requestSchema.parse(body)
-    const searchParams = request.nextUrl.searchParams
-    const sessionId = searchParams.get('sessionId')
+    const sessionId = params.id
 
     if (!sessionId) return ResponseThrow("InvalidSession")
 
