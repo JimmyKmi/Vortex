@@ -61,6 +61,74 @@ interface DownloadFile {
   selected?: boolean;
 }
 
+/**
+ * 统一的API响应处理函数
+ * @param apiCall - API调用函数
+ * @param options - 选项配置
+ * @returns 处理后的响应数据或抛出错误
+ */
+interface ApiCallOptions {
+  errorMessage?: string; // 自定义错误消息
+  showErrorToast?: boolean; // 是否显示错误提示
+  onSuccess?: (data: any) => void; // 成功回调
+  onError?: (error: any) => void; // 错误回调
+  finallyAction?: () => void; // 最终执行的操作
+}
+
+const handleApiCall = async <T,>(
+  apiCall: Promise<any>,
+  options: ApiCallOptions = {}
+): Promise<T | null> => {
+  const {
+    errorMessage,
+    showErrorToast = true,
+    onSuccess,
+    onError,
+    finallyAction
+  } = options;
+
+  try {
+    const response = await apiCall;
+    
+    if (response.data.code !== "Success") {
+      const apiError = new Error(getApiErrorMessage(response.data));
+      apiError.name = response.data.code || "ApiError";
+      
+      if (showErrorToast) {
+        toast.error(errorMessage || getApiErrorMessage(response.data));
+      }
+      
+      if (onError) {
+        onError(apiError);
+      }
+      
+      return null;
+    }
+    
+    if (onSuccess) {
+      onSuccess(response.data.data);
+    }
+    
+    return response.data.data as T;
+  } catch (error: any) {
+    console.error("API call error:", error);
+    
+    if (showErrorToast) {
+      toast.error(errorMessage || getApiErrorMessage(error));
+    }
+    
+    if (onError) {
+      onError(error);
+    }
+    
+    return null;
+  } finally {
+    if (finallyAction) {
+      finallyAction();
+    }
+  }
+};
+
 export default function DownloadPage({params}: PageProps) {
   const resolvedParams = use(params)
   const sessionId = resolvedParams.params
@@ -102,31 +170,24 @@ export default function DownloadPage({params}: PageProps) {
    * 获取文件列表
    */
   const fetchFileList = async () => {
-    try {
-      setIsLoadingFiles(true)
-      const response = await axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`)
-      if (response.data.code === "Success") {
-        setFiles(response.data.data)
-      } else {
-        toast.error(getApiErrorMessage(response.data))
+    setIsLoadingFiles(true);
+    
+    await handleApiCall<DownloadFile[]>(
+      axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`),
+      {
+        errorMessage: "获取文件列表失败",
+        onSuccess: (data) => setFiles(data),
+        finallyAction: () => setIsLoadingFiles(false)
       }
-    } catch (error: any) {
-      console.warn("Get file list error:", error)
-      toast.error(getApiErrorMessage(error))
-    } finally {
-      setIsLoadingFiles(false)
-    }
-  }
+    );
+  };
 
-  // 初始化加载
   useEffect(() => {
+    // 初始化加载
     if (sessionId && isActive) void fetchFileList()
-  }, [sessionId, isActive])
-
-  // 监听会话状态变化，当会话激活时获取文件列表
-  useEffect(() => {
+    // 监听会话状态变化，当会话激活时获取文件列表
     if (isActive && !isValidating && transferInfo) void fetchFileList()
-  }, [isActive, isValidating])
+  }, [sessionId, isActive, isValidating])
 
   // 修改初始选中状态
   useEffect(() => {
@@ -372,50 +433,55 @@ export default function DownloadPage({params}: PageProps) {
         const batch = actualSelectedFiles.slice(batchIndex, batchIndex + batchSize)
         const batchFileNames = batch.map(f => f.name)
 
-        try {
-          // 更新状态显示
-          setDownloadStatus(`正在生成 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''}等 ${totalFiles} 个文件的下载通道`)
+        // 更新状态显示
+        setDownloadStatus(`正在生成 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''}等 ${totalFiles} 个文件的下载通道`)
 
-          // 获取下载URL
-          const response = await axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
+        // 获取下载URL
+        const downloadUrls = await handleApiCall<{url: string, filename: string}[]>(
+          axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
             files: batch.map(file => ({
               fileId: file.id,
               name: file.name
             }))
-          })
-
-          if (response.data.code !== "Success") throw new Error(getApiErrorMessage(response.data))
-
-          // 开始下载文件
-          setDownloadStatus(`正在下载 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''} 等 ${totalFiles} 个文件`)
-          const downloadUrls = response.data.data
-          for (let fileIndex = 0; fileIndex < downloadUrls.length; fileIndex++) {
-            const {url, filename} = downloadUrls[fileIndex]
-            // 创建下载链接
-            const link = document.createElement('a')
-            link.href = url
-            link.download = filename
-            link.style.display = 'none'  // 隐藏链接
-            document.body.appendChild(link)
-            link.click()
-
-            // 延迟移除链接，确保下载已经开始
-            await new Promise(resolve => setTimeout(resolve, 100))
-            document.body.removeChild(link)
-
-            // 更新进度
-            downloadedCount++
-            setDownloadProgress(Math.round((downloadedCount / totalFiles) * 100))
-
-            // 每个文件下载之间添加短暂延迟
-            if (fileIndex < downloadUrls.length - 1) {
-              await new Promise(resolve => setTimeout(resolve, 2000))
+          }),
+          {
+            errorMessage: "生成下载链接失败",
+            onError: () => {
+              console.error("Failed to generate download URLs for batch")
             }
           }
+        )
 
-        } catch (error: any) {
-          console.error("Download batch error:", error)
-          toast.error(`部分文件下载失败: ${error.message || "未知错误"}`)
+        if (!downloadUrls || !downloadUrls.length) {
+          toast.error(`部分文件下载失败: 无法获取下载链接`)
+          continue // 继续下一批次的处理
+        }
+
+        // 开始下载文件
+        setDownloadStatus(`正在下载 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''} 等 ${totalFiles} 个文件`)
+        
+        for (let fileIndex = 0; fileIndex < downloadUrls.length; fileIndex++) {
+          const {url, filename} = downloadUrls[fileIndex]
+          // 创建下载链接
+          const link = document.createElement('a')
+          link.href = url
+          link.download = filename
+          link.style.display = 'none'  // 隐藏链接
+          document.body.appendChild(link)
+          link.click()
+
+          // 延迟移除链接，确保下载已经开始
+          await new Promise(resolve => setTimeout(resolve, 100))
+          document.body.removeChild(link)
+
+          // 更新进度
+          downloadedCount++
+          setDownloadProgress(Math.round((downloadedCount / totalFiles) * 100))
+
+          // 每个文件下载之间添加短暂延迟
+          if (fileIndex < downloadUrls.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
         }
 
         // 每批下载之间稍微暂停一下，避免浏览器压力太大
@@ -441,83 +507,91 @@ export default function DownloadPage({params}: PageProps) {
   const startCompressPolling = useCallback(() => {
     // 清除已有的轮询
     if (compressPollingInterval) {
-      clearInterval(compressPollingInterval)
-      setCompressPollingInterval(null)
+      clearInterval(compressPollingInterval);
+      setCompressPollingInterval(null);
+    }
+
+    // 定义压缩状态接口
+    interface CompressionStatus {
+      status: string;
+      url?: string;
+      progress?: number;
     }
 
     // 创建新的轮询
     const interval = setInterval(async () => {
-      try {
-        const response = await axios.post(`/api/transfer-sessions/${sessionId}/download/compress-download`)
-
-        if (response.data.code !== "Success") {
-          clearInterval(interval)
-          setCompressPollingInterval(null)
-          toast.error(getApiErrorMessage(response.data))
-          return
+      const compressionStatus = await handleApiCall<CompressionStatus>(
+        axios.post(`/api/transfer-sessions/${sessionId}/download/compress-download`),
+        {
+          errorMessage: "获取压缩状态失败",
+          onError: () => {
+            clearInterval(interval);
+            setCompressPollingInterval(null);
+          },
+          showErrorToast: true
         }
+      );
 
-        const {status, url, progress} = response.data.data
-
-        if (status === "COMPLETED" && url) {
-          setDownloadStatus("正在从缓存中下载，请从浏览器检查下载进度")
-          setDownloadProgress(100)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `${sessionId}.zip`
-          link.style.display = 'none'
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-
-          clearInterval(interval)
-          setCompressPollingInterval(null)
-          setDownloadMode(null)  // 重置下载模式
-        } else if (status === "PROCESSING") {
-          const phase = (progress || 0) >= 100 ? 2 : 1
-          setDownloadStatus(`（打包任务${phase}/2）${phase === 1 ? '正在打包...' : '正在建立缓存...'}`)
-          setDownloadProgress(progress || 0)
-        } else {
-          // 如果状态既不是 COMPLETED 也不是 PROCESSING，说明可能出现了问题
-          clearInterval(interval)
-          setCompressPollingInterval(null)
-          toast.error("压缩任务状态异常")
-        }
-      } catch (error: any) {
-        console.error("Compress status check error:", error)
-        clearInterval(interval)
-        setCompressPollingInterval(null)
-        toast.error(getApiErrorMessage(error))
+      if (!compressionStatus) {
+        return; // 已在handleApiCall中处理错误
       }
-    }, 3000)  // 每 3 秒轮询一次
 
-    setCompressPollingInterval(interval)
-  }, [sessionId, compressPollingInterval])
+      const {status, url, progress} = compressionStatus;
+
+      if (status === "COMPLETED" && url) {
+        setDownloadStatus("正在从缓存中下载，请从浏览器检查下载进度");
+        setDownloadProgress(100);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${sessionId}.zip`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        clearInterval(interval);
+        setCompressPollingInterval(null);
+        setDownloadMode(null);  // 重置下载模式
+      } else if (status === "PROCESSING") {
+        const phase = (progress || 0) >= 100 ? 2 : 1;
+        setDownloadStatus(`（打包任务${phase}/2）${phase === 1 ? '正在打包...' : '正在建立缓存...'}`)
+        setDownloadProgress(progress || 0);
+      } else {
+        // 如果状态既不是 COMPLETED 也不是 PROCESSING，说明可能出现了问题
+        clearInterval(interval);
+        setCompressPollingInterval(null);
+        toast.error("压缩任务状态异常");
+      }
+    }, 3000);  // 每 3 秒轮询一次
+
+    setCompressPollingInterval(interval);
+  }, [sessionId, compressPollingInterval]);
 
   // 组件卸载时清理轮询
   useEffect(() => {
     return () => {
       if (compressPollingInterval) {
-        clearInterval(compressPollingInterval)
-        setCompressPollingInterval(null)
+        clearInterval(compressPollingInterval);
+        setCompressPollingInterval(null);
       }
-    }
-  }, [compressPollingInterval])
+    };
+  }, [compressPollingInterval]);
 
   /**
    * 处理压缩下载
    */
   const handleCompressDownload = async () => {
     try {
-      setShowProgress(true)
-      setDownloadProgress(0)
-      setDownloadStatus("正在建立通道...")
-      startCompressPolling()
+      setShowProgress(true);
+      setDownloadProgress(0);
+      setDownloadStatus("正在建立通道...");
+      startCompressPolling();
     } catch (error: any) {
-      console.error("Compress download error:", error)
-      toast.error(getApiErrorMessage(error))
+      console.error("Compress download error:", error);
+      toast.error(getApiErrorMessage(error));
+      setDownloadMode(null); // 确保错误时重置下载模式
     }
-  }
+  };
 
   // 渲染骨架屏
   const renderSkeleton = () => {
