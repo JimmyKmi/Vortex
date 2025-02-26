@@ -458,7 +458,7 @@ export default function DownloadPage({params}: PageProps) {
     // 创建新的轮询
     const interval = setInterval(async () => {
       try {
-        const response = await axios.post(`/api/download/${sessionId}/compress-download`)
+        const response = await axios.post(`/api/transfer-sessions/${sessionId}/download/compress-download`)
 
         if (response.data.code !== "Success") {
           clearInterval(interval)

@@ -13,16 +13,15 @@ const fileService = new FileService()
  * 2. 如果已完成,直接返回下载链接
  * 3. 如果未完成,创建压缩任务并返回进度信息
  * 
- * @route POST /api/download/[params]/compress-download
+ * @route POST /api/transfer-sessions/[id]/download/compress-download
  */
 export async function POST(
   req: NextRequest,
-  {params}: { params: { params: string } }
+  {params}: { params: { id: string } }
 ) {
   try {
-    // 等待params对象解析完成
-    const resolvedParams = await params
-    const sessionId = resolvedParams.params
+    // 获取会话ID
+    const sessionId = params.id
 
     // 验证会话
     const validationResult = await validateTransferSession(req, sessionId, ["DOWNLOADING", "COMPLETED"], ["DOWNLOAD"])
