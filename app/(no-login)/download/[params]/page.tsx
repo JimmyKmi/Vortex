@@ -16,16 +16,11 @@ interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-import {useEffect, useState, useCallback, use} from 'react'
+import {useEffect, useState, useCallback, use, useRef, useMemo} from 'react'
 import Layout from '@/components/layout'
 import axios from "axios"
 import {Button} from "@/components/ui/button"
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
 import {
-  FileIcon,
-  ChevronRight,
-  ChevronDown,
-  FolderIcon,
   FileDown,
   FolderDown,
   Loader2
@@ -49,6 +44,8 @@ import {Shake} from "@/components/jimmy-ui/shake"
 import {Progress} from "@/components/ui/progress"
 import {TransferInfo} from "@/components/transfer-page/transfer-info"
 import {useApi} from "@/hooks/useApi"
+// 导入FileTree组件
+import {FileTree, FileTreeRef} from "@/components/jimmy-ui/file-tree"
 
 // 下载文件类型定义
 interface DownloadFile {
@@ -71,6 +68,9 @@ export default function DownloadPage({params}: PageProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const {isActive, isValidating, transferInfo, checkSessionActive} = useTransferSession({sessionId})
   const {call} = useApi() // 使用自定义API Hook
+  const fileTreeRef = useRef<FileTreeRef>(null)
+  // 添加ref跟踪文件列表是否已加载
+  const hasLoadedFiles = useRef<boolean>(false)
 
   // 新增状态用于控制下载模式
   const [downloadMode, setDownloadMode] = useState<'single' | 'package' | null>(null)
@@ -103,126 +103,53 @@ export default function DownloadPage({params}: PageProps) {
   /**
    * 获取文件列表
    */
-  const fetchFileList = async () => {
+  const fetchFileList = useCallback(async () => {
     if (!checkSessionActive()) return
+    
+    // 避免重复加载
+    if (isLoadingFiles) return
     
     setIsLoadingFiles(true)
     
-    await call<DownloadFile[]>(
-      axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`),
-      {
-        errorMessage: "获取文件列表失败",
-        onSuccess: (data) => setFiles(data),
-        finallyAction: () => setIsLoadingFiles(false)
+    try {
+      const response = await call<DownloadFile[]>(
+        axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`),
+        {
+          errorMessage: "获取文件列表失败",
+          showErrorToast: true
+        }
+      )
+      
+      if (response) {
+        setFiles(response)
+        hasLoadedFiles.current = true
       }
-    )
-  }
-
-  useEffect(() => {
-    // 初始化加载
-    if (sessionId && isActive) void fetchFileList()
-    // 监听会话状态变化，当会话激活时获取文件列表
-    if (isActive && !isValidating && transferInfo) void fetchFileList()
-  }, [sessionId, isActive, isValidating, transferInfo, fetchFileList])
-
-  // 修改初始选中状态
-  useEffect(() => {
-    if (files.length > 0) {
-      const allFileIds = getAllFileIds(files)
-      setSelectedFiles(new Set(allFileIds))
+    } finally {
+      setIsLoadingFiles(false)
     }
-  }, [files])
+  }, [sessionId, checkSessionActive, call, isLoadingFiles]);
+
+  // 初始加载文件列表 - 只在会话首次激活时加载一次
+  useEffect(() => {
+    if (sessionId && isActive && !hasLoadedFiles.current && !isLoadingFiles) {
+      void fetchFileList();
+    }
+  }, [sessionId, isActive, fetchFileList, isLoadingFiles]);
+
+  // 会话状态变化处理 - 只在会话从不活跃变为活跃时重新加载
+  const prevIsActive = useRef<boolean>(false);
+  useEffect(() => {
+    // 只在从不活跃变为活跃时触发重新加载
+    if (isActive && !prevIsActive.current && !isLoadingFiles) {
+      void fetchFileList();
+    }
+    prevIsActive.current = isActive;
+  }, [isActive, fetchFileList, isLoadingFiles]);
 
   useEffect(() => {
     // 修改进度条动画逻辑
     if (downloadMode === 'package') setDownloadProgress(downloadProgress)
   }, [downloadMode, downloadProgress])
-
-  /**
-   * 切换文件夹展开/折叠状态
-   */
-  const toggleFolder = (folderId: string) => {
-    setExpandedFolders(prev => {
-      const newSet = new Set(prev)
-      newSet.has(folderId) ? newSet.delete(folderId) : newSet.add(folderId)
-      return newSet
-    })
-  }
-
-  /**
-   * 获取文件夹的所有子文件ID（包括子文件夹的文件）
-   */
-  const getFolderChildrenIds = (folder: DownloadFile): string[] => {
-    return folder.children?.reduce((ids: string[], child) => {
-      ids.push(child.id)
-      if (child.type === 'folder') ids.push(...getFolderChildrenIds(child))
-      return ids
-    }, []) || []
-  }
-
-  /**
-   * 获取文件夹的选中状态
-   */
-  const getFolderCheckState = (folder: DownloadFile, selectedSet: Set<string>): boolean => {
-    if (!folder.children?.length) return false
-
-    const selectedChildren = folder.children.filter(child => {
-      if (child.type === 'folder') return getFolderCheckState(child, selectedSet)
-      return selectedSet.has(child.id)
-    })
-
-    return selectedChildren.length === folder.children.length && selectedChildren.length > 0
-  }
-
-  /**
-   * 查找并更新所有父文件夹的状态
-   */
-  const updateParentFoldersState = (fileId: string, selectedSet: Set<string>) => {
-    const updateFolder = (files: DownloadFile[], parentPath: DownloadFile[] = []): boolean => {
-      for (const file of files) {
-        if (file.type === 'folder' && file.children) {
-          // 检查当前文件夹是否包含目标文件
-          const containsTarget = file.children.some(child => child.id === fileId) ||
-            file.children.some(child => child.type === 'folder' && updateFolder([child], [...parentPath, file]))
-
-          if (containsTarget) {
-            // 更新当前文件夹的状态
-            const checked = getFolderCheckState(file, selectedSet)
-            checked ? selectedSet.add(file.id) : selectedSet.delete(file.id)
-            return true
-          }
-        }
-      }
-      return false
-    }
-
-    updateFolder(files)
-  }
-
-  /**
-   * 处理文件选中状态变更
-   */
-  const handleFileSelect = (fileId: string, checked: boolean, file: DownloadFile) => {
-    setSelectedFiles(prev => {
-      const newSet = new Set(prev)
-      checked ? newSet.add(fileId) : newSet.delete(fileId)
-
-      // 如果是文件夹，处理所有子文件
-      if (file.type === 'folder') {
-        const processChildren = (folder: DownloadFile) => {
-          folder.children?.forEach(child => {
-            checked ? newSet.add(child.id) : newSet.delete(child.id)
-            if (child.type === 'folder') processChildren(child)
-          })
-        }
-        processChildren(file)
-      }
-
-      // 更新所有父文件夹的状态
-      updateParentFoldersState(fileId, newSet)
-      return newSet
-    })
-  }
 
   /**
    * 获取所有文件ID（包括文件夹内的文件）
@@ -238,34 +165,68 @@ export default function DownloadPage({params}: PageProps) {
   }
 
   /**
-   * 处理全选
-   */
-  const handleSelectAll = (checked: boolean) => {
-    setSelectedFiles(() => {
-      const newSet = new Set<string>()
-      if (checked) {
-        // 获取所有文件和文件夹的ID
-        const getAllIds = (items: DownloadFile[]): void => {
-          items.forEach(item => {
-            newSet.add(item.id)
-            if (item.type === 'folder' && item.children) {
-              getAllIds(item.children)
-            }
-          })
-        }
-        getAllIds(files)
-      }
-      return newSet
-    })
-  }
-
-  /**
    * 处理反选
    */
   const handleInvertSelection = () => {
-    const allIds = getAllFileIds(files)
-    const newSelected = allIds.filter(id => !selectedFiles.has(id))
-    setSelectedFiles(new Set(newSelected))
+    // 使用组件内置的反选方法
+    fileTreeRef.current?.invertSelection();
+  }
+
+  /**
+   * 选择状态变化回调
+   */
+  const handleSelectionChange = useCallback((newSelectedFiles: Set<string>) => {
+    // 避免不必要的更新 - 只有当新旧集合不同时才更新
+    setSelectedFiles(prev => {
+      // 检查新旧集合是否相同
+      if (prev.size !== newSelectedFiles.size) return newSelectedFiles;
+      
+      // 检查内容是否相同
+      for (const id of prev) {
+        if (!newSelectedFiles.has(id)) return newSelectedFiles;
+      }
+      
+      // 如果集合大小和内容都相同，保持原状态
+      return prev;
+    });
+  }, []);
+
+  // 计算默认选中的文件，只在files变化时更新
+  const computeDefaultSelectedFiles = useCallback(() => {
+    // 递归获取所有文件和文件夹ID
+    const getAllIds = (files: DownloadFile[]): string[] => {
+      return files.reduce((acc: string[], file) => {
+        // 同时选中文件和文件夹
+        acc.push(file.id)
+        
+        if (file.type === 'folder' && file.children) {
+          acc.push(...getAllIds(file.children))
+        }
+        return acc
+      }, [])
+    }
+    
+    return new Set(getAllIds(files));
+  }, [files]);
+  
+  // 缓存默认选中的文件ID
+  const defaultSelectedFiles = useMemo(() => {
+    return computeDefaultSelectedFiles();
+  }, [computeDefaultSelectedFiles]);
+
+  /**
+   * 获取实际选中的文件（不包括文件夹）
+   */
+  const getActualSelectedFiles = (currentFiles: DownloadFile[]): DownloadFile[] => {
+    const actualFiles: DownloadFile[] = []
+    const traverse = (files: DownloadFile[]) => {
+      files.forEach(file => {
+        if (file.type === 'file' && selectedFiles.has(file.id)) actualFiles.push(file)
+        if (file.type === 'folder' && file.children) traverse(file.children)
+      })
+    }
+    traverse(currentFiles)
+    return actualFiles
   }
 
   /**
@@ -288,65 +249,10 @@ export default function DownloadPage({params}: PageProps) {
     }, 0)
   }
 
-  /**
-   * 渲染文件/文件夹列表项
-   */
-  const renderFileItem = (file: DownloadFile, depth: number = 0): React.ReactNode => {
-    const isFolder = file.type === 'folder'
-    const isExpanded = expandedFolders.has(file.id)
-    const checked = isFolder
-      ? getFolderCheckState(file, selectedFiles)
-      : selectedFiles.has(file.id)
-
-    return (
-      <React.Fragment key={file.id}>
-        <TableRow>
-          <TableCell className="w-[40px]">
-            <Checkbox
-              checked={checked}
-              onCheckedChange={(checked) => handleFileSelect(file.id, checked as boolean, file)}
-            />
-          </TableCell>
-          <TableCell className="font-medium">
-            <div className="flex items-center" style={{paddingLeft: `${depth * 20}px`}}>
-              {isFolder ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 p-0"
-                  onClick={() => toggleFolder(file.id)}
-                >
-                  {isExpanded ? <ChevronDown className="h-4 w-4"/> : <ChevronRight className="h-4 w-4"/>}
-                </Button>
-              ) : (
-                <div className="w-6 h-6"/>
-              )}
-              <div className="flex items-center max-w-full">
-                {isFolder ?
-                  <FolderIcon className="mr-2 h-4 w-4 flex-shrink-0"/> :
-                  <FileIcon className="mr-2 h-4 w-4 flex-shrink-0"/>}
-                <span className="truncate" title={file.name}>{file.name}</span>
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="text-right">{formatFileSize(file.sizeInBytes)}</TableCell>
-        </TableRow>
-        {isFolder && isExpanded && file.children?.map(child => renderFileItem(child, depth + 1))}
-      </React.Fragment>
-    )
-  }
-
-  // 获取实际选中的文件（不包括文件夹）
-  const getActualSelectedFiles = (currentFiles: DownloadFile[]): DownloadFile[] => {
-    const actualFiles: DownloadFile[] = []
-    const traverse = (files: DownloadFile[]) => {
-      files.forEach(file => {
-        if (file.type === 'file' && selectedFiles.has(file.id)) actualFiles.push(file)
-        if (file.type === 'folder' && file.children) traverse(file.children)
-      })
-    }
-    traverse(currentFiles)
-    return actualFiles
+  // 渲染文件状态
+  const renderFileStatus = (file: DownloadFile) => {
+    // 此函数为空，因为下载列表不显示状态列
+    return null
   }
 
   /**
@@ -531,31 +437,9 @@ export default function DownloadPage({params}: PageProps) {
     }
   }
 
-  // 渲染骨架屏
-  const renderSkeleton = () => {
-    return (
-      <React.Fragment>
-        {[1, 2, 3].map((i) => (
-          <TableRow key={i}>
-            <TableCell className="w-[40px]">
-              <Skeleton className="h-5 w-5"/>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-5 w-5"/>
-                <Skeleton className="h-5 w-[200px]"/>
-              </div>
-            </TableCell>
-            <TableCell className="text-right">
-              <Skeleton className="h-5 w-[60px] ml-auto"/>
-            </TableCell>
-          </TableRow>
-        ))}
-      </React.Fragment>
-    )
-  }
-
-  // 下载按钮点击
+  /**
+   * 下载按钮点击
+   */
   const handleDownloadClick = async (mode: 'single' | 'package') => {
     if (!checkSessionActive()) return
     
@@ -563,8 +447,31 @@ export default function DownloadPage({params}: PageProps) {
       setDownloadMode(mode)
       setDownloadProgress(0)
       setDownloadStatus("")
-      const isFullSelection = selectedFiles.size === getAllFileIds(files).length
-      const isNoSelection = selectedFiles.size === 0
+      
+      // 获取当前选中的文件
+      const currentSelection = selectedFiles;
+      
+      // 获取所有的文件（不包括文件夹）
+      const allFileIds = (() => {
+        const getAllFileIdsHelper = (items: DownloadFile[]): string[] => {
+          return items.reduce((acc: string[], item) => {
+            if (item.type === 'file') {
+              acc.push(item.id);
+            } else if (item.type === 'folder' && item.children) {
+              acc.push(...getAllFileIdsHelper(item.children));
+            }
+            return acc;
+          }, []);
+        };
+        return getAllFileIdsHelper(files);
+      })();
+      
+      // 检查是否全选了所有文件
+      const isFullSelection = allFileIds.length > 0 && 
+        allFileIds.every(id => currentSelection.has(id));
+      
+      // 检查是否一个文件都没选
+      const isNoSelection = allFileIds.every(id => !currentSelection.has(id));
 
       switch (mode) {
         case 'single': {
@@ -690,23 +597,25 @@ export default function DownloadPage({params}: PageProps) {
             </div>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40px]">
-                  <Checkbox
-                    checked={files.length > 0 && selectedFiles.size === getAllFileIds(files).length}
-                    onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
-                  />
-                </TableHead>
-                <TableHead>文件名</TableHead>
-                <TableHead className="text-right">大小</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingFiles ? renderSkeleton() : files.map(file => renderFileItem(file))}
-            </TableBody>
-          </Table>
+          {isLoadingFiles ? (
+            <div className="space-y-2 py-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5" />
+                  <Skeleton className="h-5 w-[300px]" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <FileTree
+              ref={fileTreeRef}
+              files={files}
+              mode="uncontrolled"
+              defaultSelectedFiles={defaultSelectedFiles}
+              onSelectionChange={handleSelectionChange}
+              disabled={!!downloadMode}
+            />
+          )}
         </>
       )}
 

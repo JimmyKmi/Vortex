@@ -21,7 +21,7 @@ export async function POST(
 ) {
   try {
     // 获取会话ID
-    const sessionId = params.id
+    const {id: sessionId} = await Promise.resolve(params)
 
     // 验证会话
     const validationResult = await validateTransferSession(req, sessionId, ["DOWNLOADING", "COMPLETED"], ["DOWNLOAD"])

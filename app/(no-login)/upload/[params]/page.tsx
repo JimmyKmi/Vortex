@@ -18,13 +18,12 @@ interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-import React, {use, useCallback, useEffect, useState} from 'react'
+import React, {use, useCallback, useEffect, useState, useRef, useMemo} from 'react'
 import {useRouter} from 'next/navigation'
 import Layout from '@/components/layout'
 import axios, {AxiosProgressEvent, AxiosRequestConfig} from "axios"
 import {Button} from "@/components/ui/button"
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
-import {ChevronDown, ChevronRight, FileIcon, FolderIcon, Plus, Trash2, Upload} from 'lucide-react'
+import {FolderIcon, Plus, Trash2, Upload} from 'lucide-react'
 import {Checkbox} from "@/components/ui/checkbox"
 import {toast} from "sonner"
 import UploadConfigure from './configure'
@@ -43,6 +42,7 @@ import {
 } from "@/components/ui/dialog"
 import {Shake} from '@/components/jimmy-ui/shake'
 import {TransferInfo} from '@/components/transfer-page/transfer-info'
+import {FileTree, FileTreeRef} from "@/components/jimmy-ui/file-tree"
 
 interface FileError {
   stage: 'preparing' | 'uploading' | 'verifying';
@@ -173,38 +173,122 @@ export default function UploadPage({params}: PageProps) {
   const resolvedParams = use(params)
   const sessionId = resolvedParams.params
   const [files, setFiles] = useState<FileToUpload[]>([])
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set()) // 新增选中文件集合
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set()) // 保留状态，以便交互
   const [isUploading, setIsUploading] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const {enableDragDrop, disableDragDrop} = useDragDrop()
   const [showUploadConfirm, setShowUploadConfirm] = useState(false)
   const {isActive, isValidating, transferInfo, setTransferInfo, checkSessionActive} = useTransferSession({sessionId})
   const api = useApi()
+  const fileTreeRef = useRef<FileTreeRef>(null)
+  const hasUploaded = useRef<boolean>(false)
+  const uploadWasCancelled = useRef<boolean>(false)
+
+  /**
+   * 根据文件路径查找文件
+   */
+  const getFileByPath = (fileList: FileToUpload[], path: string): FileToUpload | null => {
+    const normalizedPath = path.replace(/\\/g, '/').toLowerCase();
+    
+    for (const file of fileList) {
+      const currentPath = (file.relativePath || file.name).replace(/\\/g, '/').toLowerCase();
+      
+      // 路径完全匹配
+      if (currentPath === normalizedPath) return file;
+      
+      // 递归检查子文件
+      if (file.type === 'folder' && file.children && normalizedPath.startsWith(currentPath + '/')) {
+        const found = getFileByPath(file.children, path);
+        if (found) return found;
+      }
+    }
+    
+    return null;
+  };
+
+  // 计算默认选中的文件，只在files变化时更新
+  const computeDefaultSelectedFiles = useCallback(() => {
+    // 递归获取所有文件和文件夹ID
+    const getAllIds = (files: FileToUpload[]): string[] => {
+      return files.reduce((acc: string[], file) => {
+        // 同时选中文件和文件夹
+        acc.push(file.id)
+        
+        if (file.type === 'folder' && file.children) {
+          acc.push(...getAllIds(file.children))
+        }
+        return acc
+      }, [])
+    }
+    
+    return new Set(getAllIds(files));
+  }, [files]);
+  
+  // 缓存默认选中的文件ID
+  const defaultSelectedFiles = useMemo(() => {
+    return computeDefaultSelectedFiles();
+  }, [computeDefaultSelectedFiles]);
 
   /**
    * 检查文件是否重复
-   *
-   * @param {string} filePath - 文件路径
-   * @param {FileToUpload[]} existingFiles - 现有文件列表
-   * @param {FileToUpload[]} newFiles - 新文件列表
-   * @returns {boolean} 是否重复
    */
-  const isFileDuplicate = useCallback((filePath: string, existingFiles: FileToUpload[], newFiles: FileToUpload[] = []): boolean => {
-    const normalizedPath = filePath.replace(/\\/g, '/').toLowerCase()
+  const isFileDuplicate = useCallback((path: string): boolean => {
+    return getFileByPath(files, path) !== null
+  }, [files])
 
-    // 检查已存在的文件
-    const checkDuplicate = (files: FileToUpload[]): boolean => {
-      return files.some(file => {
-        const currentPath = (file.relativePath || file.name).replace(/\\/g, '/').toLowerCase()
-        if (file.type === 'file') return currentPath === normalizedPath
-        if (file.type === 'folder') return currentPath === normalizedPath ||
-          (file.children && normalizedPath.startsWith(currentPath + '/') && checkDuplicate(file.children))
-        return false
+  /**
+   * 处理文件选择事件
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} event - 文件选择事件
+   */
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!checkSessionActive()) return
+    try {
+      const fileList = event.target.files
+      if (!fileList?.length) return
+
+      const files = Array.from(fileList)
+      files.forEach(file => {
+        if (!(file as any).webkitRelativePath) {
+          Object.defineProperty(file, 'webkitRelativePath', {
+            value: file.name
+          })
+        }
       })
+      await processAddFiles(files)
+    } catch (error) {
+      console.error('Error handling file change:', error)
+      toast.error('添加文件时发生错误')
+    } finally {
+      event.target.value = ''
     }
+  }
 
-    return checkDuplicate(existingFiles) || (newFiles.length > 0 && checkDuplicate(newFiles))
-  }, [])
+  /**
+   * 创建文件输入处理器
+   *
+   * @param {boolean} isDirectory - 是否为文件夹选择
+   * @returns {() => void} 文件选择处理函数
+   */
+  const createFileInputHandler = (isDirectory: boolean): () => void => () => {
+    if (!checkSessionActive()) return
+    
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    if (isDirectory) input.webkitdirectory = true
+    
+    input.onchange = (e: Event) => {
+      handleFileChange({
+        target: e.target as HTMLInputElement,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        nativeEvent: e,
+      } as React.ChangeEvent<HTMLInputElement>).then()
+    }
+    
+    input.click()
+  }
 
   /**
    * 处理文件添加
@@ -270,7 +354,7 @@ export default function UploadPage({params}: PageProps) {
         }
 
         // 检查文件是否重复
-        if (isFileDuplicate(filePath, currentFiles, newFiles)) {
+        if (isFileDuplicate(filePath)) {
           duplicates.push(filePath)
           continue
         }
@@ -374,6 +458,11 @@ export default function UploadPage({params}: PageProps) {
       if (processedPaths.size > 0) {
         setFiles(prev => mergeFiles(prev, newFiles))
         toast.success(`成功添加 ${processedPaths.size} 个文件`)
+        
+        // 添加文件后，自动选中所有文件
+        if (fileTreeRef.current) {
+          fileTreeRef.current.selectAll();
+        }
       }
 
       // 重复文件的提示
@@ -733,152 +822,6 @@ export default function UploadPage({params}: PageProps) {
   }
 
   /**
-   * 切换文件夹展开/折叠状态
-   *
-   * @param {string} folderId - 文件夹ID
-   */
-  const toggleFolder = (folderId: string) => {
-    setExpandedFolders(prev => {
-      const newSet = new Set(prev)
-      newSet.has(folderId) ? newSet.delete(folderId) : newSet.add(folderId)
-      return newSet
-    })
-  }
-
-  /**
-   * 处理文件选择事件
-   *
-   * @param {React.ChangeEvent<HTMLInputElement>} event - 文件选择事件
-   */
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!checkSessionActive()) return
-    try {
-      const fileList = event.target.files
-      if (!fileList?.length) return
-
-      const files = Array.from(fileList)
-      files.forEach(file => {
-        if (!(file as any).webkitRelativePath) {
-          Object.defineProperty(file, 'webkitRelativePath', {
-            value: file.name
-          })
-        }
-      })
-      await processAddFiles(files)
-    } catch (error) {
-      console.error('Error handling file change:', error)
-      toast.error('添加文件时发生错误')
-    } finally {
-      event.target.value = ''
-    }
-  }
-
-  /**
-   * 创建文件输入处理器
-   *
-   * @param {boolean} isDirectory - 是否为文件夹选择
-   * @returns {() => void} 文件选择处理函数
-   */
-  const createFileInputHandler = (isDirectory: boolean): () => void => () => {
-    if (!checkSessionActive()) return
-    
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.multiple = true
-    if (isDirectory) input.webkitdirectory = true
-    
-    input.onchange = (e: Event) => {
-      handleFileChange({
-        target: e.target as HTMLInputElement,
-        preventDefault: () => {},
-        stopPropagation: () => {},
-        nativeEvent: e,
-      } as React.ChangeEvent<HTMLInputElement>).then()
-    }
-    
-    input.click()
-  }
-
-  /**
-   * 获取文件夹的所有子文件ID（包括子文件夹的文件）
-   */
-  const getFolderChildrenIds = (folder: FileToUpload): string[] => {
-    if (!folder.children) return []
-    
-    return folder.children.reduce((ids: string[], child) => {
-      ids.push(child.id)
-      if (child.type === 'folder') ids.push(...getFolderChildrenIds(child))
-      return ids
-    }, [])
-  }
-  
-  /**
-   * 获取文件夹的选中状态
-   */
-  const getFolderCheckState = (folder: FileToUpload, selectedSet: Set<string>): boolean => {
-    if (!folder.children?.length) return false
-
-    const selectedChildren = folder.children.filter(child => {
-      if (child.type === 'folder') return getFolderCheckState(child, selectedSet)
-      return selectedSet.has(child.id)
-    })
-
-    return selectedChildren.length === folder.children.length && selectedChildren.length > 0
-  }
-
-  /**
-   * 查找并更新所有父文件夹的状态
-   */
-  const updateParentFoldersState = (fileId: string, selectedSet: Set<string>) => {
-    const updateFolder = (files: FileToUpload[], parentPath: FileToUpload[] = []): boolean => {
-      for (const file of files) {
-        if (file.type === 'folder' && file.children) {
-          // 检查当前文件夹是否包含目标文件
-          const containsTarget = file.children.some(child => child.id === fileId) ||
-            file.children.some(child => child.type === 'folder' && updateFolder([child], [...parentPath, file]))
-
-          if (containsTarget) {
-            // 更新当前文件夹的状态
-            const checked = getFolderCheckState(file, selectedSet)
-            checked ? selectedSet.add(file.id) : selectedSet.delete(file.id)
-            return true
-          }
-        }
-      }
-      return false
-    }
-
-    updateFolder(files)
-  }
-
-  /**
-   * 处理文件选中状态变更
-   */
-  const handleFileSelect = (fileId: string, checked: boolean, file: FileToUpload) => {
-    setSelectedFiles(prev => {
-      const newSet = new Set(prev)
-
-      // 处理当前文件
-      checked ? newSet.add(fileId) : newSet.delete(fileId)
-
-      // 如果是文件夹，处理所有子文件
-      if (file.type === 'folder') {
-        const processChildren = (folder: FileToUpload) => {
-          folder.children?.forEach(child => {
-            checked ? newSet.add(child.id) : newSet.delete(child.id)
-            if (child.type === 'folder') processChildren(child)
-          })
-        }
-        processChildren(file)
-      }
-      
-      // 更新所有父文件夹的状态
-      updateParentFoldersState(fileId, newSet)
-      return newSet
-    })
-  }
-
-  /**
    * 获取所有文件ID（包括文件夹内的文件）
    */
   const getAllFileIds = (files: FileToUpload[]): string[] => files.reduce((acc: string[], file) => {
@@ -888,34 +831,31 @@ export default function UploadPage({params}: PageProps) {
   }, [])
 
   /**
-   * 处理全选/反选
-   * @param {boolean} checked - 是否全选
-   */
-  const handleSelectAll = (checked: boolean) => {
-    setSelectedFiles(() => {
-      if (!checked) return new Set<string>()
-      
-      // 获取所有文件和文件夹的ID
-      const newSet = new Set<string>()
-      const getAllIds = (items: FileToUpload[]): void => {
-        items.forEach(item => {
-          newSet.add(item.id)
-          if (item.type === 'folder' && item.children) getAllIds(item.children)
-        })
-      }
-      getAllIds(files)
-      return newSet
-    })
-  }
-
-  /**
    * 处理反选
    */
   const handleInvertSelection = () => {
-    const allIds = getAllFileIds(files)
-    const newSelected = allIds.filter(id => !selectedFiles.has(id))
-    setSelectedFiles(new Set(newSelected))
+    // 使用FileTree组件的内置方法
+    fileTreeRef.current?.invertSelection();
   }
+  
+  /**
+   * 处理选择变化
+   */
+  const handleSelectionChange = useCallback((newSelectedFiles: Set<string>) => {
+    // 避免不必要的更新 - 只有当新旧集合不同时才更新
+    setSelectedFiles(prev => {
+      // 检查新旧集合是否相同
+      if (prev.size !== newSelectedFiles.size) return newSelectedFiles;
+      
+      // 检查内容是否相同
+      for (const id of prev) {
+        if (!newSelectedFiles.has(id)) return newSelectedFiles;
+      }
+      
+      // 如果集合大小和内容都相同，保持原状态
+      return prev;
+    });
+  }, []);
 
   /**
    * 批量删除选中的文件
@@ -933,7 +873,10 @@ export default function UploadPage({params}: PageProps) {
       }
       return removeSelectedFiles(prev)
     })
+    // 清除选择
     setSelectedFiles(new Set())
+    // 如果有更多选择相关逻辑，可以调用组件的方法
+    fileTreeRef.current?.deselectAll();
   }
 
   /**
@@ -946,164 +889,151 @@ export default function UploadPage({params}: PageProps) {
     }, 0)
   }
 
-  /**
-   * 渲染文件/文件夹列表项
-   *
-   * @param {FileToUpload} file - 文件对象
-   * @param {number} [depth=0] - 文件夹嵌套深度
-   * @returns {React.ReactNode} 渲染的文件列表项
-   */
-  const renderFileItem = (file: FileToUpload, depth: number = 0): React.ReactNode => {
-    const isFolder = file.type === 'folder'
-    const isExpanded = expandedFolders.has(file.id)
-    const checked = isFolder
-      ? getFolderCheckState(file, selectedFiles)
-      : selectedFiles.has(file.id)
-
-    const getFolderStatus = (folder: FileToUpload): 'not_started' | 'uploading' | 'completed' => {
-      if (!folder.children?.length) return 'not_started'
-
-      // 只统计文件，不统计文件夹
-      const fileStatuses = folder.children.reduce((acc: string[], child) => {
-        if (child.type === 'file') {
-          acc.push(child.status || 'not_started')
-        } else if (child.type === 'folder') {
-          // 递归获取子文件夹的状态
-          const childStatus = getFolderStatus(child)
-          acc.push(childStatus)
-        }
-        return acc
-      }, [])
-
-      if (fileStatuses.length === 0) return 'not_started'
-
-      // 如果所有文件都是 completed，则显示完成
-      if (fileStatuses.every(status => status === 'completed')) return 'completed'
-
-      // 如果所有文件都是 not_started，则显示未上传
-      if (fileStatuses.every(status => status === 'not_started')) return 'not_started'
-
-      // 其他情况显示上传中
-      return 'uploading'
-    }
-
-    const getStatusDisplay = (file: FileToUpload) => {
-      if (isFolder) {
-        const folderStatus = getFolderStatus(file)
-        switch (folderStatus) {
-          case 'not_started':
-            return <span className="text-muted-foreground">未上传</span>
-          case 'uploading':
-            return <span className="text-blue-500">上传中</span>
-          case 'completed':
-            return <span className="text-green-500">完成</span>
-        }
-      }
-
-      const status = file.status || 'not_started'
-      switch (status) {
+  // 渲染文件状态
+  const renderFileStatus = (file: FileToUpload) => {
+    if (file.type === 'folder') {
+      const folderStatus = getFolderStatus(file)
+      switch (folderStatus) {
         case 'not_started':
           return <span className="text-muted-foreground">未上传</span>
-        case 'preparing':
-          return <span className="text-blue-500">正在准备</span>
         case 'uploading':
-          return (
-            <span className="text-blue-500">
-              {file.uploadedSize ? `${formatFileSize(file.uploadedSize)}` : ''} ({file.progress}%)
-            </span>
-          )
-        case 'verifying':
-          return <span className="text-yellow-500">正在校验</span>
+          return <span className="text-blue-500">上传中</span>
         case 'completed':
           return <span className="text-green-500">完成</span>
-        case 'error_preparing':
-          return <span className="text-red-500">
-            准备失败 ({file.error?.retryCount || 0}/{retryConfig.stages.preparing.maxRetries})
-          </span>
-        case 'error_uploading':
-          return <span className="text-red-500">
-            上传失败 ({file.error?.retryCount || 0}/{retryConfig.stages.uploading.maxRetries})
-          </span>
-        case 'error_verifying':
-          return <span className="text-red-500">
-            校验失败 ({file.error?.retryCount || 0}/{retryConfig.stages.verifying.maxRetries})
-          </span>
-        case 'retrying':
-          return <span className="text-yellow-500">重试中...</span>
-        default:
-          return <span className="text-muted-foreground">未知状态</span>
       }
     }
 
-    return (
-      <React.Fragment key={file.id}>
-        <TableRow>
-          <TableCell className="w-[40px]">
-            <Checkbox
-              checked={checked}
-              onCheckedChange={(checked) => handleFileSelect(file.id, checked as boolean, file)}
-            />
-          </TableCell>
-          <TableCell className="font-medium">
-            <div className="flex items-center" style={{paddingLeft: `${depth * 20}px`}}>
-              {isFolder ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6 p-0"
-                  onClick={() => toggleFolder(file.id)}
-                >
-                  {isExpanded ? <ChevronDown className="h-4 w-4"/> : <ChevronRight className="h-4 w-4"/>}
-                </Button>
-              ) : (
-                <div className="w-6 h-6"/>
-              )}
-              <div className="flex items-center max-w-full">
-                {isFolder ?
-                  <FolderIcon className="mr-2 h-4 w-4 flex-shrink-0"/> :
-                  <FileIcon className="mr-2 h-4 w-4 flex-shrink-0"/>}
-                <span className="truncate" title={file.name}>{file.name}</span>
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="text-right">{file.size}</TableCell>
-          <TableCell className="text-right">
-            {getStatusDisplay(file)}
-          </TableCell>
-        </TableRow>
-        {isFolder && isExpanded && file.children?.map(child => renderFileItem(child, depth + 1))}
-      </React.Fragment>
-    )
+    const status = file.status || 'not_started'
+    switch (status) {
+      case 'not_started':
+        return <span className="text-muted-foreground">未上传</span>
+      case 'preparing':
+        return <span className="text-blue-500">正在准备</span>
+      case 'uploading':
+        return (
+          <span className="text-blue-500">
+            {file.uploadedSize ? `${formatFileSize(file.uploadedSize)}` : ''} ({file.progress}%)
+          </span>
+        )
+      case 'verifying':
+        return <span className="text-yellow-500">正在校验</span>
+      case 'completed':
+        return <span className="text-green-500">完成</span>
+      case 'error_preparing':
+        return <span className="text-red-500">
+          准备失败 ({file.error?.retryCount || 0}/{retryConfig.stages.preparing.maxRetries})
+        </span>
+      case 'error_uploading':
+        return <span className="text-red-500">
+          上传失败 ({file.error?.retryCount || 0}/{retryConfig.stages.uploading.maxRetries})
+        </span>
+      case 'error_verifying':
+        return <span className="text-red-500">
+          校验失败 ({file.error?.retryCount || 0}/{retryConfig.stages.verifying.maxRetries})
+        </span>
+      case 'retrying':
+        return <span className="text-yellow-500">重试中...</span>
+      default:
+        return <span className="text-muted-foreground">未知状态</span>
+    }
   }
 
-  useEffect(() => {
-    console.log('Transfer status:', {
-      isValidating,
-      isActive,
-      status: transferInfo?.status,
-      shouldEnableDrop: !isValidating && transferInfo && isActive && ["PICKING"].includes(transferInfo.status)
-    })
+  /**
+   * 获取文件夹状态
+   */
+  const getFolderStatus = (folder: FileToUpload): 'not_started' | 'uploading' | 'completed' => {
+    if (!folder.children?.length) return 'not_started'
 
-    // 只在会话处于PICKING状态且活跃时启用拖放功能
-    const shouldEnableDrop = !isValidating && transferInfo && isActive && ["PICKING"].includes(transferInfo.status)
-    
-    if (shouldEnableDrop) {
-      console.log('Enabling drag drop')
+    // 只统计文件，不统计文件夹
+    const fileStatuses = folder.children.reduce((acc: string[], child) => {
+      if (child.type === 'file') {
+        acc.push(child.status || 'not_started')
+      } else if (child.type === 'folder') {
+        // 递归获取子文件夹的状态
+        const childStatus = getFolderStatus(child)
+        acc.push(childStatus)
+      }
+      return acc
+    }, [])
+
+    if (fileStatuses.length === 0) return 'not_started'
+
+    // 如果所有文件都是 completed，则显示完成
+    if (fileStatuses.every(status => status === 'completed')) return 'completed'
+
+    // 如果所有文件都是 not_started，则显示未上传
+    if (fileStatuses.every(status => status === 'not_started')) return 'not_started'
+
+    // 其他情况显示上传中
+    return 'uploading'
+  }
+
+  /**
+   * 组件卸载时清理事件监听和轮询
+   */
+  useEffect(() => {
+    if (isActive) {
       enableDragDrop(processAddFiles)
-      return () => disableDragDrop()
+    } else {
+      disableDragDrop()
     }
-    
-    disableDragDrop()
-  }, [isValidating, transferInfo, isActive, enableDragDrop, disableDragDrop, processAddFiles])
+
+    return () => {
+      disableDragDrop()
+    }
+  }, [isActive, enableDragDrop, disableDragDrop, processAddFiles])
+
+  /**
+   * 处理URL查询参数
+   */
+  useEffect(() => {
+    if (!checkSessionActive()) return
+
+    // 获取 URL 搜索参数，特别是 action 值
+    const urlParams = new URLSearchParams(window.location.search)
+    const action = urlParams.get('action')
+
+    // 当 action 为 'start-upload' 时，自动打开文件选择
+    if (action === 'start-upload') {
+      createFileInputHandler(false)()
+      
+      // 清除 URL 参数，防止刷新页面时重复触发
+      router.replace(`/upload/${sessionId}`, {scroll: false})
+    }
+  }, [sessionId, router, checkSessionActive])
 
   /**
    * 检查是否需要显示上传确认对话框
    */
   const checkUploadConfirmation = () => {
-    const allFileIds = getAllFileIds(files)
+    if (!fileTreeRef.current) return;
+    
+    // 获取所有的文件（不包括文件夹）
+    const allFileIds = (() => {
+      const getAllFileIdsHelper = (items: FileToUpload[]): string[] => {
+        return items.reduce((acc: string[], item) => {
+          if (item.type === 'file') {
+            acc.push(item.id);
+          } else if (item.type === 'folder' && item.children) {
+            acc.push(...getAllFileIdsHelper(item.children));
+          }
+          return acc;
+        }, []);
+      };
+      return getAllFileIdsHelper(files);
+    })();
+    
+    const currentSelectedFiles = fileTreeRef.current.getSelectedFiles();
+    
+    // 检查是否全选了所有文件
+    const isFullSelection = allFileIds.length > 0 && 
+      allFileIds.every(id => currentSelectedFiles.has(id));
+    
+    // 检查是否一个文件都没选
+    const isNoSelection = allFileIds.every(id => !currentSelectedFiles.has(id));
     
     // 全选或未选择任何文件时直接上传
-    selectedFiles.size === 0 || selectedFiles.size === allFileIds.length
+    isFullSelection || isNoSelection
       ? void handleUpload()
       : setShowUploadConfirm(true)
   }
@@ -1160,7 +1090,7 @@ export default function UploadPage({params}: PageProps) {
 
       {files.length > 0 && (
         <>
-          <div className="flex flex-col sm:flex-row justify-between gap-2 items-center bg-muted/50 p-2 rounded-lg">
+          <div className="flex flex-col-reverse items-stretch sm:flex-row justify-between gap-2 bg-muted/50 p-2 rounded-lg">
             <div className="flex gap-2 items-center">
               <Button
                 variant="outline"
@@ -1185,24 +1115,15 @@ export default function UploadPage({params}: PageProps) {
             </Button>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40px]">
-                  <Checkbox
-                    checked={files.length > 0 && selectedFiles.size === getAllFileIds(files).length}
-                    onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
-                  />
-                </TableHead>
-                <TableHead>文件名</TableHead>
-                <TableHead className="text-right">大小</TableHead>
-                <TableHead className="text-right">状态</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {files.map(file => renderFileItem(file))}
-            </TableBody>
-          </Table>
+          <FileTree
+            ref={fileTreeRef}
+            files={files}
+            mode="uncontrolled"
+            defaultSelectedFiles={defaultSelectedFiles}
+            onSelectionChange={handleSelectionChange}
+            renderStatus={renderFileStatus}
+            disabled={isUploading}
+          />
         </>
       )}
 

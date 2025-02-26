@@ -49,7 +49,7 @@ export async function POST(request: NextRequest, {params}: {params: {id: string}
   try {
     const body = await request.json()
     const validatedData = requestSchema.parse(body)
-    const sessionId = params.id
+    const {id: sessionId} = await Promise.resolve(params)
 
     if (!sessionId) return ResponseThrow("InvalidSession")
 
