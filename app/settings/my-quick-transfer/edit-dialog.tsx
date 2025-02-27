@@ -46,12 +46,12 @@ const formSchema = z.object({
 
 interface EditDialogProps {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChangeAction: (open: boolean) => void
   data: TransferCode
-  onSuccess?: () => void
+  onSuccessAction?: () => void
 }
 
-export function EditDialog({ open, onOpenChange, data, onSuccess }: EditDialogProps) {
+export function EditDialog({ open, onOpenChangeAction, data, onSuccessAction }: EditDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,9 +74,9 @@ export function EditDialog({ open, onOpenChange, data, onSuccess }: EditDialogPr
       })
       
       toast.success("保存成功")
-      onOpenChange(false)
+      onOpenChangeAction(false)
       form.reset()
-      onSuccess?.()
+      onSuccessAction?.()
     } catch (error: any) {
       toast.error("保存失败", {
         description: error.response?.data?.message || "请重试",
@@ -87,7 +87,7 @@ export function EditDialog({ open, onOpenChange, data, onSuccess }: EditDialogPr
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChangeAction}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>编辑快传码</DialogTitle>

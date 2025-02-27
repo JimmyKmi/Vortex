@@ -24,7 +24,6 @@ import Layout from '@/components/layout'
 import axios, {AxiosProgressEvent, AxiosRequestConfig} from "axios"
 import {Button} from "@/components/ui/button"
 import {FolderIcon, Plus, Trash2, Upload} from 'lucide-react'
-import {Checkbox} from "@/components/ui/checkbox"
 import {toast} from "sonner"
 import UploadConfigure from './configure'
 import UploadComplete from './complete'
@@ -175,14 +174,11 @@ export default function UploadPage({params}: PageProps) {
   const [files, setFiles] = useState<FileToUpload[]>([])
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set()) // 保留状态，以便交互
   const [isUploading, setIsUploading] = useState(false)
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const {enableDragDrop, disableDragDrop} = useDragDrop()
   const [showUploadConfirm, setShowUploadConfirm] = useState(false)
   const {isActive, isValidating, transferInfo, setTransferInfo, checkSessionActive} = useTransferSession({sessionId})
   const api = useApi()
   const fileTreeRef = useRef<FileTreeRef>(null)
-  const hasUploaded = useRef<boolean>(false)
-  const uploadWasCancelled = useRef<boolean>(false)
 
   /**
    * 根据文件路径查找文件
@@ -1056,7 +1052,7 @@ export default function UploadPage({params}: PageProps) {
     return (
       <UploadConfigure
         transferInfo={transferInfo}
-        onStatusChange={(info) => setTransferInfo(info)}
+        onStatusChangeAction={(info: typeof transferInfo) => setTransferInfo(info)}
       />
     )
   }

@@ -40,14 +40,14 @@ interface TransferInfo {
  * 上传配置页面组件
  * @param {Object} props - 组件属性
  * @param {TransferInfo} props.transferInfo - 初始传输信息对象
- * @param {(info: TransferInfo) => void} props.onStatusChange - 状态变更回调函数
+ * @param {(info: TransferInfo) => void} props.onStatusChangeAction - 状态变更回调函数
  */
 export default function UploadConfigure({
                                           transferInfo: initialTransferInfo,
-                                          onStatusChange
+                                          onStatusChangeAction
                                         }: {
   transferInfo: TransferInfo;
-  onStatusChange: (info: TransferInfo) => void;
+  onStatusChangeAction: (info: TransferInfo) => void;
 }) {
   const params = useParams()
   const [isLoading, setIsLoading] = useState(false)
@@ -92,7 +92,7 @@ export default function UploadConfigure({
         }
         setTransferInfo(updatedInfo)
         // 通知父组件状态已更新
-        onStatusChange(updatedInfo)
+        onStatusChangeAction(updatedInfo)
       } else {
         toast.error('更新下载码设置失败：' + getApiErrorMessage(response.data))
       }

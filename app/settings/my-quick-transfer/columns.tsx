@@ -27,7 +27,6 @@ import {
 import { toast } from "sonner"
 import axios from "axios"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Shake } from "@/components/jimmy-ui/shake"
 
 export type TransferCode = {
   id: string
@@ -76,7 +75,7 @@ export function getColumns(actions: ColumnActions) {
             variant="ghost"
             className="p-0 font-mono hover:bg-transparent hover:underline"
             onClick={() => {
-              navigator.clipboard.writeText(code)
+              void navigator.clipboard.writeText(code)
               toast.success("已复制到剪贴板")
             }}
           >
@@ -291,14 +290,14 @@ export function getColumns(actions: ColumnActions) {
 
             <EditDialog
               open={editDialogOpen}
-              onOpenChange={setEditDialogOpen}
+              onOpenChangeAction={setEditDialogOpen}
               data={row.original}
-              onSuccess={actions.onRefresh}
+              onSuccessAction={actions.onRefresh}
             />
 
             <DetailDialog
               open={detailDialogOpen}
-              onOpenChange={setDetailDialogOpen}
+              onOpenChangeAction={setDetailDialogOpen}
               data={row.original}
             />
 

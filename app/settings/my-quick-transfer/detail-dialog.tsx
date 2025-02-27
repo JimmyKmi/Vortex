@@ -16,18 +16,18 @@ import { toast } from "sonner"
 
 interface DetailDialogProps {
   open: boolean
-  onOpenChange: (open: boolean) => void
+  onOpenChangeAction: (open: boolean) => void
   data: TransferCode
 }
 
-export function DetailDialog({ open, onOpenChange, data }: DetailDialogProps) {
+export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogProps) {
   const handleCopyCode = () => {
     void navigator.clipboard.writeText(data.code)
     toast.success("已复制到剪贴板")
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChangeAction}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>快传码详情</DialogTitle>
@@ -83,7 +83,7 @@ export function DetailDialog({ open, onOpenChange, data }: DetailDialogProps) {
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>
+          <Button onClick={() => onOpenChangeAction(false)}>
             关闭
           </Button>
         </DialogFooter>

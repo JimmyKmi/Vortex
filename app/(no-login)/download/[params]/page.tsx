@@ -25,11 +25,9 @@ import {
   FolderDown,
   Loader2
 } from 'lucide-react'
-import {Checkbox} from "@/components/ui/checkbox"
 import React from 'react'
 import {toast} from "sonner"
 import {getApiErrorMessage} from "@/lib/utils/error-messages"
-import {formatFileSize} from "@/lib/utils/file"
 import {useTransferSession} from "@/hooks/useTransferSession"
 import {Skeleton} from "@/components/ui/skeleton"
 import {
@@ -65,7 +63,6 @@ export default function DownloadPage({params}: PageProps) {
   const [isLoadingFiles, setIsLoadingFiles] = useState(false)
   const [files, setFiles] = useState<DownloadFile[]>([])
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const {isActive, isValidating, transferInfo, checkSessionActive} = useTransferSession({sessionId})
   const {call} = useApi() // 使用自定义API Hook
   const fileTreeRef = useRef<FileTreeRef>(null)
@@ -247,12 +244,6 @@ export default function DownloadPage({params}: PageProps) {
       if (file.type === 'folder') return count + (file.children ? getTotalFileCount(file.children) : 0)
       return count + 1
     }, 0)
-  }
-
-  // 渲染文件状态
-  const renderFileStatus = (file: DownloadFile) => {
-    // 此函数为空，因为下载列表不显示状态列
-    return null
   }
 
   /**
