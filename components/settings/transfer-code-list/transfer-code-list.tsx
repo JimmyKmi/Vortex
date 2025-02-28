@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { DataTable } from "@/components/ui/data-table"
-import { SettingsLayout } from '@/components/settings/settings-layout'
-import { SettingsTitle } from '@/components/settings/settings-title'
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -25,10 +23,7 @@ import { TransferCode, TransferCodeListProps } from "./types"
 
 export function TransferCodeList({
   type,
-  title,
-  description,
   getColumnsAction,
-  extraActions,
   onRefreshRef,
 }: TransferCodeListProps) {
   // 状态管理
@@ -130,14 +125,7 @@ export function TransferCodeList({
   )
 
   return (
-    <SettingsLayout title={title}>
-      <SettingsTitle
-        title={title}
-        description={description}
-      >
-        {extraActions}
-      </SettingsTitle>
-
+    <>
       <div className="flex items-center gap-2">
         <Input
           placeholder="搜索传输码或描述..."
@@ -223,6 +211,6 @@ export function TransferCodeList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SettingsLayout>
+    </>
   )
 } 

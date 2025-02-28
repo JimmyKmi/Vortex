@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import axios from "axios"
 import { format } from "date-fns"
-import type { TransferCode } from "./columns"
+import type { TransferCode } from "@/components/settings/transfer-code-list"
 import {
   Select,
   SelectContent,

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import type { TransferCode } from "./columns"
+import type { TransferCode } from "@/components/settings/transfer-code-list"
 import { Copy } from "lucide-react"
 import { toast } from "sonner"
 
