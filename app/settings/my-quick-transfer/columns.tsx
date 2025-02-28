@@ -27,23 +27,7 @@ import {
 import { toast } from "sonner"
 import axios from "axios"
 import { Checkbox } from "@/components/ui/checkbox"
-
-export type TransferCode = {
-  id: string
-  code: string
-  comment: string
-  type: "UPLOAD" | "COLLECTION" | "DOWNLOAD"
-  disableReason: string | null
-  expires: Date | null
-  speedLimit: number | null
-  usageLimit: number | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface ColumnActions {
-  onRefresh?: () => void
-}
+import { TransferCode, ColumnActions } from "@/components/settings/transfer-code-list"
 
 export function getColumns(actions: ColumnActions) {
   const columns: ColumnDef<TransferCode>[] = [

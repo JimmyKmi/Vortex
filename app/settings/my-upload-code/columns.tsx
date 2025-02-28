@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Copy } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { format } from "date-fns"
 import { EditDialog } from "./edit-dialog"
 import { DetailDialog } from "./detail-dialog"
@@ -28,23 +28,10 @@ import { toast } from "sonner"
 import axios from "axios"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Shake } from "@/components/jimmy-ui/shake"
+import { TransferCode, ColumnActions } from "@/components/settings/transfer-code-list"
 
-export type UploadCode = {
-  id: string
-  code: string
-  comment: string
-  type: "UPLOAD" | "COLLECTION" | "DOWNLOAD"
-  disableReason: string | null
-  expires: Date | null
-  speedLimit: number | null
-  usageLimit: number | null
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface ColumnActions {
-  onRefresh?: () => void
-}
+// 继续使用UploadCode类型作为别名以保持兼容性
+export type UploadCode = TransferCode
 
 export function getColumns(actions: ColumnActions) {
   const columns: ColumnDef<UploadCode>[] = [
