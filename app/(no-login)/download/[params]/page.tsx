@@ -271,19 +271,40 @@ export default function DownloadPage({params}: PageProps) {
         // 更新状态显示
         setDownloadStatus(`正在生成 ${batchFileNames.join('、')}${batch.length < totalFiles ? '...' : ''}等 ${totalFiles} 个文件的下载通道`)
 
-        // 获取下载URL
-        const downloadUrls = await call<{url: string, filename: string}[]>(
-          axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
-            files: batch.map(file => ({
-              fileId: file.id,
-              name: file.name
-            }))
-          }),
-          {
-            errorMessage: "生成下载链接失败",
-            onError: () => console.error("下载URL生成失败")
+        // 下载
+        let downloadUrls = null;
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        while (retryCount < maxRetries && !downloadUrls) {
+          try {
+            // 获取下载URL
+            downloadUrls = await call<{url: string, filename: string}[]>(
+              axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
+                files: batch.map(file => ({
+                  fileId: file.id,
+                  name: file.name
+                }))
+              }),
+              {
+                errorMessage: "",  // 不使用默认错误消息，我们将自己处理
+                onError: () => console.error(`下载URL生成失败，重试次数: ${retryCount + 1}`)
+              }
+            )
+          } catch (error) {
+            // 处理错误
+            retryCount++;
+            
+            // 显示重试提示
+            if (retryCount < maxRetries) {
+              toast.error(`${batchFileNames.join('、')} 文件下载通道建立失败，正在重试 (${retryCount}/${maxRetries})`)
+              // 等待1秒后重试
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            } else {
+              toast.error(`${batchFileNames.join('、')} 文件下载通道建立失败`)
+            }
           }
-        )
+        }
 
         if (!downloadUrls || !downloadUrls.length) {
           toast.error(`部分文件下载失败: 无法获取下载链接`)
