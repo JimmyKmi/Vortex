@@ -35,7 +35,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SPEED_LIMIT_OPTIONS } from "@/app/api/(user)/transfer-codes/[id]/route"
+
+// 定义客户端可用的常量，避免从服务器路由导入
+const SPEED_LIMIT_OPTIONS: number[] = [
+  3072,    // 3Mbps
+  5120,    // 5Mbps
+  10240,   // 10Mbps
+  15360,   // 15Mbps
+  30720,   // 30Mbps
+  51200,   // 50Mbps
+  102400,  // 100Mbps
+]
 
 const formSchema = z.object({
   comment: z.string().max(100, "描述最多100个字符").optional(),

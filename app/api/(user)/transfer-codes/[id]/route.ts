@@ -3,6 +3,8 @@ import {auth} from "@/auth"
 import {prisma} from "@/lib/prisma"
 import {z} from "zod"
 import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
+import {S3StorageService} from "@/lib/s3/storage"
+import {S3_CONFIG} from "@/lib/config/env"
 
 // 速度限制选项（单位：KB/s）
 export const SPEED_LIMIT_OPTIONS: number[] = [
@@ -151,21 +153,120 @@ export async function DELETE(
   if (!session?.user) return ResponseThrow("Unauthorized")
 
   const {id} = await Promise.resolve(params)
+  const s3Service = S3StorageService.getInstance()
 
   try {
     const transferCode = await validateOwnership(id, session.user.id)
     if (!transferCode) return ResponseThrow("TransferCodeNotFound")
 
-    await prisma.transferCode.delete({
-      where: {
-        id,
-        userId: session.user.id, // 再次确认所有权
-      },
+    // 使用事务确保原子性
+    await prisma.$transaction(async (tx) => {
+      // S3删除错误追踪
+      let s3DeleteError = null;
+      
+      // 1. 查找与传输码关联的所有文件
+      const fileRelations = await tx.fileToTransferCode.findMany({
+        where: { transferCodeId: id },
+        include: { file: true }
+      })
+
+      // 2. 删除 S3 中的文件
+      const filesToDelete = fileRelations
+        .filter(relation => !relation.file.isDirectory)
+        .map(relation => ({
+          s3BasePath: relation.file.s3BasePath,
+          relativePath: relation.file.relativePath
+        }))
+
+      try {
+        if (filesToDelete.length > 0) {
+          await s3Service.deleteFiles(filesToDelete)
+        }
+      } catch (s3Error) {
+        const errorMsg = s3Error instanceof Error ? s3Error.message : "Unknown S3 error";
+        console.error("Failed to delete S3 files:", errorMsg)
+        // 记录错误但继续处理数据库清理
+        s3DeleteError = s3Error;
+      }
+
+      // 3. 先删除关联记录，避免外键约束问题
+      if (fileRelations.length > 0) {
+        // 获取需要删除的文件ID列表
+        const fileIds = fileRelations.map(relation => relation.file.id);
+        
+        // 删除文件与传输码的关联
+        const deletedRelations = await tx.fileToTransferCode.deleteMany({
+          where: {
+            transferCodeId: id,
+          }
+        })
+        console.log(`已删除 ${deletedRelations.count} 个文件关联记录`);
+
+        // 检查这些文件是否还被其他传输码使用
+        const stillInUseFiles = await tx.fileToTransferCode.findMany({
+          where: {
+            fileId: { in: fileIds }
+          },
+          select: {
+            fileId: true
+          }
+        })
+        
+        // 如果某些文件仍在使用，则从删除列表中移除
+        const stillInUseFileIds = stillInUseFiles.map(f => f.fileId);
+        console.log(`仍在使用的文件IDs: ${stillInUseFileIds.join(', ')}`);
+        
+        // 只删除不再被其他传输码使用的文件
+        const fileIdsToDelete = fileIds.filter(id => !stillInUseFileIds.includes(id));
+        
+        if (fileIdsToDelete.length > 0) {
+          const deletedFiles = await tx.file.deleteMany({
+            where: {
+              id: {
+                in: fileIdsToDelete
+              }
+            }
+          })
+          console.log(`已删除 ${deletedFiles.count} 个文件记录`);
+        }
+      }
+
+      // 5. 删除传输码的其他关联数据
+      await tx.transferCodeUsage.deleteMany({
+        where: { transferCodeId: id }
+      })
+
+      await tx.transferSession.deleteMany({
+        where: { transferCodeId: id }
+      })
+
+      await tx.uploadToken.deleteMany({
+        where: { transferCodeId: id }
+      })
+
+      // 6. 最后删除传输码
+      await tx.transferCode.delete({
+        where: {
+          id,
+          userId: session.user.id, // 再次确认所有权
+        },
+      })
+      
+      // 记录S3删除错误但不抛出异常
+      if (s3DeleteError) {
+        console.warn('S3 files deletion had errors but database records were deleted successfully')
+      }
     })
 
     return ResponseSuccess()
   } catch (error) {
-    console.error("Failed to delete transfer code:", error)
+    // 安全地记录错误
+    try {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error"
+      console.error(`Failed to delete transfer code: ${errorMessage}`)
+    } catch (loggingError) {
+      console.error("Error while logging")
+    }
     return ResponseThrow("DatabaseError")
   }
 }
