@@ -1,10 +1,11 @@
-import {NextResponse} from "next/server"
 import {auth} from "@/auth"
 import {prisma} from "@/lib/prisma"
 import {z} from "zod"
 import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
 import {S3StorageService} from "@/lib/s3/storage"
 import {S3_CONFIG} from "@/lib/config/env"
+import { DeleteObjectCommand } from "@aws-sdk/client-s3"
+import { s3Client } from "@/lib/s3/client"
 
 // 速度限制选项（单位：KB/s）
 export const SPEED_LIMIT_OPTIONS: number[] = [
@@ -181,6 +182,21 @@ export async function DELETE(
       try {
         if (filesToDelete.length > 0) {
           await s3Service.deleteFiles(filesToDelete)
+        }
+        
+        // 2.1 尝试删除压缩包（如果存在）
+        try {
+          // 不需要检查压缩包是否存在，直接尝试删除
+          const command = new DeleteObjectCommand({
+            Bucket: S3_CONFIG.bucket,
+            Key: `compress/${id}/archive.zip`,
+          });
+          await s3Client.send(command);
+          console.log(`已删除传输码 ${id} 的压缩包`);
+        } catch (compressError) {
+          // 压缩包可能不存在，忽略该错误
+          console.log(`传输码 ${id} 的压缩包删除失败或不存在:`, 
+            compressError instanceof Error ? compressError.message : 'Unknown error');
         }
       } catch (s3Error) {
         const errorMsg = s3Error instanceof Error ? s3Error.message : "Unknown S3 error";

@@ -31,15 +31,6 @@ if (!isServer) {
       }
     };
     
-    // 服务器端记录诊断信息
-    console.log('Initializing S3 client with config:', {
-      region: S3_CONFIG.region,
-      endpoint: S3_CONFIG.endpoint,
-      bucket: S3_CONFIG.bucket,
-      hasCredentials: !!S3_CONFIG.accessKeyId && !!S3_CONFIG.secretAccessKey,
-      isAliyunOSS: isAliyunOSS
-    });
-    
   } catch (error) {
     console.error('Error configuring S3 client:', error);
     // 使用一个最小配置，避免应用崩溃
