@@ -5,6 +5,10 @@ import {Geist, Azeret_Mono as Geist_Mono} from 'next/font/google';
 import Providers from "@/app/providers";
 import {NEXT_PUBLIC_APP_NAME} from "@/lib/config/env";
 import {Toaster} from "@/components/ui/sonner";
+import { TasksDaemon } from '@/app/components/TasksDaemon';
+
+// 强制导入初始化模块，确保在服务器启动时自动执行初始化
+import './_init';
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -38,6 +42,7 @@ export default function RootLayout({
     <Providers>
       {children}
       <Toaster/>
+      <TasksDaemon/>
     </Providers>
     </body>
     </html>

@@ -11,7 +11,7 @@ import { S3StorageService } from "@/lib/s3/storage"
  */
 export async function cleanupTask() {
   try {
-    console.log("开始执行清理任务...")
+    console.log("执行清理任务")
     const now = new Date()
 
     // 1. 清理过期会话
@@ -34,9 +34,7 @@ export async function cleanupTask() {
           }
         }
       })
-      console.log(`已清理 ${deletedSessions.count} 个过期会话`)
-    } else {
-      console.log("没有找到过期会话")
+      console.log(`清理过期会话: ${deletedSessions.count}个`)
     }
 
     // 2. 清理过期的传输码
@@ -52,7 +50,8 @@ export async function cleanupTask() {
         disableReason: "LIMIT"
       }
     })
-    console.log(`已禁用 ${expiredCodes.count} 个过期传输码`)
+
+    if (expiredCodes.count) console.log(`禁用过期传输码: ${expiredCodes.count}个`)
 
     // 3. 清理孤立的文件记录
     // 首先找出没有关联传输码的文件
@@ -76,21 +75,18 @@ export async function cleanupTask() {
         
         // 准备要删除的文件列表
         const filesToDelete = orphanedFiles
-          .filter(file => file.s3BasePath && file.relativePath !== undefined) // 确保s3BasePath和relativePath都存在
+          .filter(file => file.s3BasePath && file.relativePath !== undefined)
           .map(file => ({
             s3BasePath: file.s3BasePath,
             relativePath: file.relativePath
           }))
         
         if (filesToDelete.length > 0) {
-          console.log(`正在删除 ${filesToDelete.length} 个S3文件...`)
           await s3Service.deleteFiles(filesToDelete)
-          console.log(`S3文件删除完成`)
+          console.log(`删除S3文件: ${filesToDelete.length}个`)
         }
       } catch (error) {
-        // 捕获并记录S3删除错误，但继续清理数据库记录
-        console.error(`删除S3文件时出错:`, error instanceof Error ? error.message : '未知错误')
-        console.log(`将继续清理数据库记录`)
+        console.error(`S3文件删除错误:`, error instanceof Error ? error.message : '未知错误')
       }
       
       // 删除数据库中的孤立文件记录
@@ -101,11 +97,11 @@ export async function cleanupTask() {
           }
         }
       })
-      console.log(`已清理 ${orphanedFiles.length} 个孤立文件记录`)
+      console.log(`清理孤立文件记录: ${orphanedFiles.length}个`)
     }
 
     console.log("清理任务完成")
   } catch (error) {
-    console.error("清理任务执行失败:", error)
+    console.error("清理任务错误:", error)
   }
 }
