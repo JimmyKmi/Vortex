@@ -6,7 +6,7 @@ import {PrismaAdapter} from "@auth/prisma-adapter"
 import {prisma} from "@/lib/prisma"
 import {signInSchema} from "@/lib/zod"
 import {UserRole} from "@/lib/roles"
-import {comparePassword} from "@/utils/password"
+import {comparePassword} from "@/lib/utils/password"
 import {getSystemSetting} from "@/lib/config/system-settings";
 
 /**

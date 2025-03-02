@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { saltAndHashPassword } from "@/utils/password"
+import { saltAndHashPassword } from "@/lib/utils/password"
 
 export async function POST(request: Request) {
   const session = await auth()

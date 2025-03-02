@@ -1,6 +1,6 @@
 import {NextRequest} from 'next/server';
 import {getSystemSetting} from '@/lib/config/system-settings';
-import {saltAndHashPassword} from '@/utils/password';
+import {saltAndHashPassword} from '@/lib/utils/password';
 import {UserRole} from '@/lib/roles';
 import {registerSchema} from '@/lib/zod';
 import {ZodError} from 'zod';

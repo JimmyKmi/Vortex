@@ -32,11 +32,6 @@ export async function POST(req: NextRequest) {
 
     if (transferCode.expires && transferCode.expires < new Date()) return NextResponse.json({code: "TransferCodeExpired"})
 
-    // 如果是下载类型，但没有源传输码，返回错误
-    if (transferCode.type === "DOWNLOAD" && !transferCode.sourceTransferCodeId) {
-      return NextResponse.json({code: "InvalidTransferCode"})
-    }
-
     const clientIp = getClientIp(req)
     const userAgent = req.headers.get("user-agent")
     const fingerprint = uuidv4() // 生成随机指纹

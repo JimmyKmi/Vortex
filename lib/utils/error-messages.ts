@@ -23,7 +23,7 @@ const errorMessages: { [key: string]: string } = {
   'TransferCodeDisabled': '传输码已被禁用',
   'TransferCodeExpired': '传输码已过期',
   'TransferCodeUsageExceeded': '该传输码已达到使用次数上限',
-  'InvalidTransferCode': '无效的传输码，该传输码可能不支持下载',
+  'InvalidTransferCode': '传输码过期或被禁用',
   'GetUploadUrlFailed': '获取上传 URL 失败',
   'CreateFileRecordFailed': '创建文件记录失败',
   'InvalidRequest': '无效的请求',
