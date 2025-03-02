@@ -81,6 +81,8 @@ CREATE TABLE "TransferCode" (
     "speedLimit" INTEGER,
     "comment" TEXT,
     "sourceTransferCodeId" TEXT,
+    "compressStatus" TEXT NOT NULL DEFAULT 'IDLE',
+    "compressProgress" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "TransferCode_sourceTransferCodeId_fkey" FOREIGN KEY ("sourceTransferCodeId") REFERENCES "TransferCode" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
@@ -92,9 +94,6 @@ CREATE TABLE "FileToTransferCode" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "fileId" TEXT NOT NULL,
     "transferCodeId" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "FileToTransferCode_fileId_fkey" FOREIGN KEY ("fileId") REFERENCES "File" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "FileToTransferCode_transferCodeId_fkey" FOREIGN KEY ("transferCodeId") REFERENCES "TransferCode" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -135,12 +134,10 @@ CREATE TABLE "TransferSession" (
     "transferCodeId" TEXT NOT NULL,
     "linkedTransferCodeId" TEXT,
     "fingerprint" TEXT NOT NULL,
-    "expiresAt" DATETIME NOT NULL,
-    "lastActivityAt" DATETIME NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PICKING',
     "ipAddress" TEXT,
     "userAgent" TEXT,
-    "s3BasePaths" TEXT,
+    "s3BasePath" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "TransferSession_transferCodeId_fkey" FOREIGN KEY ("transferCodeId") REFERENCES "TransferCode" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
@@ -200,7 +197,7 @@ CREATE INDEX "FileToTransferCode_fileId_idx" ON "FileToTransferCode"("fileId");
 CREATE INDEX "FileToTransferCode_transferCodeId_idx" ON "FileToTransferCode"("transferCodeId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "FileToTransferCode_fileId_transferCodeId_type_key" ON "FileToTransferCode"("fileId", "transferCodeId", "type");
+CREATE UNIQUE INDEX "FileToTransferCode_fileId_transferCodeId_key" ON "FileToTransferCode"("fileId", "transferCodeId");
 
 -- CreateIndex
 CREATE INDEX "File_parentId_idx" ON "File"("parentId");
@@ -225,9 +222,6 @@ CREATE INDEX "TransferSession_linkedTransferCodeId_idx" ON "TransferSession"("li
 
 -- CreateIndex
 CREATE INDEX "TransferSession_fingerprint_idx" ON "TransferSession"("fingerprint");
-
--- CreateIndex
-CREATE INDEX "TransferSession_expiresAt_idx" ON "TransferSession"("expiresAt");
 
 -- CreateIndex
 CREATE INDEX "TransferSession_status_idx" ON "TransferSession"("status");
