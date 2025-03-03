@@ -36,7 +36,7 @@ const Layout: React.FC<LayoutProps> = ({
   const {data: session} = useSession();
 
   useEffect(() => {
-    document.title = `${title ? title + " | " : ""}${NEXT_PUBLIC_APP_NAME || 'Jimmy FILË'}`;
+    document.title = `${title ? title + " | " : ""}${NEXT_PUBLIC_APP_NAME || 'VORTËX'}`;
     // 如果用户角色是 unused，自动登出
     if (session?.user?.enabled === false) void signOut({redirectTo: '/signin'});
   }, [session, onLogout, title]);

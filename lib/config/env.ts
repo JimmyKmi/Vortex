@@ -24,7 +24,7 @@ const envSchema = z.object({
 const env = envSchema.parse(process.env)
 
 // 导出带默认值的环境变量
-export const NEXT_PUBLIC_APP_NAME = env.NEXT_PUBLIC_APP_NAME || 'Jimmy FILË'
+export const NEXT_PUBLIC_APP_NAME = env.NEXT_PUBLIC_APP_NAME || 'VORTËX'
 export const NEXT_PUBLIC_FOOTER = env.NEXT_PUBLIC_FOOTER || 'MAKE LIFE BETTER'
 export const NEXT_PUBLIC_FOOTER_LINK = env.NEXT_PUBLIC_FOOTER_LINK || 'JimmyKmi\'s GitHub|https://github.com/JimmyKmi/jimmy-file'
 
