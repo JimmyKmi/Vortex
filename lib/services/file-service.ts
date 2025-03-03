@@ -3,7 +3,7 @@ import {S3StorageService} from "@/lib/s3/storage"
 import {s3Client} from "@/lib/s3/client"
 import {getSystemSetting} from "@/lib/config/system-settings"
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner"
-import {GetObjectCommand, PutObjectCommand} from "@aws-sdk/client-s3"
+import {GetObjectCommand} from "@aws-sdk/client-s3"
 import {S3_CONFIG} from "@/lib/config/env"
 import crypto from 'crypto'
 import archiver from 'archiver'

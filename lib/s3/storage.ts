@@ -1,9 +1,7 @@
 import {
-  GetObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand
 } from "@aws-sdk/client-s3"
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner"
 import {createPresignedPost} from "@aws-sdk/s3-presigned-post"
 import {s3Client} from "./client"
 import {S3_CONFIG} from "../env"
@@ -13,7 +11,7 @@ import {PrismaClient} from "@prisma/client"
 const isServer = typeof window === 'undefined'
 
 // 只在服务器端导入和初始化Prisma客户端
-const prisma = isServer ? new PrismaClient() : undefined
+isServer ? new PrismaClient() : undefined
 
 export class S3StorageService {
   private static instance: S3StorageService
@@ -144,12 +142,12 @@ export class S3StorageService {
     
     // 验证参数
     const validFiles = files.filter(file => {
-      if (!file.s3BasePath || typeof file.s3BasePath !== 'string') {
+      if (!file.s3BasePath) {
         console.warn(`Invalid S3 file path: Missing or invalid s3BasePath`, file);
         return false;
       }
       
-      if (!file.relativePath || typeof file.relativePath !== 'string') {
+      if (!file.relativePath) {
         console.warn(`Invalid S3 file path: Missing or invalid relativePath`, file);
         return false;
       }

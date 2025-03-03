@@ -1,4 +1,4 @@
-import {startScheduler, getSchedulerStatus as getTaskSchedulerStatus, stopScheduler} from "@/lib/tasks/scheduler"
+import {startScheduler, getSchedulerStatus as getTaskSchedulerStatus} from "@/lib/tasks/scheduler"
 
 // 是否已经初始化的标志
 let isInitialized = false

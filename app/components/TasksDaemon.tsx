@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
  * 添加在根布局中以确保每次应用启动都会执行
  */
 export function TasksDaemon() {
-  const [status, setStatus] = useState<string>('未启动');
+  const [, setStatus] = useState<string>('未启动');
 
   useEffect(() => {
     async function startTasks() {
