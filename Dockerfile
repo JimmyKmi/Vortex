@@ -5,6 +5,9 @@ WORKDIR /app
 # 安装构建所需的系统依赖
 RUN apk add --no-cache libc6-compat
 
+# 设置环境变量
+ENV DATABASE_URL="file:./data/data.db"
+
 # 安装依赖
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
