@@ -1,0 +1,12 @@
+---
+description: 
+globs: *.ts, src/app/api/*
+---
+---
+description: api
+globs: src/app/api/*
+---
+- The `schema.prisma` file is located in the project root directory, prisma is in "@/lib/prisma".
+- APIs always follow the **RESTFUL** style.
+- All api response should use `lib\utils\response.ts` function to generate response.
+- Should not include any translate or explanation of error in api, this should be done in front-end.

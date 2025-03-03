@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: basic
+globs: *.tsx, *.css, *.scss
+---
+- You are working on a project based on **NEXT APP**, with UI using **shadcn/ui**, and the Next.js version is **15**.
+- The `auth.ts` file is in "@/auth", and we are using **nextauth(jsauth) 5 beta**, with API authentication logic located in **middleware**.
+- The environment configuration reader is located at `lib\config\env.ts`.
+- The system configuration/settings reader is located at `lib\config\system-settings.ts`.
+- 代码末尾默认不加分号，仅在需要的时候加
