@@ -10,10 +10,9 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    webpackBuildWorker: true,
-    parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
+    webpackBuildWorker: true
   },
+  output: 'standalone',
   webpack: (config) => {
     config.externals = [...(config.externals || []), 'crypto', 'node:crypto']
     return config

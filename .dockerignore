@@ -1,0 +1,49 @@
+# 构建输出和临时文件
+.next
+out
+dist
+build
+
+# 开发环境文件
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# 版本控制和编辑器文件
+.git
+.github
+.vscode
+.idea
+.cursor
+*.swp
+*.swo
+
+# 本地环境文件（Docker中会使用环境变量注入）
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Docker相关文件
+Dockerfile
+.dockerignore
+compose.yml
+
+# 数据文件（根据您的需求可能需要挂载为卷）
+# data/
+
+# 测试文件
+__tests__
+*.test.*
+*.spec.*
+coverage
+
+# 文档和其他不需要的文件
+README.md
+LICENSE
+*.md 
