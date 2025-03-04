@@ -13,7 +13,6 @@ const clientEnvSchema = z.object({
 
 // 服务器端环境变量验证schema（包含更多敏感配置）
 const serverEnvSchema = isServer ? z.object({
-  DATABASE_URL: z.string(),
   S3_ENDPOINT: z.string().url().optional(),
   S3_REGION: z.string().optional(),
   S3_BUCKET_NAME: z.string().optional(),
