@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 /**
  * 任务守护进程组件
@@ -9,9 +9,14 @@ import { useEffect, useState } from 'react';
  */
 export function TasksDaemon() {
   const [, setStatus] = useState<string>('未启动');
+  const hasChecked = useRef(false);
 
   useEffect(() => {
     async function startTasks() {
+      // 避免重复检查
+      if (hasChecked.current) return;
+      hasChecked.current = true;
+
       try {
         // 尝试调用健康检查API以启动定时任务
         const response = await fetch('/api/health');

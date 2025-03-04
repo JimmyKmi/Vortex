@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSchedulerStatus } from '@/app/api/init'
 
-// 导入初始化模块，确保在检查状态时系统已初始化
-import '@/app/api/init'
-
 // 全局状态追踪
 const apiStats = {
   lastHealthCheck: null as Date | null,
