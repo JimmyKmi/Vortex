@@ -15,23 +15,42 @@ export const ZITADEL_CLIENT_ID = process.env.ZITADEL_CLIENT_ID
 export const ZITADEL_CLIENT_SECRET = process.env.ZITADEL_CLIENT_SECRET
 export const ZITADEL_ISSUER = process.env.ZITADEL_ISSUER
 
-// 检查 S3 配置，打印更多诊断信息
-function checkS3Config() {
-  if (!isServer) return; // 客户端不需要检查完整配置
+// S3配置验证
+import { z } from 'zod'
+
+// S3配置验证模式
+const s3ConfigSchema = z.object({
+  endpoint: z.string({ required_error: 'S3_ENDPOINT 未配置' }),
+  region: z.string().optional(),
+  bucket: z.string({ required_error: 'S3_BUCKET_NAME 未配置' }),
+  accessKeyId: z.string({ required_error: 'S3_ACCESS_KEY_ID 未配置' }),
+  secretAccessKey: z.string({ required_error: 'S3_SECRET_ACCESS_KEY 未配置' }),
+})
+
+// 验证S3配置
+function validateS3Config() {
+  if (!isServer) return // 客户端不需要验证完整配置
   
-  // 如果任何 S3 环境变量设置了，就检查是否所有必要变量都设置了
+  // 如果任何S3环境变量被设置，才进行验证
   const hasAnyS3Config = process.env.S3_ENDPOINT || process.env.S3_BUCKET_NAME ||
     (isServer && 'S3_ACCESS_KEY_ID' in process.env ? process.env.S3_ACCESS_KEY_ID : undefined)
   
   if (hasAnyS3Config && isServer) {
-    const missing = []
-    if (!process.env.S3_ENDPOINT) missing.push('S3_ENDPOINT')
-    if (!process.env.S3_BUCKET_NAME) missing.push('S3_BUCKET_NAME')
-    if (!('S3_ACCESS_KEY_ID' in process.env) || !process.env.S3_ACCESS_KEY_ID) missing.push('S3_ACCESS_KEY_ID')
-    if (!('S3_SECRET_ACCESS_KEY' in process.env) || !process.env.S3_SECRET_ACCESS_KEY) missing.push('S3_SECRET_ACCESS_KEY')
-    
-    if (missing.length > 0) {
-      console.warn(`S3 配置不完整，缺少: ${missing.join(', ')}`)
+    try {
+      s3ConfigSchema.parse({
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION,
+        bucket: process.env.S3_BUCKET_NAME,
+        accessKeyId: process.env.S3_ACCESS_KEY_ID,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+      })
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const missingFields = error.errors.map(e => e.path.join('.'))
+        console.warn(`S3 配置不完整，缺少: ${missingFields.join(', ')}`)
+      } else {
+        console.warn('S3 配置验证失败', error)
+      }
     }
   }
 }
@@ -43,21 +62,21 @@ export const S3_CONFIG = {
     return process.env.S3_ENDPOINT
   },
   get region() {
-    checkS3Config()
+    validateS3Config()
     return process.env.S3_REGION
   },
   get bucket() {
-    checkS3Config()
+    validateS3Config()
     return process.env.S3_BUCKET_NAME
   },
   ignoreErrors: process.env.IGNORE_S3_ERRORS === 'true' || false,
   // 敏感配置只在服务器端环境提供
   get accessKeyId() {
-    checkS3Config()
+    validateS3Config()
     return isServer && 'S3_ACCESS_KEY_ID' in process.env ? process.env.S3_ACCESS_KEY_ID : undefined
   },
   get secretAccessKey() {
-    checkS3Config()
+    validateS3Config()
     return isServer && 'S3_SECRET_ACCESS_KEY' in process.env ? process.env.S3_SECRET_ACCESS_KEY : undefined
   },
 } 
