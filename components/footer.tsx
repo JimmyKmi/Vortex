@@ -1,4 +1,4 @@
-import {NEXT_PUBLIC_FOOTER, NEXT_PUBLIC_FOOTER_LINK} from '@/lib/config/env'
+import {NEXT_PUBLIC_FOOTER, NEXT_PUBLIC_FOOTER_LINK} from '@/lib/env'
 
 export function Footer() {
   function getFooterLink() {

@@ -7,7 +7,13 @@ import {prisma} from "@/lib/prisma"
 import {signInSchema} from "@/lib/zod"
 import {UserRole} from "@/lib/roles"
 import {comparePassword} from "@/lib/utils/password"
-import {getSystemSetting} from "@/lib/config/system-settings";
+import {getSystemSetting} from "@/lib/config/system-settings"
+import {
+  ZITADEL_CLIENT_ID, 
+  ZITADEL_CLIENT_SECRET, 
+  ZITADEL_ISSUER,
+  NODE_ENV
+} from "@/lib/env"
 
 /**
  * 自定义认证错误类
@@ -88,9 +94,9 @@ export const {handlers, auth, signOut} = NextAuth({
       },
     }),
     Zitadel({
-      clientId: process.env.ZITADEL_CLIENT_ID,
-      clientSecret: process.env.ZITADEL_CLIENT_SECRET,
-      issuer: process.env.ZITADEL_ISSUER,
+      clientId: ZITADEL_CLIENT_ID,
+      clientSecret: ZITADEL_CLIENT_SECRET,
+      issuer: ZITADEL_ISSUER,
       profile(profile) {
         const defaultEnabled = true; // 这里先硬编码为 true，因为异步获取系统设置会比较复杂
 
@@ -194,11 +200,11 @@ export const {handlers, auth, signOut} = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: NODE_ENV === "production",
       },
     },
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: NODE_ENV === 'development',
   events: {
     async createUser({user}) {
       // 获取默认启用状态

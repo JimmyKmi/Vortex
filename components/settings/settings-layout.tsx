@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import {SettingsSidebar} from './settings-sidebar'
 import {useTheme} from "@/contexts/theme-context";
-import {NEXT_PUBLIC_APP_NAME} from "@/lib/config/env";
+import {NEXT_PUBLIC_APP_NAME} from "@/lib/env";
 
 interface SettingsLayoutProps {
   children: React.ReactNode

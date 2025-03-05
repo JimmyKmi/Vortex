@@ -4,7 +4,7 @@ import Link from 'next/link'
 import {useTheme} from '@/contexts/theme-context'
 import {signOut} from 'next-auth/react'
 import {usePathname} from 'next/navigation'
-import { NEXT_PUBLIC_APP_NAME } from '@/lib/config/env'
+import { NEXT_PUBLIC_APP_NAME } from '@/lib/env'
 import {
   DropdownMenu,
   DropdownMenuContent,

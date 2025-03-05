@@ -3,7 +3,7 @@ import React from "react";
 import '../styles/globals.scss';
 import {Geist, Azeret_Mono as Geist_Mono} from 'next/font/google';
 import Providers from "@/app/providers";
-import {NEXT_PUBLIC_APP_NAME} from "@/lib/config/env";
+import {NEXT_PUBLIC_APP_NAME} from "@/lib/env";
 import {Toaster} from "@/components/ui/sonner";
 import { TasksDaemon } from '@/app/components/TasksDaemon';
 

@@ -5,7 +5,7 @@ import {Header} from './header'
 import {Footer} from './footer'
 import {useTheme} from '@/contexts/theme-context'
 import {useSession, signOut} from 'next-auth/react'
-import {NEXT_PUBLIC_APP_NAME} from '@/lib/config/env'
+import {NEXT_PUBLIC_APP_NAME} from '@/lib/env'
 import Background from './background'
 import {Title} from "@/components/title";
 

@@ -11,8 +11,8 @@ let clientConfig: any; // 使用any类型暂时解决类型问题
 if (!isServer) {
   // 客户端只需要基本配置用于显示，不会实际执行S3操作
   clientConfig = {
-    region: S3_CONFIG.region || 'oss-cn-hangzhou',
-    endpoint: S3_CONFIG.endpoint || 'https://oss-cn-hangzhou.aliyuncs.com',
+    region: S3_CONFIG.region,
+    endpoint: S3_CONFIG.endpoint,
     forcePathStyle: false, // 阿里云OSS不支持path style
   };
 } else {
@@ -33,16 +33,7 @@ if (!isServer) {
     
   } catch (error) {
     console.error('Error configuring S3 client:', error);
-    // 使用一个最小配置，避免应用崩溃
-    clientConfig = {
-      region: 'oss-cn-hangzhou',
-      endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
-      forcePathStyle: false, // 阿里云OSS不支持path style
-      credentials: {
-        accessKeyId: 'dev-key',
-        secretAccessKey: 'dev-secret'
-      }
-    };
+    throw new Error('S3配置错误，请检查环境变量是否正确设置');
   }
 }
 
