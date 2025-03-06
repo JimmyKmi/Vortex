@@ -1,6 +1,6 @@
 datasource db {
   provider = "sqlite"
-  url      = "file:./data/data.db"
+  url      = "file:./../data/data.db"
 }
 
 generator client {
@@ -93,41 +93,41 @@ model SystemSettings {
 
 // 传输码模型：用于生成和管理文件快传的授权码
 model TransferCode {
-  id            String    @id @default(cuid())
-  code          String    @unique // 6位传输码，全局唯一
-  userId        String // 创建者ID
+  id                   String         @id @default(cuid())
+  code                 String         @unique // 6位传输码，全局唯一
+  userId               String // 创建者ID
   // 传输码类型：
   // UPLOAD - 上传，允许其他用户上传文件
   // COLLECTION - 采集，用于收集多人的文件
   // DOWNLOAD - 下载，允许其他用户下载文件
-  type          String
+  type                 String
   // 禁用原因：
   // null - 当前可用
   // USER - 由创建者手动禁用
   // LIMIT - 因达到使用限制自动禁用
-  disableReason String?
-  expires       DateTime? // 过期时间，null表示永不过期
-  speedLimit    Int? // 传输速度限制，单位 KB/s，null表示不限速
-  comment       String? // 传输码补充描述
+  disableReason        String?
+  expires              DateTime? // 过期时间，null表示永不过期
+  speedLimit           Int? // 传输速度限制，单位 KB/s，null表示不限速
+  comment              String? // 传输码补充描述
   sourceTransferCodeId String? // 如果是下载码，关联的源上传码ID
-  sourceTransferCode   TransferCode? @relation("SourceTransferCode", fields: [sourceTransferCodeId], references: [id], onDelete: SetNull)
+  sourceTransferCode   TransferCode?  @relation("SourceTransferCode", fields: [sourceTransferCodeId], references: [id], onDelete: SetNull)
   downloadCodes        TransferCode[] @relation("SourceTransferCode")
 
   // 压缩相关字段
-  compressStatus String @default("IDLE") // IDLE, PROCESSING, COMPLETED, FAILED
-  compressProgress Int @default(0) // 压缩进度 0-100
+  compressStatus   String @default("IDLE") // IDLE, PROCESSING, COMPLETED, FAILED
+  compressProgress Int    @default(0) // 压缩进度 0-100
 
-  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   // 该传输码的所有使用记录
-  usages TransferCodeUsage[]
+  usages       TransferCodeUsage[]
   // 关联的文件列表
-  files  FileToTransferCode[]
+  files        FileToTransferCode[]
   // 关联的上传令牌
   uploadTokens UploadToken[]
 
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  sessions TransferSession[] @relation("SessionTransferCode")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  sessions      TransferSession[] @relation("SessionTransferCode")
   childSessions TransferSession[] @relation("SessionChildCode")
 
   @@index([code]) // 用于快速查找传输码
@@ -199,16 +199,16 @@ model TransferCodeUsage {
 
 // 传输会话模型：用于管理文件传输的临时会话
 model TransferSession {
-  id             String   @id @default(cuid())
-  transferCodeId String // 关联的传输码ID（母码）
+  id                   String  @id @default(cuid())
+  transferCodeId       String // 关联的传输码ID（母码）
   linkedTransferCodeId String? // 关联的子码ID
-  fingerprint    String // 设备指纹
-  status         String   @default("PICKING") // PICKING, UPLOADING, CONFIGURING, COMPLETED
-  ipAddress      String? // 用于安全审计
-  userAgent      String? // 用于安全审计
-  s3BasePath    String? // 存储会话关联的S3基础路径
+  fingerprint          String // 设备指纹
+  status               String  @default("PICKING") // PICKING, UPLOADING, CONFIGURING, COMPLETED
+  ipAddress            String? // 用于安全审计
+  userAgent            String? // 用于安全审计
+  s3BasePath           String? // 存储会话关联的S3基础路径
 
-  transferCode TransferCode @relation("SessionTransferCode", fields: [transferCodeId], references: [id], onDelete: Cascade)
+  transferCode       TransferCode  @relation("SessionTransferCode", fields: [transferCodeId], references: [id], onDelete: Cascade)
   linkedTransferCode TransferCode? @relation("SessionChildCode", fields: [linkedTransferCodeId], references: [id])
 
   createdAt DateTime @default(now())

@@ -12,7 +12,8 @@ import {
   ZITADEL_CLIENT_ID, 
   ZITADEL_CLIENT_SECRET, 
   ZITADEL_ISSUER,
-  NODE_ENV
+  NODE_ENV,
+  NEXTAUTH_SECRET
 } from "@/lib/env"
 
 /**
@@ -45,6 +46,7 @@ class ErrorEmailUnverified extends CredentialsSignin {
 
 export const {handlers, auth, signOut} = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
+  secret: NEXTAUTH_SECRET,
   providers: [
     Credentials({
       credentials: {
@@ -93,35 +95,38 @@ export const {handlers, auth, signOut} = NextAuth({
         } as User;
       },
     }),
-    Zitadel({
-      clientId: ZITADEL_CLIENT_ID,
-      clientSecret: ZITADEL_CLIENT_SECRET,
-      issuer: ZITADEL_ISSUER,
-      profile(profile) {
-        const defaultEnabled = true; // 这里先硬编码为 true，因为异步获取系统设置会比较复杂
+    // 仅在所有必要的 Zitadel 配置都存在时才加载 Zitadel 提供商
+    ...(ZITADEL_CLIENT_ID && ZITADEL_CLIENT_SECRET && ZITADEL_ISSUER ? [
+      Zitadel({
+        clientId: ZITADEL_CLIENT_ID,
+        clientSecret: ZITADEL_CLIENT_SECRET,
+        issuer: ZITADEL_ISSUER,
+        profile(profile) {
+          const defaultEnabled = true; // 这里先硬编码为 true，因为异步获取系统设置会比较复杂
 
-        // 检查 Zitadel 权限
-        let role = UserRole.USER; // 默认角色
+          // 检查 Zitadel 权限
+          let role = UserRole.USER; // 默认角色
 
-        // 从 Zitadel 项目角色中获取权限信息
-        const projectRoles = profile['urn:zitadel:iam:org:project:roles'] || {};
-        const roles = Object.keys(projectRoles);
+          // 从 Zitadel 项目角色中获取权限信息
+          const projectRoles = profile['urn:zitadel:iam:org:project:roles'] || {};
+          const roles = Object.keys(projectRoles);
 
-        // 检查是否有管理员权限
-        if (roles.some(r => r?.toLowerCase().includes('admin'))) {
-          role = UserRole.ADMIN;
-        }
+          // 检查是否有管理员权限
+          if (roles.some(r => r?.toLowerCase().includes('admin'))) {
+            role = UserRole.ADMIN;
+          }
 
-        return {
-          id: profile.sub,
-          name: profile.name || `${profile.given_name} ${profile.family_name}`.trim(),
-          email: profile.email,
-          image: profile.picture,
-          enabled: defaultEnabled,
-          role: role,
-        }
-      },
-    }),
+          return {
+            id: profile.sub,
+            name: profile.name || `${profile.given_name} ${profile.family_name}`.trim(),
+            email: profile.email,
+            image: profile.picture,
+            enabled: defaultEnabled,
+            role: role,
+          }
+        },
+      })
+    ] : []),
   ],
   session: {
     strategy: 'jwt',

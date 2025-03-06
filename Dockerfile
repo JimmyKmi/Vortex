@@ -12,7 +12,6 @@ RUN npm ci --legacy-peer-deps
 COPY . .
 RUN npx prisma generate
 RUN npm run build
-CMD ["ls"]
 
 # Stage 2: 生产环境运行
 FROM node:20-alpine AS runner
@@ -29,7 +28,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/.env ./.env
+
+# 安装prisma CLI，确保迁移命令可用
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g prisma@latest
 
 # 设置正确的权限
 RUN chown -R nextjs:nodejs /app
@@ -38,5 +42,5 @@ USER nextjs
 # 暴露端口
 EXPOSE 3000
 
-# 启动应用
-CMD ["node", "server.js"]
+# 添加数据库迁移命令并启动应用
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]

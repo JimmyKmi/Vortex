@@ -11,6 +11,7 @@ export const NODE_ENV = process.env.NODE_ENV
 
 // 认证相关配置
 export const NEXTAUTH_URL = process.env.NEXTAUTH_URL
+export const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'this-is-a-secret-key'
 export const ZITADEL_CLIENT_ID = process.env.ZITADEL_CLIENT_ID
 export const ZITADEL_CLIENT_SECRET = process.env.ZITADEL_CLIENT_SECRET
 export const ZITADEL_ISSUER = process.env.ZITADEL_ISSUER
