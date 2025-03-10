@@ -1,10 +1,65 @@
 // 检查是否在服务器端运行
 const isServer = typeof window === 'undefined'
 
-// 导出应用配置（带默认值）
-export const NEXT_PUBLIC_APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'VORTËX'
-export const NEXT_PUBLIC_FOOTER = process.env.NEXT_PUBLIC_FOOTER || 'MAKE LIFE BETTER'
-export const NEXT_PUBLIC_FOOTER_LINK = process.env.NEXT_PUBLIC_FOOTER_LINK || 'JimmyKmi\'s GitHub|https://github.com/JimmyKmi/jimmy-file'
+// 定义默认值常量，便于统一管理
+export const DEFAULT_APP_NAME = 'VORTËX';
+export const DEFAULT_FOOTER = 'JimmyKmi\'s GitHub / VORTEX';
+export const DEFAULT_FOOTER_LINK = 'https://github.com/JimmyKmi/vortex';
+
+// 应用公共设置接口
+export interface AppPublicSettings {
+  appName: string;
+  footer: string;
+  footerLink: string;
+}
+
+// 客户端配置缓存
+let configCache: AppPublicSettings | null = null;
+let lastFetchTime = 0
+const CACHE_DURATION = 5000 // 缓存时间，5秒
+
+// 获取所有应用公共设置
+export const getAppPublicSettings = async (): Promise<AppPublicSettings> => {
+
+  // 服务器端直接从环境变量获取
+  if (isServer) return {
+    appName: process.env.APP_NAME || DEFAULT_APP_NAME,
+    footer: process.env.APP_FOOTER || DEFAULT_FOOTER,
+    footerLink: process.env.APP_FOOTER_LINK || DEFAULT_FOOTER_LINK
+  }
+
+  // 检查缓存是否有效
+  const now = Date.now();
+  if (configCache && (now - lastFetchTime < CACHE_DURATION)) return configCache
+
+  // 客户端通过 API 获取
+  try {
+    const response = await fetch('/api/config');
+    const data = await response.json();
+    if (data.code === 'Success' && data.data) {
+      // 更新缓存和时间戳
+      configCache = {
+        appName: data.data.appName || DEFAULT_APP_NAME,
+        footer: data.data.footer || DEFAULT_FOOTER,
+        footerLink: data.data.footerLink || DEFAULT_FOOTER_LINK
+      }
+      lastFetchTime = now
+      return configCache
+    }
+  } catch (error) {
+    console.error('获取应用配置失败', error)
+  }
+
+  // 如果请求失败但有缓存，仍返回缓存
+  if (configCache) return configCache;
+
+  // 完全失败时返回默认值
+  return {
+    appName: DEFAULT_APP_NAME,
+    footer: DEFAULT_FOOTER,
+    footerLink: DEFAULT_FOOTER_LINK
+  };
+};
 
 // 系统环境变量
 export const NODE_ENV = process.env.NODE_ENV
@@ -31,11 +86,11 @@ const s3ConfigSchema = z.object({
 // 验证S3配置
 function validateS3Config() {
   if (!isServer) return // 客户端不需要验证完整配置
-  
+
   // 如果任何S3环境变量被设置，才进行验证
   const hasAnyS3Config = process.env.S3_ENDPOINT || process.env.S3_BUCKET_NAME ||
     (isServer && 'S3_ACCESS_KEY_ID' in process.env ? process.env.S3_ACCESS_KEY_ID : undefined)
-  
+
   if (hasAnyS3Config && isServer) {
     try {
       s3ConfigSchema.parse({

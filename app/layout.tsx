@@ -3,7 +3,7 @@ import React from "react";
 import '../styles/globals.scss';
 import {Geist, Azeret_Mono as Geist_Mono} from 'next/font/google';
 import Providers from "@/app/providers";
-import {NEXT_PUBLIC_APP_NAME} from "@/lib/env";
+import {getAppPublicSettings} from "@/lib/env";
 import {Toaster} from "@/components/ui/sonner";
 import { TasksDaemon } from '@/app/components/TasksDaemon';
 
@@ -20,13 +20,15 @@ const geistMono = Geist_Mono({
 })
 
 export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getAppPublicSettings();
+  
   return {
     title: {
-      default: NEXT_PUBLIC_APP_NAME,
-      template: `%s | ${NEXT_PUBLIC_APP_NAME}`,
+      default: settings.appName,
+      template: `%s | ${settings.appName}`,
     },
     description: 'File Transfer System',
-  };
+  }
 }
 
 export default function RootLayout({

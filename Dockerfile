@@ -4,7 +4,9 @@ WORKDIR /app
 
 RUN apk add --no-cache libc6-compat
 
-ENV NEXT_SWC=0
+ENV NEXT_SWC=0 \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PRISMA_HIDE_UPDATE_MESSAGE=1
 
 RUN npm config set registry https://registry.npmmirror.com
 COPY package*.json ./
@@ -17,7 +19,14 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
+# 基础环境变量
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PRISMA_HIDE_UPDATE_MESSAGE=1 \
+    AUTH_TRUST_HOST=true
+
+# 用户配置变量
+ENV APP_NAME=${APP_NAME}
 
 # 创建非root用户
 RUN addgroup --system --gid 1001 nodejs
@@ -29,7 +38,6 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/.env ./.env
 
 # 安装prisma CLI，确保迁移命令可用
 RUN npm config set registry https://registry.npmmirror.com && \

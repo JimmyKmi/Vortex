@@ -4,26 +4,28 @@ import Link from 'next/link'
 import {useTheme} from '@/contexts/theme-context'
 import {signOut} from 'next-auth/react'
 import {usePathname} from 'next/navigation'
-import { NEXT_PUBLIC_APP_NAME } from '@/lib/env'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { DEFAULT_APP_NAME } from '@/lib/env'
 
 interface HeaderProps {
   onLoginClick: () => void;
   isLoggedIn: boolean;
   username?: string;
   bgTransparent?: boolean;
+  appName?: string;
 }
 
 export function Header({
                          onLoginClick,
                          isLoggedIn,
                          username,
-                         bgTransparent = false
+                         bgTransparent = false,
+                         appName = DEFAULT_APP_NAME
 }: HeaderProps) {
   const {theme, toggleTheme} = useTheme();
   const pathname = usePathname();
@@ -33,7 +35,7 @@ export function Header({
 
   return (
     <header className={`flex justify-between items-center px-6 py-2 z-50 ${bgTransparent? "" : "bg-background/30 backdrop-blur-lg"}`}>
-      <div className="text-xl font-bold text-foreground select-none">{NEXT_PUBLIC_APP_NAME}</div>
+      <div className="text-xl font-bold text-foreground select-none">{appName}</div>
       <div className="flex items-center space-x-2">
         <Button variant="ghost" size="icon" onClick={toggleTheme}>
           {theme === 'light' ? <Moon className="h-5 w-5"/> : <Sun className="h-5 w-5"/>}

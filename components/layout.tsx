@@ -1,11 +1,17 @@
 'use client'
 
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import {Header} from './header'
 import {Footer} from './footer'
 import {useTheme} from '@/contexts/theme-context'
 import {useSession, signOut} from 'next-auth/react'
-import {NEXT_PUBLIC_APP_NAME} from '@/lib/env'
+import {
+  getAppPublicSettings, 
+  AppPublicSettings, 
+  DEFAULT_APP_NAME, 
+  DEFAULT_FOOTER, 
+  DEFAULT_FOOTER_LINK
+} from '@/lib/env'
 import Background from './background'
 import {Title} from "@/components/title";
 
@@ -25,7 +31,6 @@ const Layout: React.FC<LayoutProps> = ({
                                          children,
                                          onLoginClick = () => {
                                          },
-                                         onLogout = () => signOut({redirectTo: '/signin'}),
                                          width = 'full',
                                          title,
                                          bgTransparent = false,
@@ -34,12 +39,26 @@ const Layout: React.FC<LayoutProps> = ({
                                        }) => {
   const {theme} = useTheme();
   const {data: session} = useSession();
+  const [appConfig, setAppConfig] = useState<AppPublicSettings>({
+    appName: DEFAULT_APP_NAME,
+    footer: DEFAULT_FOOTER,
+    footerLink: DEFAULT_FOOTER_LINK
+  });
 
   useEffect(() => {
-    document.title = `${title ? title + " | " : ""}${NEXT_PUBLIC_APP_NAME || 'VORTËX'}`;
+    // 组件挂载后获取应用配置
+    const fetchAppConfig = async () => {
+      const settings = await getAppPublicSettings();
+      setAppConfig(settings);
+      // 更新文档标题
+      document.title = `${title ? title + " | " : ""}${settings.appName}`;
+    };
+    
+    void fetchAppConfig();
+    
     // 如果用户角色是 unused，自动登出
     if (session?.user?.enabled === false) void signOut({redirectTo: '/signin'});
-  }, [session, onLogout, title]);
+  }, [session?.user?.enabled, title]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -53,6 +72,7 @@ const Layout: React.FC<LayoutProps> = ({
         isLoggedIn={!!session}
         username={session?.user?.name || ''}
         bgTransparent={bgTransparent}
+        appName={appConfig.appName}
       />
       {width === 'full' ? children :
         (<main
@@ -69,7 +89,10 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
         </main>)
       }
-      <Footer/>
+      <Footer 
+        footer={appConfig.footer} 
+        footerLink={appConfig.footerLink}
+      />
     </div>
   )
 }
