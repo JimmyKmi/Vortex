@@ -17,8 +17,8 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_PASSWORD }}
     - name: Build Docker Image
       run: |
-        docker build . --file Dockerfile --tag $DOCKER_REPO:${{ github.ref }}
-        docker tag $DOCKER_REPO:${{ github.ref }}
+        docker build . --file Dockerfile --tag ${{ env.DOCKER_REPO }}:${{ github.ref }}
+        docker tag ${{ env.DOCKER_REPO }}:${{ github.ref }}
     - name: Push Docker Image
       run: |
-        docker push $DOCKER_REPO
+        docker push ${{ env.$DOCKER_REPO }}
