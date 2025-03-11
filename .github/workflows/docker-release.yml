@@ -21,4 +21,4 @@ jobs:
         docker tag ${{ env.DOCKER_REPO }}:${{ github.ref }}
     - name: Push Docker Image
       run: |
-        docker push ${{ env.$DOCKER_REPO }}
+        docker push ${{ env.DOCKER_REPO }}
