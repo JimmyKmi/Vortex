@@ -27,7 +27,7 @@ jobs:
         
     - name: Conditionally Tag as Latest
       if: |
-          !endsWith(env.TAG, 'b')  # 如果TAG不以b结尾则执行
+          !endsWith(env.TAG, 'b')
       run: |
           docker tag ${{ secrets.DOCKER_REPO }}:${{ env.TAG }} ${{ secrets.DOCKER_REPO }}:latest
 
@@ -37,6 +37,6 @@ jobs:
 
     - name: Push Latest Tag (if not beta)
       if: |
-        !endsWith(env.TAG, 'b')  # 如果TAG不以b结尾则执行
+        !endsWith(env.TAG, 'b')
       run: |
         docker push ${{ secrets.DOCKER_REPO }}:latest
