@@ -10,25 +10,33 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        
     - name: Extract Version Tag
       run: |
         echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        
     - name: Build Docker Image
       run: |
         docker build . --file Dockerfile --tag ${{ secrets.DOCKER_REPO }}:$TAG
+        
     - name: Conditionally Tag as Latest
       if: |
-        endsWith($TAG, 'b') == false
+          !endsWith(env.TAG, 'b')  # 如果TAG不以b结尾则执行
       run: |
-        docker tag ${{ secrets.DOCKER_REPO }}:$TAG ${{ secrets.DOCKER_REPO }}:latest
-    - name: Push Docker Image
+          docker tag ${{ secrets.DOCKER_REPO }}:${{ env.TAG }} ${{ secrets.DOCKER_REPO }}:latest
+
+    - name: Push Version Tag
       run: |
-        docker push ${{ secrets.DOCKER_REPO }}:$TAG
-        if: |
-          endsWith($TAG, 'b') == false
+        docker push ${{ secrets.DOCKER_REPO }}:${{ env.TAG }}
+
+    - name: Push Latest Tag (if not beta)
+      if: |
+        !endsWith(env.TAG, 'b')  # 如果TAG不以b结尾则执行
+      run: |
         docker push ${{ secrets.DOCKER_REPO }}:latest
