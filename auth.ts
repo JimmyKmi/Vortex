@@ -13,7 +13,8 @@ import {
   ZITADEL_CLIENT_SECRET, 
   ZITADEL_ISSUER,
   NODE_ENV,
-  NEXTAUTH_SECRET
+  NEXTAUTH_SECRET,
+  AUTH_TRUST_HOST
 } from "@/lib/env"
 
 /**
@@ -47,6 +48,7 @@ class ErrorEmailUnverified extends CredentialsSignin {
 export const {handlers, auth, signOut} = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
   secret: NEXTAUTH_SECRET,
+  trustHost: AUTH_TRUST_HOST,
   providers: [
     Credentials({
       credentials: {

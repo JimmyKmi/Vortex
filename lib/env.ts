@@ -70,6 +70,7 @@ export const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'this-is-a-secret-
 export const ZITADEL_CLIENT_ID = process.env.ZITADEL_CLIENT_ID
 export const ZITADEL_CLIENT_SECRET = process.env.ZITADEL_CLIENT_SECRET
 export const ZITADEL_ISSUER = process.env.ZITADEL_ISSUER
+export const AUTH_TRUST_HOST = process.env.AUTH_TRUST_HOST === 'true'
 
 // S3配置验证
 import { z } from 'zod'
