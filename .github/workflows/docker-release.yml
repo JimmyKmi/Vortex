@@ -23,12 +23,12 @@ jobs:
         docker build . --file Dockerfile --tag ${{ secrets.DOCKER_REPO }}:$TAG
     - name: Conditionally Tag as Latest
       if: |
-        endsWith(env.TAG, 'b') == false
+        endsWith($TAG, 'b') == false
       run: |
         docker tag ${{ secrets.DOCKER_REPO }}:$TAG ${{ secrets.DOCKER_REPO }}:latest
     - name: Push Docker Image
       run: |
         docker push ${{ secrets.DOCKER_REPO }}:$TAG
         if: |
-          endsWith(env.TAG, 'b') == false
+          endsWith($TAG, 'b') == false
         docker push ${{ secrets.DOCKER_REPO }}:latest
