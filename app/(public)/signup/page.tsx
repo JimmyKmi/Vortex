@@ -7,7 +7,6 @@ import {Input} from "@/components/ui/input"
 import {Button} from "@/components/ui/button"
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert"
 import {Label} from "@/components/ui/label"
-import {useSession} from 'next-auth/react'
 import axios from 'axios'
 import Link from 'next/link'
 import {toast} from "sonner"
@@ -16,7 +15,6 @@ import {registerSchema} from '@/lib/zod'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const {data: session, status} = useSession()
   const {allowRegistration} = useAuthSettings()
 
   const [formData, setFormData] = useState({

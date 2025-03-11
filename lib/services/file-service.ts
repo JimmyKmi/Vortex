@@ -4,7 +4,7 @@ import {s3Client} from "@/lib/s3/client"
 import {getSystemSetting} from "@/lib/config/system-settings"
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner"
 import {GetObjectCommand} from "@aws-sdk/client-s3"
-import {S3_CONFIG} from "@/lib/config/env"
+import {S3_CONFIG} from "@/lib/env"
 import crypto from 'crypto'
 import archiver from 'archiver'
 import {Readable} from 'stream'

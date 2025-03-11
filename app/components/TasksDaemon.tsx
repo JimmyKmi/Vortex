@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { NODE_ENV } from '@/lib/env';
 
 /**
  * 任务守护进程组件
@@ -9,9 +10,14 @@ import { useEffect, useState } from 'react';
  */
 export function TasksDaemon() {
   const [, setStatus] = useState<string>('未启动');
+  const hasChecked = useRef(false);
 
   useEffect(() => {
     async function startTasks() {
+      // 避免重复检查
+      if (hasChecked.current) return;
+      hasChecked.current = true;
+
       try {
         // 尝试调用健康检查API以启动定时任务
         const response = await fetch('/api/health');
@@ -26,7 +32,7 @@ export function TasksDaemon() {
     }
 
     // 只在生产环境执行
-    if (process.env.NODE_ENV !== 'production') console.log('定时任务守护进程：开发环境下不自动启动');
+    if (NODE_ENV !== 'production') console.log('定时任务守护进程：开发环境下不自动启动');
     void startTasks();
   }, []);
 

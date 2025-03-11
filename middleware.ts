@@ -1,11 +1,7 @@
 import {auth} from "@/auth"
 import {NextResponse, NextRequest} from "next/server"
 import {UserRole} from "@/lib/roles"
-import {
-  isAdminPath,
-  isUserPath,
-  isAuthPath
-} from "@/lib/utils/route"
+import {isAdminPath, isUserPath, isAuthPath} from "@/lib/utils/route"
 import {ResponseThrow} from "@/lib/utils/response";
 
 /**

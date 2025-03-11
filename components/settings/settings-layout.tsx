@@ -1,8 +1,8 @@
 'use client'
 
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import {useRouter} from 'next/navigation'
-import {signOut, useSession} from 'next-auth/react'
+import {useSession} from 'next-auth/react'
 import {
   SidebarInset,
   SidebarProvider,
@@ -17,24 +17,30 @@ import {
 } from "@/components/ui/breadcrumb"
 import {SettingsSidebar} from './settings-sidebar'
 import {useTheme} from "@/contexts/theme-context";
-import {NEXT_PUBLIC_APP_NAME} from "@/lib/config/env";
+import {getAppPublicSettings, DEFAULT_APP_NAME} from "@/lib/env";
 
 interface SettingsLayoutProps {
   children: React.ReactNode
-  title: string
+  title?: string
 }
 
 export function SettingsLayout({children, title}: SettingsLayoutProps) {
   const router = useRouter()
   const {status} = useSession()
   const {theme} = useTheme();
-  const {data: session} = useSession();
+  const [, setAppName] = useState(DEFAULT_APP_NAME)
 
   useEffect(() => {
-    document.title = `${title ? title + " | " : ""}${NEXT_PUBLIC_APP_NAME || 'VORTËX'}`;
-    // 如果用户角色是 unused，自动登出
-    if (session?.user?.enabled === false) void signOut({redirectTo: '/signin'});
-  }, [session, title]);
+    const fetchAppConfig = async () => {
+      const settings = await getAppPublicSettings();
+      setAppName(settings.appName);
+      
+      // 更新文档标题
+      document.title = `${title ? title + " | " : ""}${settings.appName}`;
+    }
+
+    void fetchAppConfig()
+  }, [title])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')

@@ -18,6 +18,7 @@ const nextConfig = {
     return config
   },
   env: {
+    // 环境变量由lib/env.ts统一管理
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   }
 }

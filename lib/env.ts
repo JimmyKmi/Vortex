@@ -1,67 +1,139 @@
-import { z } from 'zod'
-
 // 检查是否在服务器端运行
 const isServer = typeof window === 'undefined'
 
-// 客户端环境变量验证schema
-const clientEnvSchema = z.object({
-  S3_ENDPOINT: z.string().url().optional(),
-  S3_REGION: z.string().optional(),
-  S3_BUCKET_NAME: z.string().optional(),
-  IGNORE_S3_ERRORS: z.enum(['true', 'false']).optional(),
+// 定义默认值常量，便于统一管理
+export const DEFAULT_APP_NAME = 'VORTËX';
+export const DEFAULT_FOOTER = 'JimmyKmi\'s GitHub / VORTEX';
+export const DEFAULT_FOOTER_LINK = 'https://github.com/JimmyKmi/vortex';
+
+// 应用公共设置接口
+export interface AppPublicSettings {
+  appName: string;
+  footer: string;
+  footerLink: string;
+}
+
+// 客户端配置缓存
+let configCache: AppPublicSettings | null = null;
+let lastFetchTime = 0
+const CACHE_DURATION = 5000 // 缓存时间，5秒
+
+// 获取所有应用公共设置
+export const getAppPublicSettings = async (): Promise<AppPublicSettings> => {
+
+  // 服务器端直接从环境变量获取
+  if (isServer) return {
+    appName: process.env.APP_NAME || DEFAULT_APP_NAME,
+    footer: process.env.APP_FOOTER || DEFAULT_FOOTER,
+    footerLink: process.env.APP_FOOTER_LINK || DEFAULT_FOOTER_LINK
+  }
+
+  // 检查缓存是否有效
+  const now = Date.now();
+  if (configCache && (now - lastFetchTime < CACHE_DURATION)) return configCache
+
+  // 客户端通过 API 获取
+  try {
+    const response = await fetch('/api/config');
+    const data = await response.json();
+    if (data.code === 'Success' && data.data) {
+      // 更新缓存和时间戳
+      configCache = {
+        appName: data.data.appName || DEFAULT_APP_NAME,
+        footer: data.data.footer || DEFAULT_FOOTER,
+        footerLink: data.data.footerLink || DEFAULT_FOOTER_LINK
+      }
+      lastFetchTime = now
+      return configCache
+    }
+  } catch (error) {
+    console.error('获取应用配置失败', error)
+  }
+
+  // 如果请求失败但有缓存，仍返回缓存
+  if (configCache) return configCache;
+
+  // 完全失败时返回默认值
+  return {
+    appName: DEFAULT_APP_NAME,
+    footer: DEFAULT_FOOTER,
+    footerLink: DEFAULT_FOOTER_LINK
+  };
+};
+
+// 系统环境变量
+export const NODE_ENV = process.env.NODE_ENV
+
+// 认证相关配置
+export const NEXTAUTH_URL = process.env.NEXTAUTH_URL
+export const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'this-is-a-secret-key'
+export const ZITADEL_CLIENT_ID = process.env.ZITADEL_CLIENT_ID
+export const ZITADEL_CLIENT_SECRET = process.env.ZITADEL_CLIENT_SECRET
+export const ZITADEL_ISSUER = process.env.ZITADEL_ISSUER
+export const AUTH_TRUST_HOST = process.env.AUTH_TRUST_HOST === 'true'
+
+// S3配置验证
+import { z } from 'zod'
+
+// S3配置验证模式
+const s3ConfigSchema = z.object({
+  endpoint: z.string({ required_error: 'S3_ENDPOINT 未配置' }),
+  region: z.string().optional(),
+  bucket: z.string({ required_error: 'S3_BUCKET_NAME 未配置' }),
+  accessKeyId: z.string({ required_error: 'S3_ACCESS_KEY_ID 未配置' }),
+  secretAccessKey: z.string({ required_error: 'S3_SECRET_ACCESS_KEY 未配置' }),
 })
 
-// 服务器端环境变量验证schema（包含更多敏感配置）
-const serverEnvSchema = isServer ? z.object({
-  DATABASE_URL: z.string(),
-  S3_ENDPOINT: z.string().url().optional(),
-  S3_REGION: z.string().optional(),
-  S3_BUCKET_NAME: z.string().optional(),
-  S3_ACCESS_KEY_ID: z.string().optional(),
-  S3_SECRET_ACCESS_KEY: z.string().optional(),
-  IGNORE_S3_ERRORS: z.enum(['true', 'false']).optional(),
-}) : clientEnvSchema
+// 验证S3配置
+function validateS3Config() {
+  if (!isServer) return // 客户端不需要验证完整配置
 
-// 根据运行环境选择合适的schema进行验证
-export const env = isServer 
-  ? serverEnvSchema.parse(process.env)
-  : clientEnvSchema.parse(process.env)
+  // 如果任何S3环境变量被设置，才进行验证
+  const hasAnyS3Config = process.env.S3_ENDPOINT || process.env.S3_BUCKET_NAME ||
+    (isServer && 'S3_ACCESS_KEY_ID' in process.env ? process.env.S3_ACCESS_KEY_ID : undefined)
 
-// 检查 S3 配置，打印更多诊断信息
-function checkS3Config() {
-  if (!isServer) return; // 客户端不需要检查完整配置
-  
-  // 如果任何 S3 环境变量设置了，就检查是否所有必要变量都设置了
-  const hasAnyS3Config = env.S3_ENDPOINT || env.S3_BUCKET_NAME || 
-    (isServer && 'S3_ACCESS_KEY_ID' in env ? env.S3_ACCESS_KEY_ID : undefined)
-  
   if (hasAnyS3Config && isServer) {
-    const missing = []
-    if (!env.S3_ENDPOINT) missing.push('S3_ENDPOINT')
-    if (!env.S3_BUCKET_NAME) missing.push('S3_BUCKET_NAME')
-    if (!('S3_ACCESS_KEY_ID' in env) || !env.S3_ACCESS_KEY_ID) missing.push('S3_ACCESS_KEY_ID')
-    if (!('S3_SECRET_ACCESS_KEY' in env) || !env.S3_SECRET_ACCESS_KEY) missing.push('S3_SECRET_ACCESS_KEY')
-    
-    if (missing.length > 0) {
-      console.warn(`S3 配置不完整，缺少: ${missing.join(', ')}`)
+    try {
+      s3ConfigSchema.parse({
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION,
+        bucket: process.env.S3_BUCKET_NAME,
+        accessKeyId: process.env.S3_ACCESS_KEY_ID,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+      })
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const missingFields = error.errors.map(e => e.path.join('.'))
+        console.warn(`S3 配置不完整，缺少: ${missingFields.join(', ')}`)
+      } else {
+        console.warn('S3 配置验证失败', error)
+      }
     }
   }
 }
 
 // S3 配置
 export const S3_CONFIG = {
-  // 使用阿里云OSS默认端点，而不是加速端点
-  endpoint: env.S3_ENDPOINT || 'https://oss-cn-hangzhou.aliyuncs.com',
-  region: env.S3_REGION || 'oss-cn-hangzhou',
-  bucket: env.S3_BUCKET_NAME,
-  ignoreErrors: env.IGNORE_S3_ERRORS === 'true' || false,
+  // 端点配置
+  get endpoint() {
+    return process.env.S3_ENDPOINT
+  },
+  get region() {
+    validateS3Config()
+    return process.env.S3_REGION
+  },
+  get bucket() {
+    validateS3Config()
+    return process.env.S3_BUCKET_NAME
+  },
+  ignoreErrors: process.env.IGNORE_S3_ERRORS === 'true' || false,
   // 敏感配置只在服务器端环境提供
   get accessKeyId() {
-    checkS3Config()
-    return isServer && 'S3_ACCESS_KEY_ID' in env ? env.S3_ACCESS_KEY_ID : 'dev-key'
+    validateS3Config()
+    return isServer && 'S3_ACCESS_KEY_ID' in process.env ? process.env.S3_ACCESS_KEY_ID : undefined
   },
   get secretAccessKey() {
-    checkS3Config()
-    return isServer && 'S3_SECRET_ACCESS_KEY' in env ? env.S3_SECRET_ACCESS_KEY : 'dev-secret'
+    validateS3Config()
+    return isServer && 'S3_SECRET_ACCESS_KEY' in process.env ? process.env.S3_SECRET_ACCESS_KEY : undefined
   },
 } 

@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-    darkMode: ["class"],
+    darkMode: ['class'],
     content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -85,16 +85,16 @@ const config: Config = {
   				}
   			},
   			'text-shake': {
-  				'0%, 100%': { 
+  				'0%, 100%': {
   					transform: 'translate(0px, 0px) rotate(var(--rotation))'
   				},
-  				'25%': { 
+  				'25%': {
   					transform: 'translate(var(--offset-x), var(--offset-y)) rotate(calc(var(--rotation) + 1deg))'
   				},
-  				'50%': { 
+  				'50%': {
   					transform: 'translate(calc(var(--offset-x) * -0.5), calc(var(--offset-y) * -0.5)) rotate(var(--rotation))'
   				},
-  				'75%': { 
+  				'75%': {
   					transform: 'translate(calc(var(--offset-x) * 0.5), var(--offset-y)) rotate(calc(var(--rotation) - 1deg))'
   				}
   			}

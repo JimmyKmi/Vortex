@@ -1,14 +1,14 @@
-import { NextRequest } from "next/server"
-import { auth } from "@/auth"
-import { prisma } from "@/lib/prisma"
-import { z } from "zod"
-import { generateTransferCode } from "@/lib/utils/generate-transfer-code"
-import { SPEED_LIMIT_OPTIONS } from "./[id]/route"
-import { ResponseSuccess, ResponseThrow } from "@/lib/utils/response"
-import { S3StorageService } from "@/lib/s3/storage"
-import { S3_CONFIG } from "@/lib/config/env"
-import { DeleteObjectCommand } from "@aws-sdk/client-s3"
-import { s3Client } from "@/lib/s3/client"
+import {NextRequest} from "next/server"
+import {auth} from "@/auth"
+import {prisma} from "@/lib/prisma"
+import {z} from "zod"
+import {generateTransferCode} from "@/lib/utils/generate-transfer-code"
+import {SPEED_LIMIT_OPTIONS} from "./[id]/route"
+import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
+import {S3StorageService} from "@/lib/s3/storage"
+import {S3_CONFIG} from "@/lib/env"
+import {DeleteObjectCommand} from "@aws-sdk/client-s3"
+import {s3Client} from "@/lib/s3/client"
 
 // 创建传输码的请求体验证
 const createTransferCodeSchema = z.object({
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     const transferCodes = await prisma.transferCode.findMany({
       where: {
         userId: session.user.id,
-        ...(type ? { type } : {}),
+        ...(type ? {type} : {}),
       },
       orderBy: {
         createdAt: 'desc',
@@ -91,12 +91,12 @@ export async function PUT(request: Request) {
 
   try {
     const json = await request.json()
-    const { ids, action = "disable" } = batchActionSchema.parse(json)
+    const {ids, action = "disable"} = batchActionSchema.parse(json)
 
     // 验证所有传输码都属于当前用户
     const transferCodes = await prisma.transferCode.findMany({
       where: {
-        id: { in: ids },
+        id: {in: ids},
         userId: session.user.id,
       },
     })
@@ -118,7 +118,7 @@ export async function PUT(request: Request) {
     // 批量更新
     await prisma.transferCode.updateMany({
       where: {
-        id: { in: ids },
+        id: {in: ids},
         userId: session.user.id,
       },
       data: {
@@ -150,18 +150,18 @@ export async function DELETE(request: Request) {
     } catch (parseError) {
       return ResponseThrow("InvalidParams")
     }
-    
+
     // 确保json不为null且符合预期结构
     if (!json || !Array.isArray(json.ids)) {
       return ResponseThrow("InvalidParams")
     }
 
-    const { ids } = batchActionSchema.parse(json)
+    const {ids} = batchActionSchema.parse(json)
 
     // 验证所有传输码都属于当前用户
     const transferCodes = await prisma.transferCode.findMany({
       where: {
-        id: { in: ids },
+        id: {in: ids},
         userId: session.user.id,
       },
     })
@@ -174,13 +174,13 @@ export async function DELETE(request: Request) {
     await prisma.$transaction(async (tx) => {
       // 跟踪S3删除错误
       let s3DeleteError = null;
-      
+
       for (const transferCodeId of ids) {
         try {
           // 1. 查找与传输码关联的所有文件
           const fileRelations = await tx.fileToTransferCode.findMany({
-            where: { transferCodeId },
-            include: { file: true }
+            where: {transferCodeId},
+            include: {file: true}
           })
 
           // 2. 删除 S3 中的文件
@@ -195,7 +195,7 @@ export async function DELETE(request: Request) {
             if (filesToDelete.length > 0) {
               await s3Service.deleteFiles(filesToDelete)
             }
-            
+
             // 2.1 尝试删除压缩包（如果存在）
             try {
               // 不需要检查压缩包是否存在，直接尝试删除
@@ -207,7 +207,7 @@ export async function DELETE(request: Request) {
               console.log(`已删除传输码 ${transferCodeId} 的压缩包`);
             } catch (compressError) {
               // 压缩包可能不存在，忽略该错误
-              console.log(`传输码 ${transferCodeId} 的压缩包删除失败或不存在:`, 
+              console.log(`传输码 ${transferCodeId} 的压缩包删除失败或不存在:`,
                 compressError instanceof Error ? compressError.message : 'Unknown error');
             }
           } catch (s3Error) {
@@ -221,7 +221,7 @@ export async function DELETE(request: Request) {
           if (fileRelations.length > 0) {
             // 获取需要删除的文件ID列表
             const fileIds = fileRelations.map(relation => relation.file.id);
-            
+
             // 删除文件与传输码的关联
             const deletedRelations = await tx.fileToTransferCode.deleteMany({
               where: {
@@ -233,21 +233,21 @@ export async function DELETE(request: Request) {
             // 检查这些文件是否还被其他传输码使用
             const stillInUseFiles = await tx.fileToTransferCode.findMany({
               where: {
-                fileId: { in: fileIds }
+                fileId: {in: fileIds}
               },
               select: {
                 fileId: true
               }
             })
-            
+
             // 如果某些文件仍在使用，则从删除列表中移除
             const stillInUseFileIds = stillInUseFiles.map(f => f.fileId);
             console.log(`仍在使用的文件IDs: ${stillInUseFileIds.join(', ')}`);
-            
+
             // 只删除不再被其他传输码使用的文件
             const fileIdsToDelete = fileIds.filter(id => !stillInUseFileIds.includes(id));
             console.log(`最终需要删除的文件IDs: ${fileIdsToDelete.join(', ')}`);
-            
+
             if (fileIdsToDelete.length > 0) {
               const deletedFiles = await tx.file.deleteMany({
                 where: {
@@ -262,18 +262,18 @@ export async function DELETE(request: Request) {
 
           // 5. 删除传输码的其他关联数据
           await tx.transferCodeUsage.deleteMany({
-            where: { transferCodeId }
+            where: {transferCodeId}
           })
 
           await tx.transferSession.deleteMany({
-            where: { transferCodeId }
+            where: {transferCodeId}
           })
 
           await tx.uploadToken.deleteMany({
-            where: { transferCodeId }
+            where: {transferCodeId}
           })
         } catch (innerError) {
-          console.error(`Error processing transfer code ${transferCodeId}:`, 
+          console.error(`Error processing transfer code ${transferCodeId}:`,
             innerError instanceof Error ? innerError.message : "Unknown inner error")
           // 继续处理下一个传输码
         }
@@ -282,7 +282,7 @@ export async function DELETE(request: Request) {
       // 6. 最后批量删除传输码
       await tx.transferCode.deleteMany({
         where: {
-          id: { in: ids },
+          id: {in: ids},
           userId: session.user.id,
         },
       })
@@ -298,7 +298,7 @@ export async function DELETE(request: Request) {
     if (error instanceof z.ZodError) {
       return ResponseThrow("InvalidParams")
     }
-    
+
     // 安全地记录错误
     try {
       const errorMessage = error instanceof Error ? error.message : "Unknown error"

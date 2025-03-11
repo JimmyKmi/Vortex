@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server'
 import { getSchedulerStatus, initScheduler } from '@/app/api/init'
 import { recordHealthCheck } from '@/app/api/tasks/status/route'
 
-// 强制导入初始化模块
-import '@/app/api/init'
-
 export const runtime = 'nodejs'
 
 export async function GET() {
@@ -18,7 +15,12 @@ export async function GET() {
     // 如果调度器未运行，尝试启动
     if (!schedulerStatus.isRunning) {
       console.log("健康检查：调度器未运行，尝试启动")
-      initScheduler()
+      const started = initScheduler()
+      if (started) {
+        console.log("健康检查：调度器启动成功")
+      } else {
+        console.log("健康检查：调度器启动失败或已在运行")
+      }
     }
 
     return NextResponse.json({

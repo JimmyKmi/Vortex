@@ -3,7 +3,7 @@ import {prisma} from "@/lib/prisma"
 import {z} from "zod"
 import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
 import {S3StorageService} from "@/lib/s3/storage"
-import {S3_CONFIG} from "@/lib/config/env"
+import {S3_CONFIG} from "@/lib/env"
 import { DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { s3Client } from "@/lib/s3/client"
 

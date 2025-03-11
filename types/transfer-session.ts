@@ -1,4 +1,5 @@
 import {TransferCode} from "@prisma/client"
+import { NODE_ENV } from "@/lib/env"
 
 // 传输码类型
 export type TransferCodeType = "UPLOAD" | "DOWNLOAD" | "COLLECTION"
@@ -57,10 +58,10 @@ export const TRANSFER_SESSION_CONFIG = {
   // Cookie配置
   COOKIE_OPTIONS: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: NODE_ENV === "production",
     sameSite: "lax" as const,
     path: "/",
-    domain: process.env.NODE_ENV === "production" ? undefined : "localhost",
+    domain: NODE_ENV === "production" ? undefined : "localhost",
     maxAge: 24 * 60 * 60 // 1天（单位：秒）
   }
 } 
