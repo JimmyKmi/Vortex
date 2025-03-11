@@ -20,8 +20,8 @@ jobs:
         echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
     - name: Build Docker Image
       run: |
-        docker build . --file Dockerfile --tag ${{ env.DOCKER_REPO }}:$TAG
-        docker tag ${{ env.DOCKER_REPO }}:$TAG
+        docker build . --file Dockerfile --tag jimmykmi/vortex:$TAG
+        docker tag jimmykmi/vortex:$TAG
     - name: Push Docker Image
       run: |
-        docker push ${{ env.DOCKER_REPO }}
+        docker push jimmykmi/vortex
