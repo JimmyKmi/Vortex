@@ -15,10 +15,13 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+    - name: Extract Version Tag
+      run: |
+        echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
     - name: Build Docker Image
       run: |
-        docker build . --file Dockerfile --tag ${{ env.DOCKER_REPO }}:${{ github.ref }}
-        docker tag ${{ env.DOCKER_REPO }}:${{ github.ref }}
+        docker build . --file Dockerfile --tag ${{ env.DOCKER_REPO }}:$TAG
+        docker tag ${{ env.DOCKER_REPO }}:$TAG
     - name: Push Docker Image
       run: |
         docker push ${{ env.DOCKER_REPO }}
