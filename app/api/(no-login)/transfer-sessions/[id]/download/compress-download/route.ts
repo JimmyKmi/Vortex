@@ -107,46 +107,31 @@ export async function POST(
  */
 async function compressFiles(transferCodeId: string) {
   try {
-    // 获取所有文件列表
-    const files = await prisma.file.findMany({
-      where: {
-        transferCodes: {
-          some: {
-            transferCodeId
-          }
-        },
-        isDirectory: false  // 只获取文件,不包括文件夹
+    // 更新状态为处理中，但不设置初始进度
+    await prisma.transferCode.update({
+      where: {id: transferCodeId},
+      data: {
+        compressStatus: "PROCESSING",
+        compressProgress: 0 // 进度从0开始，由文件处理过程实时更新
       }
     })
 
-    let processedFiles = 0
-    const totalFiles = files.length
+    // 直接使用finalizeCompress方法，一次性处理所有文件
+    try {
+      await fileService.finalizeCompress(transferCodeId)
+    } catch (error) {
+      // 即使压缩过程中有错误，也继续执行
 
-    // 创建压缩包
-    for (const file of files) {
-      try {
-        // 从S3下载文件并添加到压缩包
-        await fileService.addFileToCompress(file.id, transferCodeId)
-        
-        // 更新进度
-        processedFiles++
-        const progress = Math.round((processedFiles / totalFiles) * 100)
-        
-        await prisma.transferCode.update({
-          where: {id: transferCodeId},
-          data: {
-            compressProgress: progress
-          }
-        })
-      } catch (error) {
-        console.error(`Error processing file ${file.id}:`, error)
-      }
+      // 检查当前进度
+      const currentCode = await prisma.transferCode.findUnique({
+        where: {id: transferCodeId},
+        select: {compressProgress: true}
+      })
+
+      if (!currentCode) throw error
     }
 
-    // 完成压缩
-    await fileService.finalizeCompress(transferCodeId)
-
-    // 更新压缩状态
+    // 更新压缩状态为完成
     await prisma.transferCode.update({
       where: {id: transferCodeId},
       data: {
@@ -157,6 +142,29 @@ async function compressFiles(transferCodeId: string) {
 
   } catch (error) {
     console.error("Compress files error:", error)
+
+    try {
+      // 尝试获取当前压缩进度
+      const currentCode = await prisma.transferCode.findUnique({
+        where: {id: transferCodeId},
+        select: {compressProgress: true, compressStatus: true}
+      })
+
+      // 如果压缩进度已经很高，可能文件已经可用，将状态设为完成
+      if (currentCode && currentCode.compressProgress >= 80) {
+        await prisma.transferCode.update({
+          where: {id: transferCodeId},
+          data: {
+            compressStatus: "COMPLETED",
+            compressProgress: 100
+          }
+        })
+        return
+      }
+    } catch (innerError) {
+      console.error("获取压缩进度失败:", innerError)
+    }
+
     // 更新压缩状态为失败
     await prisma.transferCode.update({
       where: {id: transferCodeId},

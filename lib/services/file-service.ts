@@ -102,7 +102,7 @@ export class FileService {
 
       // 生成预签名URL
       const {url, fields} = await this.s3Service.createPresignedPost({
-        Key: `${s3BasePath}/${relativePath || name}`,
+        Key: this.s3Service.getFullS3Key(s3BasePath, relativePath || name),
         Fields: {
           'success_action_status': '200',
           'Content-Type': mimeType || 'application/octet-stream'
@@ -244,7 +244,7 @@ export class FileService {
       // 获取预签名下载URL
       const command = new GetObjectCommand({
         Bucket: S3_CONFIG.bucket,
-        Key: `${file.s3BasePath}/${file.relativePath}`
+        Key: this.s3Service.getFullS3Key(file.s3BasePath, file.relativePath)
       })
 
       const downloadUrlExpireSeconds = await getSystemSetting<number>('DOWNLOAD_URL_EXPIRE_SECONDS')
@@ -269,7 +269,7 @@ export class FileService {
       // 获取预签名下载URL
       const command = new GetObjectCommand({
         Bucket: S3_CONFIG.bucket,
-        Key: `compress/${transferCodeId}/archive.zip`
+        Key: this.s3Service.getCompressS3Key(transferCodeId)
       })
 
       const downloadUrlExpireSeconds = await getSystemSetting<number>('DOWNLOAD_URL_EXPIRE_SECONDS')
@@ -286,6 +286,8 @@ export class FileService {
 
   /**
    * 将文件添加到压缩包
+   * 注意：此方法每次都会创建新的压缩包，适用于单文件压缩，不适合批量压缩
+   * 批量压缩请使用finalizeCompress方法
    * @param fileId 文件ID
    * @param transferCodeId 传输码ID
    */
@@ -308,40 +310,54 @@ export class FileService {
       // 从S3下载文件
       const getCommand = new GetObjectCommand({
         Bucket: S3_CONFIG.bucket,
-        Key: `${file.s3BasePath}/${file.relativePath}`
+        Key: this.s3Service.getFullS3Key(file.s3BasePath, file.relativePath)
       })
 
       const {Body} = await this.s3Client.send(getCommand)
       if (!Body) throw new Error("无法获取文件内容")
 
-      // 创建压缩包
+      // 创建临时压缩包只包含当前文件
       const archive = archiver('zip', {
-        zlib: {level: 5}  // 设置压缩级别
+        zlib: {level: 1} // 使用最低压缩级别以提高性能
+      })
+
+      // 设置错误处理
+      archive.on('error', (err) => {
+        console.error('Archiver error:', err)
+      })
+
+      // 设置警告处理
+      archive.on('warning', (err) => {
+        if (err.code === 'ENOENT') {
+          console.warn('压缩警告 (ENOENT):', err)
+        } else {
+          console.error('压缩警告:', err)
+        }
       })
 
       // 创建通道用于上传到S3
       const passThrough = new PassThrough()
       archive.pipe(passThrough)
 
-      // 添加文件到压缩包，保持目录结构
+      // 添加文件到压缩包
       archive.append(Body as Readable, {
-        name: file.relativePath || file.name,
-        prefix: file.relativePath ? file.relativePath.split('/').slice(0, -1).join('/') : ''
+        name: file.relativePath || file.name
       })
 
-      // 完成压缩
-      await archive.finalize()
+      // 完成压缩但不等待
+      archive.finalize()
 
       // 上传到S3
       const upload = new Upload({
         client: this.s3Client,
         params: {
           Bucket: S3_CONFIG.bucket,
-          Key: `compress/${transferCodeId}/archive.zip`,
+          Key: this.s3Service.getCompressS3Key(transferCodeId),
           Body: passThrough
         }
       })
 
+      // 等待上传完成
       await upload.done()
     } catch (error) {
       console.error("Add file to compress error:", error)
@@ -367,51 +383,133 @@ export class FileService {
         }
       })
 
+      if (files.length === 0) {
+        // 创建一个空的压缩包
+        const emptyArchive = archiver('zip')
+        const passThrough = new PassThrough()
+        emptyArchive.pipe(passThrough)
+        
+        // 添加一个空文件
+        emptyArchive.append('这个文件夹是空的', { name: 'README.txt' })
+        
+        await emptyArchive.finalize()
+        
+        // 上传到S3
+        const upload = new Upload({
+          client: this.s3Client,
+          params: {
+            Bucket: S3_CONFIG.bucket,
+            Key: this.s3Service.getCompressS3Key(transferCodeId),
+            Body: passThrough
+          }
+        })
+        
+        await upload.done()
+        return
+      }
+      
       // 创建压缩包
       const archive = archiver('zip', {
-        zlib: {level: 5}  // 设置压缩级别
+        zlib: {level: 1}  // 使用最低压缩级别，提高速度
       })
-
+      
+      // 设置错误处理
+      archive.on('error', (err) => {
+        console.error('压缩包创建错误:', err)
+      })
+      
       // 创建通道用于上传到S3
       const passThrough = new PassThrough()
       archive.pipe(passThrough)
-
-      // 添加所有文件到压缩包
-      for (const file of files) {
-        try {
-          // 从S3下载文件
-          const getCommand = new GetObjectCommand({
-            Bucket: S3_CONFIG.bucket,
-            Key: `${file.s3BasePath}/${file.relativePath}`
-          })
-
-          const {Body} = await this.s3Client.send(getCommand)
-          if (!Body) continue
-
-          // 添加文件到压缩包，保持目录结构
-          archive.append(Body as Readable, {
-            name: file.name,
-            prefix: file.relativePath ? file.relativePath.split('/').slice(0, -1).join('/') : ''
-          })
-        } catch (error) {
-          console.error(`Error adding file ${file.id} to archive:`, error)
-        }
-      }
-
-      // 完成压缩
-      await archive.finalize()
-
-      // 上传到S3
-      const upload = new Upload({
-        client: this.s3Client,
-        params: {
-          Bucket: S3_CONFIG.bucket,
-          Key: `compress/${transferCodeId}/archive.zip`,
-          Body: passThrough
+      
+      // 设置警告处理
+      archive.on('warning', (err) => {
+        if (err.code === 'ENOENT') {
+          console.warn('压缩警告 (ENOENT):', err)
+        } else {
+          console.error('压缩警告:', err)
         }
       })
 
-      await upload.done()
+      // 每次处理少量文件，避免内存问题
+      const batchSize = 5 // 调整批处理大小
+      let processedFiles = 0
+      const totalFiles = files.length
+      
+      try {
+        for (let i = 0; i < files.length; i += batchSize) {
+          const batch = files.slice(i, i + batchSize)
+          
+          // 顺序处理文件，避免并发问题
+          for (const file of batch) {
+            try {
+              // 从S3下载文件
+              const getCommand = new GetObjectCommand({
+                Bucket: S3_CONFIG.bucket,
+                Key: this.s3Service.getFullS3Key(file.s3BasePath, file.relativePath)
+              })
+
+              const {Body} = await this.s3Client.send(getCommand)
+              if (!Body) continue
+
+              // 添加文件到压缩包，保持目录结构
+              archive.append(Body as Readable, {
+                name: file.name,
+                prefix: file.relativePath ? file.relativePath.split('/').slice(0, -1).join('/') : ''
+              })
+              
+              // 增加处理文件计数
+              processedFiles++
+              
+              // 更新压缩进度 - 还原原始进度计算逻辑
+              const progress = Math.round((processedFiles / totalFiles) * 100)
+              await prisma.transferCode.update({
+                where: {id: transferCodeId},
+                data: {
+                  compressProgress: progress
+                }
+              })
+              
+              // 给一点时间处理流，避免内存爆炸
+              await new Promise(resolve => setTimeout(resolve, 300))
+              
+            } catch (error) {
+              console.error(`处理文件失败 ${file.id}:`, error)
+            }
+          }
+          
+          // 每批处理完成后，给系统一点喘息时间，释放内存
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      } catch (error) {
+        console.error('处理文件过程中出错:', error)
+      }
+      
+      // 设置完成回调
+      let finalized = false
+      archive.on('end', () => {
+        finalized = true
+      })
+      
+      // 完成压缩但不等待
+      archive.finalize()
+      
+      // 上传到S3
+      try {
+        const upload = new Upload({
+          client: this.s3Client,
+          params: {
+            Bucket: S3_CONFIG.bucket,
+            Key: this.s3Service.getCompressS3Key(transferCodeId),
+            Body: passThrough
+          }
+        })
+
+        await upload.done()
+      } catch (error) {
+        console.error('上传压缩包时出错:', error)
+        throw error
+      }
     } catch (error) {
       console.error("Finalize compress error:", error)
       throw error
