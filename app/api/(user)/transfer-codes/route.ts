@@ -198,10 +198,12 @@ export async function DELETE(request: Request) {
 
             // 2.1 尝试删除压缩包（如果存在）
             try {
+              // 使用S3StorageService的方法获取正确的压缩包S3键
+              const compressKey = s3Service.getCompressS3Key(transferCodeId)
               // 不需要检查压缩包是否存在，直接尝试删除
               const command = new DeleteObjectCommand({
                 Bucket: S3_CONFIG.bucket,
-                Key: `compress/${transferCodeId}/archive.zip`,
+                Key: compressKey,
               });
               await s3Client.send(command);
               console.log(`已删除传输码 ${transferCodeId} 的压缩包`);

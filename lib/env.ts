@@ -82,6 +82,7 @@ const s3ConfigSchema = z.object({
   bucket: z.string({ required_error: 'S3_BUCKET_NAME 未配置' }),
   accessKeyId: z.string({ required_error: 'S3_ACCESS_KEY_ID 未配置' }),
   secretAccessKey: z.string({ required_error: 'S3_SECRET_ACCESS_KEY 未配置' }),
+  basePath: z.string().optional(),
 })
 
 // 验证S3配置
@@ -100,6 +101,7 @@ function validateS3Config() {
         bucket: process.env.S3_BUCKET_NAME,
         accessKeyId: process.env.S3_ACCESS_KEY_ID,
         secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+        basePath: process.env.S3_BASE_PATH,
       })
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -125,6 +127,9 @@ export const S3_CONFIG = {
   get bucket() {
     validateS3Config()
     return process.env.S3_BUCKET_NAME
+  },
+  get basePath() {
+    return process.env.S3_BASE_PATH || ''
   },
   ignoreErrors: process.env.IGNORE_S3_ERRORS === 'true' || false,
   // 敏感配置只在服务器端环境提供

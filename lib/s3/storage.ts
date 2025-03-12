@@ -45,7 +45,20 @@ export class S3StorageService {
    * @returns 完整的S3路径
    */
   getFullS3Key(s3BasePath: string, relativePath: string): string {
-    return `${s3BasePath}/${relativePath}`
+    const globalBasePath = S3_CONFIG.basePath.trim()
+    const path = `${s3BasePath}/${relativePath}`
+    return globalBasePath ? `${globalBasePath}/${path}` : path
+  }
+
+  /**
+   * 获取压缩文件的完整S3路径
+   * @param transferCodeId 传输码ID
+   * @returns 压缩文件的完整S3路径
+   */
+  getCompressS3Key(transferCodeId: string): string {
+    const compressPath = `compress/${transferCodeId}/archive.zip`
+    const globalBasePath = S3_CONFIG.basePath.trim()
+    return globalBasePath ? `${globalBasePath}/${compressPath}` : compressPath
   }
 
   /**
@@ -74,6 +87,7 @@ export class S3StorageService {
       throw new Error('S3 bucket not configured')
     }
 
+    // 这里不使用getFullS3Key，因为params.Key应该已经是完整路径
     const {url, fields} = await createPresignedPost(s3Client, {
       Bucket: S3_CONFIG.bucket,
       Key: params.Key,

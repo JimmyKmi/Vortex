@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { DataTable } from "@/components/ui/data-table"
-import { Button } from "@/components/ui/button"
+import {useEffect, useState} from "react"
+import {DataTable} from "@/components/ui/data-table"
+import {Button} from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,18 +14,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import axios from "axios"
-import { toast } from "sonner"
-import { getApiErrorMessage } from "@/lib/utils/error-messages"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Input } from "@/components/ui/input"
+import {toast} from "sonner"
+import {getApiErrorMessage} from "@/lib/utils/error-messages"
+import {Skeleton} from "@/components/ui/skeleton"
+import {Input} from "@/components/ui/input"
 import {Trash2, CircleOff, RefreshCw, Circle} from "lucide-react"
-import { TransferCode, TransferCodeListProps } from "./types"
+import {TransferCode, TransferCodeListProps} from "./types"
 
 export function TransferCodeList({
-  type,
-  getColumnsAction,
-  onRefreshRef,
-}: TransferCodeListProps) {
+                                   type,
+                                   getColumnsAction,
+                                   onRefreshRef,
+                                 }: TransferCodeListProps) {
   // 状态管理
   const [data, setData] = useState<TransferCode[]>([]) // 存储传输码数据
   const [loading, setLoading] = useState(true) // 加载状态
@@ -54,13 +54,13 @@ export function TransferCodeList({
 
   // 暴露刷新方法给父组件
   useEffect(() => {
-    if (onRefreshRef) {
-      onRefreshRef.current = fetchData
-    }
+    if (onRefreshRef) onRefreshRef.current = fetchData
   }, [onRefreshRef])
 
   // 组件挂载时获取数据
-  useEffect(() => {void fetchData()}, [type])
+  useEffect(() => {
+    void fetchData()
+  }, [type])
 
   // 批量删除处理
   const handleBatchDelete = async () => {
@@ -119,7 +119,7 @@ export function TransferCodeList({
   const columns = getColumnsAction({onRefresh: fetchData})
 
   // 过滤数据
-  const filteredData = data.filter(item => 
+  const filteredData = data.filter(item =>
     item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (item.comment && item.comment.toLowerCase().includes(searchQuery.toLowerCase()))
   )
@@ -140,7 +140,7 @@ export function TransferCodeList({
           disabled={loading}
           className="text-yellow-700 dark:text-yellow-500 hover:text-yellow-600 ml-3"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4"/>
         </Button>
         {selectedRows.length > 0 && (
           <>
@@ -150,7 +150,7 @@ export function TransferCodeList({
               disabled={isDeleting || isDisabling}
               size="sm"
             >
-              <CircleOff className="h-4 w-4" />
+              <CircleOff className="h-4 w-4"/>
               禁用
             </Button>
             <Button
@@ -159,7 +159,7 @@ export function TransferCodeList({
               disabled={isDeleting || isDisabling}
               size="sm"
             >
-              <Circle className="h-4 w-4" />
+              <Circle className="h-4 w-4"/>
               启用
             </Button>
             <Button
@@ -169,7 +169,7 @@ export function TransferCodeList({
               size="icon"
               className="text-destructive hover:text-destructive dark:text-red-500 dark:hover:text-red-600"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4"/>
             </Button>
           </>
         )}
