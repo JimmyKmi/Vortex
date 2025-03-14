@@ -24,9 +24,6 @@ ENV NODE_ENV=production \
     PRISMA_HIDE_UPDATE_MESSAGE=1 \
     AUTH_TRUST_HOST=true
 
-# 用户配置变量
-# ENV APP_NAME=${APP_NAME}
-
 # 创建非root用户
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -39,8 +36,14 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# 创建并设置data目录权限
+RUN mkdir -p /app/data && \
+    chown -R nextjs:nodejs /app/data && \
+    chmod 777 /app/data
+
 # 安装全局 Prisma CLI 并设置正确的权限（在切换用户前）
-RUN cd /app && npm install prisma@latest --legacy-peer-deps
+RUN npm install prisma@latest -g
+RUN npm install @prisma/client -g
 
 # 设置正确的权限
 RUN chown -R nextjs:nodejs /app
@@ -51,4 +54,4 @@ USER nextjs
 EXPOSE 3000
 
 # 添加数据库迁移命令并启动应用
-CMD ["sh", "-c", "cd /app && npx prisma generate && npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "cd /app && npx prisma migrate deploy && node server.js"]
