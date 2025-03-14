@@ -8,7 +8,6 @@ ENV NEXT_SWC=0 \
     NEXT_TELEMETRY_DISABLED=1 \
     PRISMA_HIDE_UPDATE_MESSAGE=1
 
-RUN npm config set registry https://registry.npmmirror.com
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 COPY . .
@@ -26,7 +25,7 @@ ENV NODE_ENV=production \
     AUTH_TRUST_HOST=true
 
 # 用户配置变量
-ENV APP_NAME=${APP_NAME}
+# ENV APP_NAME=${APP_NAME}
 
 # 创建非root用户
 RUN addgroup --system --gid 1001 nodejs
@@ -38,17 +37,18 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
-# 安装prisma CLI，确保迁移命令可用
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install -g prisma@latest
+# 安装全局 Prisma CLI 并设置正确的权限（在切换用户前）
+RUN cd /app && npm install prisma@latest --legacy-peer-deps
 
 # 设置正确的权限
 RUN chown -R nextjs:nodejs /app
+
 USER nextjs
 
 # 暴露端口
 EXPOSE 3000
 
 # 添加数据库迁移命令并启动应用
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "cd /app && npx prisma generate && npx prisma migrate deploy && node server.js"]
