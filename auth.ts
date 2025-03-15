@@ -9,11 +9,10 @@ import {UserRole} from "@/lib/roles"
 import {comparePassword} from "@/lib/utils/password"
 import {getSystemSetting} from "@/lib/config/system-settings"
 import {
-  ZITADEL_CLIENT_ID, 
-  ZITADEL_CLIENT_SECRET, 
-  ZITADEL_ISSUER,
+  AUTH_ZITADEL_CLIENT_ID,
+  AUTH_ZITADEL_ISSUER,
   NODE_ENV,
-  NEXTAUTH_SECRET,
+  AUTH_SECRET,
   AUTH_TRUST_HOST
 } from "@/lib/env"
 
@@ -47,7 +46,7 @@ class ErrorEmailUnverified extends CredentialsSignin {
 
 export const {handlers, auth, signOut} = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
-  secret: NEXTAUTH_SECRET,
+  secret: AUTH_SECRET,
   trustHost: AUTH_TRUST_HOST,
   providers: [
     Credentials({
@@ -97,27 +96,19 @@ export const {handlers, auth, signOut} = NextAuth({
         } as User;
       },
     }),
-    // 仅在所有必要的 Zitadel 配置都存在时才加载 Zitadel 提供商
-    ...(ZITADEL_CLIENT_ID && ZITADEL_CLIENT_SECRET && ZITADEL_ISSUER ? [
+    ...(AUTH_ZITADEL_CLIENT_ID && AUTH_ZITADEL_ISSUER ? [
       Zitadel({
-        clientId: ZITADEL_CLIENT_ID,
-        clientSecret: ZITADEL_CLIENT_SECRET,
-        issuer: ZITADEL_ISSUER,
+        clientId: AUTH_ZITADEL_CLIENT_ID,
+        issuer: AUTH_ZITADEL_ISSUER,
         profile(profile) {
           const defaultEnabled = true; // 这里先硬编码为 true，因为异步获取系统设置会比较复杂
-
           // 检查 Zitadel 权限
           let role = UserRole.USER; // 默认角色
-
           // 从 Zitadel 项目角色中获取权限信息
           const projectRoles = profile['urn:zitadel:iam:org:project:roles'] || {};
           const roles = Object.keys(projectRoles);
-
           // 检查是否有管理员权限
-          if (roles.some(r => r?.toLowerCase().includes('admin'))) {
-            role = UserRole.ADMIN;
-          }
-
+          if (roles.some(r => r?.toLowerCase().includes('admin'))) role = UserRole.ADMIN;
           return {
             id: profile.sub,
             name: profile.name || `${profile.given_name} ${profile.family_name}`.trim(),
