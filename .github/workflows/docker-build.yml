@@ -5,12 +5,18 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+# 添加权限配置
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   wait-for-approval:
     runs-on: ubuntu-latest
     steps:
-      - name: wait-for-approval
-        uses: trstringer/manual-approval@v1
+      - name: Docker Build Test Workflow Approval
+        uses: trstringer/manual-approval@v1.9.1
         with:
           secret: ${{ github.token }}
           approvers: JimmyKmi
