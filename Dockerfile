@@ -1,5 +1,5 @@
 # Stage 1: 依赖安装和应用构建
-FROM node:23-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 RUN apk add --no-cache libc6-compat
@@ -15,7 +15,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Stage 2: 生产环境运行
-FROM node:23-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # 基础环境变量
@@ -54,4 +54,4 @@ USER nextjs
 EXPOSE 3000
 
 # 添加数据库迁移命令并启动应用
-CMD ["sh", "-c", "cd /app && npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
