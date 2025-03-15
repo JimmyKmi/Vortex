@@ -3,9 +3,24 @@ name: Docker Build
 on:
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
+  wait-for-approval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: wait-for-approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.token }}
+          approvers: JimmyKmi
+          minimum-approvals: 1
+          issue-title: "批准PR构建"
+          issue-body: "批准此PR的Docker构建"
+          exclude-workflow-initiator-as-approver: false
+
   build:
+    needs: wait-for-approval
     runs-on: ubuntu-latest
 
     steps:
