@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { DEFAULT_APP_NAME } from '@/lib/env'
+import {DEFAULT_APP_NAME} from '@/lib/env'
 
 interface HeaderProps {
   onLoginClick: () => void;
@@ -26,7 +26,7 @@ export function Header({
                          username,
                          bgTransparent = false,
                          appName = DEFAULT_APP_NAME
-}: HeaderProps) {
+                       }: HeaderProps) {
   const {theme, toggleTheme} = useTheme();
   const pathname = usePathname();
 
@@ -34,7 +34,8 @@ export function Header({
   const isSettingsPage = pathname ? pathname.startsWith('/settings') : false;
 
   return (
-    <header className={`flex justify-between items-center px-6 py-2 z-50 ${bgTransparent? "" : "bg-background/30 backdrop-blur-lg"}`}>
+    <header
+      className={`flex justify-between items-center px-6 py-2 z-50 ${bgTransparent ? "" : "bg-background/30 backdrop-blur-lg"}`}>
       <div className="text-xl font-bold text-foreground select-none">{appName}</div>
       <div className="flex items-center space-x-2">
         <Button variant="ghost" size="icon" onClick={toggleTheme}>
@@ -53,13 +54,13 @@ export function Header({
               {!isSettingsPage && (
                 <Link href="/settings">
                   <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Settings className="mr-2 h-4 w-4"/>
                     <span>设置</span>
                   </DropdownMenuItem>
                 </Link>
               )}
-              <DropdownMenuItem onClick={() => signOut()}>
-                <LogOut className="mr-2 h-4 w-4" />
+              <DropdownMenuItem onClick={() => signOut({redirectTo: "/", redirect: true})}>
+                <LogOut className="mr-2 h-4 w-4"/>
                 <span>登出</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
