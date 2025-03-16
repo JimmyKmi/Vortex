@@ -22,8 +22,7 @@ WORKDIR /app
 # 基础环境变量
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PRISMA_HIDE_UPDATE_MESSAGE=1 \
-    AUTH_TRUST_HOST=true
+    PRISMA_HIDE_UPDATE_MESSAGE=1
 
 # 创建非root用户
 RUN addgroup --system --gid 1001 nodejs
