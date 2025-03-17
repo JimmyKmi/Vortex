@@ -17,17 +17,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
       
-      - name: 安装依赖
-        run: npm ci --legacy-peer-deps
-      
-      - name: 运行 ESLint
-        run: npm run lint
-      
-      - name: 运行 Prettier 检查
-        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,scss,md}"
-      
-      - name: 运行安全检查
-        run: npm run security-check
-      
-      - name: 运行测试
-        run: npm test 
+      - run: npm ci --legacy-peer-deps
+      - run: npm run check-lint
+      - run: npm run check-prettier
+      - run: npm run check-test
+      - run: npm run check-security
