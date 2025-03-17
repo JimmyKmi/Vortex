@@ -4,12 +4,7 @@ import Link from 'next/link'
 import { useTheme } from '@/contexts/theme-context'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { DEFAULT_APP_NAME } from '@/lib/env'
 
 interface HeaderProps {

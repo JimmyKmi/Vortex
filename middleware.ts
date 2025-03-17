@@ -26,7 +26,7 @@ function createErrorResponse(error: string, pathname: string, req: NextRequest) 
  *    - 登录状态控制：已登录用户禁止访问登录/注册页面
  *    - 管理员权限：验证管理员角色访问权限
  */
-export default auth(async req => {
+export default auth(async (req) => {
   const isLoggedIn = !!req.auth?.user
   const { pathname } = req.nextUrl
 

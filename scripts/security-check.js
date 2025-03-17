@@ -26,9 +26,7 @@ try {
   // Exit with failure if high or critical vulnerabilities are found
   if (highVulnerabilities > 0 || criticalVulnerabilities > 0) {
     console.error('Security check failed: High or critical vulnerabilities detected')
-    console.log(
-      'Run npm audit for details, and npm audit fix to automatically fix issues where possible'
-    )
+    console.log('Run npm audit for details, and npm audit fix to automatically fix issues where possible')
     process.exit(1)
   }
 

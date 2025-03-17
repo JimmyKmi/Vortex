@@ -23,10 +23,7 @@ export function useApi() {
    * @param options - 选项配置
    * @returns 处理后的响应数据或null
    */
-  const call = async <T>(
-    apiCall: Promise<any>,
-    options: ApiCallOptions = {}
-  ): Promise<T | null> => {
+  const call = async <T>(apiCall: Promise<any>, options: ApiCallOptions = {}): Promise<T | null> => {
     const { errorMessage, showErrorToast = true, onSuccess, onError, finallyAction } = options
 
     try {

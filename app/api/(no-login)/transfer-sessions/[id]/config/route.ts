@@ -13,10 +13,7 @@ import { transferSessionConfigSchema } from '@/lib/zod'
  * 更新传输会话配置
  * @route PATCH /api/transfer-sessions/[id]/config
  */
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<Response> {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
   try {
     const { id: sessionId } = await Promise.resolve(params)
     const body = await req.json()
@@ -26,12 +23,7 @@ export async function PATCH(
     if (!result.success) return ResponseThrow('InvalidParams')
 
     // 验证会话
-    const validationResult = await validateTransferSession(
-      req,
-      sessionId,
-      ['CONFIGURING'],
-      ['UPLOAD']
-    )
+    const validationResult = await validateTransferSession(req, sessionId, ['CONFIGURING'], ['UPLOAD'])
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? 'InvalidSession')
 
     // 获取会话信息

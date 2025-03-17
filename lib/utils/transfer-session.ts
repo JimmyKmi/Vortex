@@ -140,11 +140,7 @@ export async function validateTransferSession(
 
     // 验证会话Cookie
     const sessionCookie = await getSessionCookie(session.transferCodeId, req)
-    if (
-      !sessionCookie ||
-      sessionCookie.sessionId !== sessionId ||
-      sessionCookie.fingerprint !== session.fingerprint
-    ) {
+    if (!sessionCookie || sessionCookie.sessionId !== sessionId || sessionCookie.fingerprint !== session.fingerprint) {
       return { valid: false, code: 'InvalidSession' }
     }
 

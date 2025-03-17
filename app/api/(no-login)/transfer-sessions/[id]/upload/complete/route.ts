@@ -8,12 +8,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { id: sessionId } = await Promise.resolve(params)
 
     // 验证会话
-    const validationResult = await validateTransferSession(
-      req,
-      sessionId,
-      ['UPLOADING'],
-      ['UPLOAD']
-    )
+    const validationResult = await validateTransferSession(req, sessionId, ['UPLOADING'], ['UPLOAD'])
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? 'InvalidSession')
 
     // 更新会话状态为 CONFIGURING

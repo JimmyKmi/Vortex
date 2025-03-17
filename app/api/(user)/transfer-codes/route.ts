@@ -17,7 +17,7 @@ const createTransferCodeSchema = z.object({
   expires: z.string().datetime().nullable(),
   speedLimit: z
     .number()
-    .refine(val => val === null || SPEED_LIMIT_OPTIONS.includes(val), '无效的速度限制选项')
+    .refine((val) => val === null || SPEED_LIMIT_OPTIONS.includes(val), '无效的速度限制选项')
     .nullable()
 })
 
@@ -107,9 +107,7 @@ export async function PUT(request: Request) {
 
     // 如果是启用操作，需要检查是否有过期的传输码
     if (action === 'enable') {
-      const hasExpired = transferCodes.some(
-        code => code.expires && new Date(code.expires) < new Date()
-      )
+      const hasExpired = transferCodes.some((code) => code.expires && new Date(code.expires) < new Date())
       if (hasExpired) {
         return ResponseThrow('TransferCodeExpired')
       }
@@ -171,7 +169,7 @@ export async function DELETE(request: Request) {
     }
 
     // 使用事务确保原子性
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       // 跟踪S3删除错误
       let s3DeleteError = null
 
@@ -185,8 +183,8 @@ export async function DELETE(request: Request) {
 
           // 2. 删除 S3 中的文件
           const filesToDelete = fileRelations
-            .filter(relation => !relation.file.isDirectory)
-            .map(relation => ({
+            .filter((relation) => !relation.file.isDirectory)
+            .map((relation) => ({
               s3BasePath: relation.file.s3BasePath,
               relativePath: relation.file.relativePath
             }))
@@ -224,7 +222,7 @@ export async function DELETE(request: Request) {
           // 3. 先删除关联记录，避免外键约束问题
           if (fileRelations.length > 0) {
             // 获取需要删除的文件ID列表
-            const fileIds = fileRelations.map(relation => relation.file.id)
+            const fileIds = fileRelations.map((relation) => relation.file.id)
 
             // 删除文件与传输码的关联
             const deletedRelations = await tx.fileToTransferCode.deleteMany({
@@ -245,11 +243,11 @@ export async function DELETE(request: Request) {
             })
 
             // 如果某些文件仍在使用，则从删除列表中移除
-            const stillInUseFileIds = stillInUseFiles.map(f => f.fileId)
+            const stillInUseFileIds = stillInUseFiles.map((f) => f.fileId)
             console.log(`仍在使用的文件IDs: ${stillInUseFileIds.join(', ')}`)
 
             // 只删除不再被其他传输码使用的文件
-            const fileIdsToDelete = fileIds.filter(id => !stillInUseFileIds.includes(id))
+            const fileIdsToDelete = fileIds.filter((id) => !stillInUseFileIds.includes(id))
             console.log(`最终需要删除的文件IDs: ${fileIdsToDelete.join(', ')}`)
 
             if (fileIdsToDelete.length > 0) {

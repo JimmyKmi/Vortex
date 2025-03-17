@@ -23,8 +23,8 @@ export async function cleanupTask() {
     })
 
     const expiredSessionIds = sessions
-      .filter(session => isSessionExpired(session.updatedAt))
-      .map(session => session.id)
+      .filter((session) => isSessionExpired(session.updatedAt))
+      .map((session) => session.id)
 
     if (expiredSessionIds.length > 0) {
       const deletedSessions = await prisma.transferSession.deleteMany({
@@ -75,8 +75,8 @@ export async function cleanupTask() {
 
         // 准备要删除的文件列表
         const filesToDelete = orphanedFiles
-          .filter(file => file.s3BasePath && file.relativePath !== undefined)
-          .map(file => ({
+          .filter((file) => file.s3BasePath && file.relativePath !== undefined)
+          .map((file) => ({
             s3BasePath: file.s3BasePath,
             relativePath: file.relativePath
           }))
@@ -93,7 +93,7 @@ export async function cleanupTask() {
       await prisma.file.deleteMany({
         where: {
           id: {
-            in: orphanedFiles.map(f => f.id)
+            in: orphanedFiles.map((f) => f.id)
           }
         }
       })

@@ -8,12 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar
-} from '@/components/ui/sidebar'
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
@@ -40,9 +35,7 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.image || undefined} alt={user.name || '用户头像'} />
-                <AvatarFallback className="rounded-lg">
-                  {user.name?.[0]?.toUpperCase() || 'U'}
-                </AvatarFallback>
+                <AvatarFallback className="rounded-lg">{user.name?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user.name || '未命名用户'}</span>

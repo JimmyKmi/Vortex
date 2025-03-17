@@ -68,13 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     })
 
     // 验证会话
-    const validationResult = await validateTransferSession(
-      request,
-      sessionId,
-      ['UPLOADING'],
-      ['UPLOAD'],
-      session
-    )
+    const validationResult = await validateTransferSession(request, sessionId, ['UPLOADING'], ['UPLOAD'], session)
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? 'InvalidSession')
 
     if (validatedData.isDirectory) {

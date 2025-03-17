@@ -73,13 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     })
 
     // 验证会话
-    const validationResult = await validateTransferSession(
-      req,
-      sessionId,
-      ['UPLOADING'],
-      ['UPLOAD'],
-      session
-    )
+    const validationResult = await validateTransferSession(req, sessionId, ['UPLOADING'], ['UPLOAD'], session)
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? 'InvalidSession')
 
     // 确保下载码存在
@@ -101,10 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         transferCodeId: session.transferCodeId,
         userId: session.transferCode.user.id,
         status: 'SUCCESS',
-        ipAddress:
-          req.headers.get('x-forwarded-for')?.split(',')[0] ||
-          req.headers.get('x-real-ip') ||
-          'unknown',
+        ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown',
         userAgent: req.headers.get('user-agent') || undefined
       }
     })

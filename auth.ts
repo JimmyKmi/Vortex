@@ -8,13 +8,7 @@ import { signInSchema } from '@/lib/zod'
 import { UserRole } from '@/lib/roles'
 import { comparePassword } from '@/lib/utils/password'
 import { getSystemSetting } from '@/lib/config/system-settings'
-import {
-  AUTH_ZITADEL_CLIENT_ID,
-  AUTH_ZITADEL_ISSUER,
-  NODE_ENV,
-  AUTH_SECRET,
-  AUTH_TRUST_HOST
-} from '@/lib/env'
+import { AUTH_ZITADEL_CLIENT_ID, AUTH_ZITADEL_ISSUER, NODE_ENV, AUTH_SECRET, AUTH_TRUST_HOST } from '@/lib/env'
 
 /**
  * 自定义认证错误类
@@ -54,7 +48,7 @@ export const { handlers, auth, signOut } = NextAuth({
         email: { label: 'Email' },
         password: { label: 'Password', type: 'password' }
       },
-      authorize: async credentials => {
+      authorize: async (credentials) => {
         if (!credentials?.email || !credentials?.password) {
           throw new ErrorMissingCredentials()
         }
@@ -109,7 +103,7 @@ export const { handlers, auth, signOut } = NextAuth({
               const projectRoles = profile['urn:zitadel:iam:org:project:roles'] || {}
               const roles = Object.keys(projectRoles)
               // 检查是否有管理员权限
-              if (roles.some(r => r?.toLowerCase().includes('admin'))) role = UserRole.ADMIN
+              if (roles.some((r) => r?.toLowerCase().includes('admin'))) role = UserRole.ADMIN
               return {
                 id: profile.sub,
                 name: profile.name || `${profile.given_name} ${profile.family_name}`.trim(),
@@ -152,7 +146,7 @@ export const { handlers, auth, signOut } = NextAuth({
           const roles = Object.keys(projectRoles)
 
           // 检查是否有管理员权限
-          if (roles.some(r => r?.toLowerCase().includes('admin'))) {
+          if (roles.some((r) => r?.toLowerCase().includes('admin'))) {
             await prisma.user.update({
               where: { id: existingUser.id },
               data: { role: UserRole.ADMIN }

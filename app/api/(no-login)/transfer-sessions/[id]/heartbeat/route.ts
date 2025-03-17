@@ -5,21 +5,14 @@
 
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import {
-  validateTransferSession,
-  setSessionCookie,
-  getSessionCookie
-} from '@/lib/utils/transfer-session'
+import { validateTransferSession, setSessionCookie, getSessionCookie } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { TransferSession } from '@/types/transfer-session'
 
 /**
  * 创建心跳响应并更新会话cookie
  */
-async function createHeartbeatResponse(
-  session: TransferSession,
-  req: NextRequest
-): Promise<Response> {
+async function createHeartbeatResponse(session: TransferSession, req: NextRequest): Promise<Response> {
   const response = ResponseSuccess()
   const sessionCookie = await getSessionCookie(session.transferCodeId, req)
   if (sessionCookie) {
@@ -38,10 +31,7 @@ async function createHeartbeatResponse(
  * 更新传输会话心跳
  * @route POST /api/transfer-sessions/[id]/heartbeat
  */
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<Response> {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
   try {
     const { id: sessionId } = await Promise.resolve(params)
 

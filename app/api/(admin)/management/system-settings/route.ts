@@ -17,7 +17,7 @@ export async function PUT(req: NextRequest) {
     const { key, value } = await req.json()
 
     // 验证设置项是否合法
-    const settingDefinition = SYSTEM_SETTINGS.find(s => s.key === key)
+    const settingDefinition = SYSTEM_SETTINGS.find((s) => s.key === key)
     if (!settingDefinition) {
       return NextResponse.json({ error: '无效的设置项' }, { status: 400 })
     }

@@ -26,10 +26,7 @@ interface StatusResponse {
  * 获取传输会话状态和详细信息
  * @route GET /api/transfer-sessions/[id]/status
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
   try {
     const { id: sessionId } = await Promise.resolve(params)
 
@@ -72,8 +69,7 @@ export async function GET(
     if (transferCode.disableReason) return ResponseThrow('TransferCodeDisabled')
 
     // 传输码过期
-    if (transferCode.expires && transferCode.expires < new Date())
-      return ResponseThrow('TransferCodeExpired')
+    if (transferCode.expires && transferCode.expires < new Date()) return ResponseThrow('TransferCodeExpired')
 
     // 返回完整的传输会话信息
     return ResponseSuccess<StatusResponse>({

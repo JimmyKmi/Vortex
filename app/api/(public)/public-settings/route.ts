@@ -7,12 +7,10 @@ const PUBLIC_SETTINGS = ['ALLOW_ZITADEL_LOGIN', 'ALLOW_REGISTRATION', 'ZITADEL_I
 export async function GET() {
   try {
     const settings = await Promise.all(
-      PUBLIC_SETTINGS.map(async key => {
+      PUBLIC_SETTINGS.map(async (key) => {
         // 根据设置项的类型获取值
         const value =
-          key === 'ZITADEL_IDP_NAME'
-            ? await getSystemSetting<string>(key)
-            : await getSystemSetting<boolean>(key)
+          key === 'ZITADEL_IDP_NAME' ? await getSystemSetting<string>(key) : await getSystemSetting<boolean>(key)
         return { key, value }
       })
     )

@@ -17,7 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { id: sessionId } = await Promise.resolve(params)
 
     // 使用事务确保操作的原子性
-    const result = await prisma.$transaction(async tx => {
+    const result = await prisma.$transaction(async (tx) => {
       // 获取最新会话信息
       const session = await tx.transferSession.findUnique({
         where: { id: sessionId },
@@ -31,13 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       })
 
       // 验证会话
-      const validationResult = await validateTransferSession(
-        req,
-        sessionId,
-        ['PICKING'],
-        ['UPLOAD'],
-        session
-      )
+      const validationResult = await validateTransferSession(req, sessionId, ['PICKING'], ['UPLOAD'], session)
       if (!validationResult.valid) return { error: validationResult.code ?? 'InvalidSession' }
 
       // 如果已经有下载码，说明已经开始上传，防止重复操作

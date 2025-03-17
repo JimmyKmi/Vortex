@@ -72,7 +72,7 @@ export function useActivityDetector({
 
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'focus']
 
-    events.forEach(event => {
+    events.forEach((event) => {
       window.addEventListener(event, handleActivity)
     })
 
@@ -85,7 +85,7 @@ export function useActivityDetector({
     }
 
     return () => {
-      events.forEach(event => {
+      events.forEach((event) => {
         window.removeEventListener(event, handleActivity)
       })
       if (inactivityTimeout.current) clearTimeout(inactivityTimeout.current)

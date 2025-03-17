@@ -34,7 +34,7 @@ function buildFileTree(files: any[]): FileNode[] {
   const folderMap = new Map<string, FileNode>()
 
   // 首先创建所有文件夹节点
-  files.forEach(file => {
+  files.forEach((file) => {
     try {
       if (!file?.relativePath) {
         console.error('File missing relativePath:', file)
@@ -80,7 +80,7 @@ function buildFileTree(files: any[]): FileNode[] {
   })
 
   // 然后添加所有文件到对应的文件夹
-  files.forEach(file => {
+  files.forEach((file) => {
     try {
       if (!file?.id || !file?.name || !file?.relativePath) {
         console.error('Invalid file object:', file)
@@ -132,7 +132,7 @@ function buildFileTree(files: any[]): FileNode[] {
     return totalSize
   }
 
-  root.forEach(node => {
+  root.forEach((node) => {
     try {
       calculateFolderSize(node)
     } catch (error) {
@@ -147,10 +147,7 @@ function buildFileTree(files: any[]): FileNode[] {
  * 获取下载文件列表
  * @route GET /api/transfer-sessions/[id]/download/file-list
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<Response> {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
   try {
     const { id: sessionId } = await Promise.resolve(params)
 
@@ -170,7 +167,7 @@ export async function GET(
           linkedTransferCode: true
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error('Database query error:', error)
         return null
       })
@@ -186,13 +183,7 @@ export async function GET(
     }
 
     // 验证会话
-    const validationResult = await validateTransferSession(
-      req,
-      sessionId,
-      ['DOWNLOADING'],
-      ['DOWNLOAD'],
-      session
-    )
+    const validationResult = await validateTransferSession(req, sessionId, ['DOWNLOADING'], ['DOWNLOAD'], session)
     if (!validationResult.valid) {
       console.error('Session validation failed:', {
         code: validationResult.code,
@@ -264,7 +255,7 @@ export async function GET(
     })
 
     const fileTree = buildFileTree(
-      transferCode.files.map(f => ({
+      transferCode.files.map((f) => ({
         ...f.file,
         id: f.fileId
       }))

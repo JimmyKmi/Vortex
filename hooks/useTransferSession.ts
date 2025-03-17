@@ -95,8 +95,7 @@ export function useTransferSession({ sessionId }: UseTransferSessionProps) {
           return
         }
 
-        if (currentTime - lastFailureTime.current >= 120 * 1000)
-          toast.error('网络连接不稳定，请检查网络后刷新页面重试')
+        if (currentTime - lastFailureTime.current >= 120 * 1000) toast.error('网络连接不稳定，请检查网络后刷新页面重试')
         retryTimeout.current = setTimeout(() => sendHeartbeat(true), 10 * 1000)
       }
     },

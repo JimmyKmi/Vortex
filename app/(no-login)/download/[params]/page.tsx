@@ -74,14 +74,10 @@ export default function DownloadPage({ params }: PageProps) {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [downloadStatus, setDownloadStatus] = useState<string>('')
   const [showProgress, setShowProgress] = useState(false)
-  const [compressPollingInterval, setCompressPollingInterval] = useState<NodeJS.Timeout | null>(
-    null
-  )
+  const [compressPollingInterval, setCompressPollingInterval] = useState<NodeJS.Timeout | null>(null)
 
   // 在组件状态部分新增两个状态
-  const [dialogPromiseResolve, setDialogPromiseResolve] = useState<
-    ((value: boolean) => void) | null
-  >(null)
+  const [dialogPromiseResolve, setDialogPromiseResolve] = useState<((value: boolean) => void) | null>(null)
   const [currentDialogContent, setCurrentDialogContent] = useState<{
     title: string
     description: React.ReactNode
@@ -89,12 +85,8 @@ export default function DownloadPage({ params }: PageProps) {
   } | null>(null)
 
   // 创建通用确认对话框方法
-  const showConfirmDialog = (
-    title: string,
-    description: React.ReactNode,
-    confirmText = '继续'
-  ): Promise<boolean> => {
-    return new Promise(resolve => {
+  const showConfirmDialog = (title: string, description: React.ReactNode, confirmText = '继续'): Promise<boolean> => {
+    return new Promise((resolve) => {
       setCurrentDialogContent({ title, description, confirmText })
       setDialogPromiseResolve(() => (result: boolean) => {
         setCurrentDialogContent(null)
@@ -115,13 +107,10 @@ export default function DownloadPage({ params }: PageProps) {
     setIsLoadingFiles(true)
 
     try {
-      const response = await call<DownloadFile[]>(
-        axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`),
-        {
-          errorMessage: '获取文件列表失败',
-          showErrorToast: true
-        }
-      )
+      const response = await call<DownloadFile[]>(axios.get(`/api/transfer-sessions/${sessionId}/download/file-list`), {
+        errorMessage: '获取文件列表失败',
+        showErrorToast: true
+      })
 
       if (response) {
         setFiles(response)
@@ -180,7 +169,7 @@ export default function DownloadPage({ params }: PageProps) {
    */
   const handleSelectionChange = useCallback((newSelectedFiles: Set<string>) => {
     // 避免不必要的更新 - 只有当新旧集合不同时才更新
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       // 检查新旧集合是否相同
       if (prev.size !== newSelectedFiles.size) return newSelectedFiles
 
@@ -223,7 +212,7 @@ export default function DownloadPage({ params }: PageProps) {
   const getActualSelectedFiles = (currentFiles: DownloadFile[]): DownloadFile[] => {
     const actualFiles: DownloadFile[] = []
     const traverse = (files: DownloadFile[]) => {
-      files.forEach(file => {
+      files.forEach((file) => {
         if (file.type === 'file' && selectedFiles.has(file.id)) actualFiles.push(file)
         if (file.type === 'folder' && file.children) traverse(file.children)
       })
@@ -237,8 +226,7 @@ export default function DownloadPage({ params }: PageProps) {
    */
   const getSelectedFilesCount = (currentFiles: DownloadFile[]): number => {
     return currentFiles.reduce((count, file) => {
-      if (file.type === 'folder')
-        return count + (file.children ? getSelectedFilesCount(file.children) : 0)
+      if (file.type === 'folder') return count + (file.children ? getSelectedFilesCount(file.children) : 0)
       return count + (selectedFiles.has(file.id) ? 1 : 0)
     }, 0)
   }
@@ -248,8 +236,7 @@ export default function DownloadPage({ params }: PageProps) {
    */
   const getTotalFileCount = (currentFiles: DownloadFile[]): number => {
     return currentFiles.reduce((count, file) => {
-      if (file.type === 'folder')
-        return count + (file.children ? getTotalFileCount(file.children) : 0)
+      if (file.type === 'folder') return count + (file.children ? getTotalFileCount(file.children) : 0)
       return count + 1
     }, 0)
   }
@@ -274,7 +261,7 @@ export default function DownloadPage({ params }: PageProps) {
       const batchSize = 10
       for (let batchIndex = 0; batchIndex < actualSelectedFiles.length; batchIndex += batchSize) {
         const batch = actualSelectedFiles.slice(batchIndex, batchIndex + batchSize)
-        const batchFileNames = batch.map(f => f.name)
+        const batchFileNames = batch.map((f) => f.name)
 
         // 更新状态显示
         setDownloadStatus(
@@ -291,7 +278,7 @@ export default function DownloadPage({ params }: PageProps) {
             // 获取下载URL
             downloadUrls = await call<{ url: string; filename: string }[]>(
               axios.post(`/api/transfer-sessions/${sessionId}/download/generate-urls`, {
-                files: batch.map(file => ({
+                files: batch.map((file) => ({
                   fileId: file.id,
                   name: file.name
                 }))
@@ -307,11 +294,9 @@ export default function DownloadPage({ params }: PageProps) {
 
             // 显示重试提示
             if (retryCount < maxRetries) {
-              toast.error(
-                `${batchFileNames.join('、')} 文件下载通道建立失败，正在重试 (${retryCount}/${maxRetries})`
-              )
+              toast.error(`${batchFileNames.join('、')} 文件下载通道建立失败，正在重试 (${retryCount}/${maxRetries})`)
               // 等待1秒后重试
-              await new Promise(resolve => setTimeout(resolve, 1000))
+              await new Promise((resolve) => setTimeout(resolve, 1000))
             } else {
               toast.error(`${batchFileNames.join('、')} 文件下载通道建立失败`)
             }
@@ -339,7 +324,7 @@ export default function DownloadPage({ params }: PageProps) {
           link.click()
 
           // 延迟移除链接，确保下载已经开始
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100))
           document.body.removeChild(link)
 
           // 更新进度
@@ -348,13 +333,13 @@ export default function DownloadPage({ params }: PageProps) {
 
           // 每个文件下载之间添加短暂延迟
           if (fileIndex < downloadUrls.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 2000))
+            await new Promise((resolve) => setTimeout(resolve, 2000))
           }
         }
 
         // 每批下载之间稍微暂停一下，避免浏览器压力太大
         if (batchIndex + batchSize < actualSelectedFiles.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 1000))
         }
       }
 
@@ -421,9 +406,7 @@ export default function DownloadPage({ params }: PageProps) {
         setDownloadMode(null) // 重置下载模式
       } else if (status === 'PROCESSING') {
         const phase = (progress || 0) >= 100 ? 2 : 1
-        setDownloadStatus(
-          `（打包任务${phase}/2）${phase === 1 ? '正在打包...' : '正在建立缓存...'}`
-        )
+        setDownloadStatus(`（打包任务${phase}/2）${phase === 1 ? '正在打包...' : '正在建立缓存...'}`)
         setDownloadProgress(progress || 0)
       } else {
         // 如果状态既不是 COMPLETED 也不是 PROCESSING，说明可能出现了问题
@@ -494,11 +477,10 @@ export default function DownloadPage({ params }: PageProps) {
       })()
 
       // 检查是否全选了所有文件
-      const isFullSelection =
-        allFileIds.length > 0 && allFileIds.every(id => currentSelection.has(id))
+      const isFullSelection = allFileIds.length > 0 && allFileIds.every((id) => currentSelection.has(id))
 
       // 检查是否一个文件都没选
-      const isNoSelection = allFileIds.every(id => !currentSelection.has(id))
+      const isNoSelection = allFileIds.every((id) => !currentSelection.has(id))
 
       switch (mode) {
         case 'single': {
@@ -511,7 +493,7 @@ export default function DownloadPage({ params }: PageProps) {
 
           // 检查目录结构
           const hasNestedFiles = getActualSelectedFiles(files).some(
-            file => file.relativePath?.includes('/') || file.relativePath?.includes('\\')
+            (file) => file.relativePath?.includes('/') || file.relativePath?.includes('\\')
           )
 
           // 显示结构警告对话框
@@ -594,9 +576,7 @@ export default function DownloadPage({ params }: PageProps) {
     return (
       <Layout width="middle">
         <div className="flex items-center justify-center min-h-[200px]">
-          <p className="text-muted-foreground">
-            {isValidating ? '正在验证会话...' : '会话异常，请刷新重试'}
-          </p>
+          <p className="text-muted-foreground">{isValidating ? '正在验证会话...' : '会话异常，请刷新重试'}</p>
         </div>
       </Layout>
     )
@@ -672,7 +652,7 @@ export default function DownloadPage({ params }: PageProps) {
 
           {isLoadingFiles ? (
             <div className="space-y-2 py-2">
-              {[1, 2, 3].map(i => (
+              {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center gap-2">
                   <Skeleton className="h-5 w-5" />
                   <Skeleton className="h-5 w-[300px]" />
@@ -695,7 +675,7 @@ export default function DownloadPage({ params }: PageProps) {
       {/* 通用确认对话框 */}
       <Dialog
         open={!!currentDialogContent}
-        onOpenChange={open => {
+        onOpenChange={(open) => {
           if (!open && dialogPromiseResolve) dialogPromiseResolve(false)
         }}
       >

@@ -13,7 +13,7 @@ const AUTH_PATHS_PREFIXES = ['/signin', '/signup'] as const
  * @returns 是否需要管理员权限
  */
 export function isAdminPath(pathname: string): boolean {
-  return ADMIN_PATH_PREFIXES.some(prefix => pathname.startsWith(prefix))
+  return ADMIN_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 }
 
 /**
@@ -22,7 +22,7 @@ export function isAdminPath(pathname: string): boolean {
  * @returns 是否需要用户登录
  */
 export function isUserPath(pathname: string): boolean {
-  return USER_PATH_PREFIXES.some(prefix => pathname.startsWith(prefix))
+  return USER_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 }
 
 /**
@@ -31,5 +31,5 @@ export function isUserPath(pathname: string): boolean {
  * @returns 是否是认证页面
  */
 export function isAuthPath(pathname: string): boolean {
-  return AUTH_PATHS_PREFIXES.some(prefix => pathname.startsWith(prefix))
+  return AUTH_PATHS_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 }

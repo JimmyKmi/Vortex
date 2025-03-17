@@ -2,13 +2,9 @@ import { DeleteObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { s3Client } from './client'
 import { S3_CONFIG } from '../env'
-import { PrismaClient } from '@prisma/client'
 
 // 检查是否在服务器端运行
 const isServer = typeof window === 'undefined'
-
-// 只在服务器端导入和初始化Prisma客户端
-const prismaClient = isServer ? new PrismaClient() : undefined;
 
 export class S3StorageService {
   private static instance: S3StorageService
@@ -65,11 +61,7 @@ export class S3StorageService {
    * @param params.Expires 链接过期时间（秒）
    * @returns 预签名URL和表单字段
    */
-  async createPresignedPost(params: {
-    Key: string
-    Fields?: Record<string, string>
-    Expires?: number
-  }): Promise<{
+  async createPresignedPost(params: { Key: string; Fields?: Record<string, string>; Expires?: number }): Promise<{
     url: string
     fields: Record<string, string>
   }> {
@@ -125,10 +117,7 @@ export class S3StorageService {
       })
       await s3Client.send(command)
     } catch (error) {
-      console.error(
-        `Failed to delete file ${s3Key}:`,
-        error instanceof Error ? error.message : 'Unknown error'
-      )
+      console.error(`Failed to delete file ${s3Key}:`, error instanceof Error ? error.message : 'Unknown error')
       // 不抛出错误，允许继续
     }
   }
@@ -154,7 +143,7 @@ export class S3StorageService {
     }
 
     // 验证参数
-    const validFiles = files.filter(file => {
+    const validFiles = files.filter((file) => {
       if (!file.s3BasePath) {
         console.warn(`Invalid S3 file path: Missing or invalid s3BasePath`, file)
         return false
@@ -209,7 +198,7 @@ export class S3StorageService {
     let hasError = false
 
     for (const batch of batches) {
-      const objects = batch.map(file => {
+      const objects = batch.map((file) => {
         const key = this.getFullS3Key(file.s3BasePath, file.relativePath)
         return { Key: key }
       })

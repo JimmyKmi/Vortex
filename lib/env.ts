@@ -105,7 +105,7 @@ function validateS3Config() {
       })
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const missingFields = error.errors.map(e => e.path.join('.'))
+        const missingFields = error.errors.map((e) => e.path.join('.'))
         console.warn(`S3 配置不完整，缺少: ${missingFields.join(', ')}`)
       } else {
         console.warn('S3 配置验证失败', error)
@@ -139,8 +139,6 @@ export const S3_CONFIG = {
   },
   get secretAccessKey() {
     validateS3Config()
-    return isServer && 'S3_SECRET_ACCESS_KEY' in process.env
-      ? process.env.S3_SECRET_ACCESS_KEY
-      : undefined
+    return isServer && 'S3_SECRET_ACCESS_KEY' in process.env ? process.env.S3_SECRET_ACCESS_KEY : undefined
   }
 }

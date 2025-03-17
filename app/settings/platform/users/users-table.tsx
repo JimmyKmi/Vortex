@@ -6,22 +6,9 @@ import { UserRole, ROLE_DEFINITIONS } from '@/lib/roles'
 import useSWR, { useSWRConfig } from 'swr'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { toast } from 'sonner'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   AlertDialog,
@@ -48,7 +35,7 @@ interface UsersTableProps {
   session: Session | null
 }
 
-const fetcher = (url: string) => axios.get(url).then(res => res.data)
+const fetcher = (url: string) => axios.get(url).then((res) => res.data)
 
 // 格式化用户标识显示
 const formatUserIdentifier = (user: UserAccount): string => {
@@ -76,9 +63,7 @@ export function UsersTable({ session }: UsersTableProps) {
       await mutate(
         '/api/management/users',
         (currentUsers: UserAccount[] | undefined) =>
-          currentUsers
-            ? currentUsers.map(user => (user.id === userId ? { ...user, role: newRole } : user))
-            : [],
+          currentUsers ? currentUsers.map((user) => (user.id === userId ? { ...user, role: newRole } : user)) : [],
         { revalidate: false }
       )
 
@@ -91,7 +76,7 @@ export function UsersTable({ session }: UsersTableProps) {
         return
       }
 
-      const targetUser = users?.find(u => u.id === userId)
+      const targetUser = users?.find((u) => u.id === userId)
       toast.success('用户状态已更新', {
         description: `用户 ${targetUser ? formatUserIdentifier(targetUser) : userId} 的角色已更改为 ${ROLE_DEFINITIONS[newRole].name}`
       })
@@ -114,9 +99,7 @@ export function UsersTable({ session }: UsersTableProps) {
       await mutate(
         '/api/management/users',
         (currentUsers: UserAccount[] | undefined) =>
-          currentUsers
-            ? currentUsers.map(user => (user.id === userId ? { ...user, enabled } : user))
-            : [],
+          currentUsers ? currentUsers.map((user) => (user.id === userId ? { ...user, enabled } : user)) : [],
         { revalidate: false }
       )
 
@@ -129,7 +112,7 @@ export function UsersTable({ session }: UsersTableProps) {
         return
       }
 
-      const targetUser = users?.find(u => u.id === userId)
+      const targetUser = users?.find((u) => u.id === userId)
       toast.success('用户状态已更新', {
         description: `用户 ${targetUser ? formatUserIdentifier(targetUser) : userId} 已${enabled ? '启用' : '禁用'}`
       })
@@ -147,11 +130,11 @@ export function UsersTable({ session }: UsersTableProps) {
       await mutate(
         '/api/management/users',
         (currentUsers: UserAccount[] | undefined) =>
-          currentUsers ? currentUsers.filter(user => user.id !== userId) : [],
+          currentUsers ? currentUsers.filter((user) => user.id !== userId) : [],
         { revalidate: false }
       )
 
-      const targetUser = users?.find(u => u.id === userId)
+      const targetUser = users?.find((u) => u.id === userId)
       toast.success('用户已删除', {
         description: `用户 ${targetUser ? formatUserIdentifier(targetUser) : userId} 已成功删除`
       })
@@ -185,7 +168,7 @@ export function UsersTable({ session }: UsersTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {users?.map(user => (
+        {users?.map((user) => (
           <TableRow key={user.id}>
             <TableCell>
               <div className="flex flex-col space-y-1">
@@ -196,7 +179,7 @@ export function UsersTable({ session }: UsersTableProps) {
             <TableCell className="text-sm text-muted-foreground font-mono">{user.id}</TableCell>
             <TableCell>
               <Select
-                onValueChange={value => handleUserRoleChange(user.id, value as UserRole)}
+                onValueChange={(value) => handleUserRoleChange(user.id, value as UserRole)}
                 defaultValue={user.role}
               >
                 <SelectTrigger className="w-[120px]">
@@ -215,11 +198,7 @@ export function UsersTable({ session }: UsersTableProps) {
               <Button
                 variant="default"
                 size="sm"
-                className={cn(
-                  user.enabled
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-yellow-600 hover:bg-yellow-700'
-                )}
+                className={cn(user.enabled ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700')}
                 onClick={() => handleUserStatusChange(user.id, !user.enabled)}
               >
                 {user.enabled ? '已启用' : '已禁用'}
@@ -234,14 +213,10 @@ export function UsersTable({ session }: UsersTableProps) {
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogTitle>确认删除用户？</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    此操作不可撤销。将永久删除该用户账号。
-                  </AlertDialogDescription>
+                  <AlertDialogDescription>此操作不可撤销。将永久删除该用户账号。</AlertDialogDescription>
                   <AlertDialogFooter>
                     <AlertDialogCancel>取消</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleUserDelete(user.id)}>
-                      删除
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={() => handleUserDelete(user.id)}>删除</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

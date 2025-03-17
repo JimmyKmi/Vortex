@@ -314,12 +314,12 @@ export class FileService {
       })
 
       // 设置错误处理
-      archive.on('error', err => {
+      archive.on('error', (err) => {
         console.error('Archiver error:', err)
       })
 
       // 设置警告处理
-      archive.on('warning', err => {
+      archive.on('warning', (err) => {
         if (err.code === 'ENOENT') {
           console.warn('压缩警告 (ENOENT):', err)
         } else {
@@ -406,7 +406,7 @@ export class FileService {
       })
 
       // 设置错误处理
-      archive.on('error', err => {
+      archive.on('error', (err) => {
         console.error('压缩包创建错误:', err)
       })
 
@@ -415,7 +415,7 @@ export class FileService {
       archive.pipe(passThrough)
 
       // 设置警告处理
-      archive.on('warning', err => {
+      archive.on('warning', (err) => {
         if (err.code === 'ENOENT') {
           console.warn('压缩警告 (ENOENT):', err)
         } else {
@@ -463,14 +463,14 @@ export class FileService {
               })
 
               // 给一点时间处理流，避免内存爆炸
-              await new Promise(resolve => setTimeout(resolve, 300))
+              await new Promise((resolve) => setTimeout(resolve, 300))
             } catch (error) {
               console.error(`处理文件失败 ${file.id}:`, error)
             }
           }
 
           // 每批处理完成后，给系统一点喘息时间，释放内存
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 1000))
         }
       } catch (error) {
         console.error('处理文件过程中出错:', error)
