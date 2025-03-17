@@ -258,14 +258,14 @@ export default function UploadPage({ params }: PageProps) {
       if (!fileList?.length) return
 
       const files = Array.from(fileList)
-      await processAddFiles(files, event.target.webkitdirectory)
+      await processAddFiles(files)
     } catch (error) {
       console.error('Error handling file change:', error)
       toast.error('添加文件时发生错误')
     } finally {
       event.target.value = ''
     }
-  }, [checkSessionActive, processAddFiles])
+  }, [checkSessionActive])
 
   /**
    * 创建文件输入处理函数
@@ -307,7 +307,7 @@ export default function UploadPage({ params }: PageProps) {
    * @param {File[]} files - 文件列表
    */
   const processAddFiles = useCallback(
-    async (files: File[], isDirectory: boolean) => {
+    async (files: File[]) => {
       try {
         const newFiles: FileToUpload[] = []
         const duplicates: string[] = []
@@ -1020,7 +1020,7 @@ export default function UploadPage({ params }: PageProps) {
 
   // 为DragDrop上下文提供的简化版processAddFiles
   const handleDragDropFiles = useCallback((files: File[]) => {
-    processAddFiles(files, false).catch(error => {
+    processAddFiles(files).catch(error => {
       console.error('Error handling drag drop files:', error)
       toast.error('添加文件时发生错误')
     })
