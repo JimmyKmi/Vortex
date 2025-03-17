@@ -516,10 +516,7 @@ export default function UploadPage({ params }: PageProps) {
         errorMessage: '启动上传失败',
         onError: (error) => {
           // 如果返回已经开始上传的错误，则忽略继续执行
-          if (error?.name === 'AlreadyStarted') {
-            console.log('Upload already started, continuing...')
-            return
-          }
+          if (error?.name === 'AlreadyStarted') return
           hasError = true
         }
       })

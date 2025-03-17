@@ -145,7 +145,7 @@ export async function DELETE(request: Request) {
     let json
     try {
       json = await request.json()
-    } catch (_parseError) {
+    } catch {
       return ResponseThrow('InvalidParams')
     }
 
@@ -224,7 +224,7 @@ export async function DELETE(request: Request) {
             const fileIds = fileRelations.map((relation) => relation.file.id)
 
             // 删除文件与传输码的关联
-            const deletedRelations = await tx.fileToTransferCode.deleteMany({
+            await tx.fileToTransferCode.deleteMany({
               where: {
                 transferCodeId
               }
@@ -247,7 +247,7 @@ export async function DELETE(request: Request) {
             const fileIdsToDelete = fileIds.filter((id) => !stillInUseFileIds.includes(id))
 
             if (fileIdsToDelete.length > 0) {
-              const deletedFiles = await tx.file.deleteMany({
+              await tx.file.deleteMany({
                 where: {
                   id: {
                     in: fileIdsToDelete
@@ -302,7 +302,7 @@ export async function DELETE(request: Request) {
     try {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error(`Failed to batch delete transfer codes: ${errorMessage}`)
-    } catch (_loggingError) {
+    } catch {
       console.error('Error while logging')
     }
     return ResponseThrow('DatabaseError')

@@ -275,10 +275,10 @@ export default function DownloadPage({ params }: PageProps) {
                 onError: () => console.error(`下载URL生成失败，重试次数: ${retryCount + 1}`)
               }
             )
-          } catch (_error) {
+          } catch (error) {
+            console.error('Error when generating download URLs:', error)
             // 处理错误
             retryCount++
-
             // 显示重试提示
             if (retryCount < maxRetries) {
               toast.error(`${batchFileNames.join('、')} 文件下载通道建立失败，正在重试 (${retryCount}/${maxRetries})`)

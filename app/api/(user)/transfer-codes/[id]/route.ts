@@ -183,8 +183,8 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
           await s3Client.send(command)
         } catch (compressError) {
           // 压缩包可能不存在，忽略该错误
-          console.log(
-            `传输码 ${id} 的压缩包删除失败或不存在:`,
+          console.warn(
+            `Error while delete compress file for transfer code ${id}:`,
             compressError instanceof Error ? compressError.message : 'Unknown error'
           )
         }
@@ -201,7 +201,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
         const fileIds = fileRelations.map((relation) => relation.file.id)
 
         // 删除文件与传输码的关联
-        const deletedRelations = await tx.fileToTransferCode.deleteMany({
+        await tx.fileToTransferCode.deleteMany({
           where: {
             transferCodeId: id
           }
@@ -224,7 +224,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
         const fileIdsToDelete = fileIds.filter((id) => !stillInUseFileIds.includes(id))
 
         if (fileIdsToDelete.length > 0) {
-          const deletedFiles = await tx.file.deleteMany({
+          await tx.file.deleteMany({
             where: {
               id: {
                 in: fileIdsToDelete
@@ -267,7 +267,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     try {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error(`Failed to delete transfer code: ${errorMessage}`)
-    } catch (_loggingError) {
+    } catch {
       console.error('Error while logging')
     }
     return ResponseThrow('DatabaseError')
