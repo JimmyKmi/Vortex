@@ -1,23 +1,18 @@
 {
   "extends": [
+    "next",
     "next/core-web-vitals",
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
   ],
   "plugins": ["@typescript-eslint"],
   "parser": "@typescript-eslint/parser",
   "rules": {
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": ["warn"],
+    "no-unused-vars": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
     "@typescript-eslint/no-explicit-any": "warn",
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
-    "semi": ["error", "never"],
-    "quotes": ["error", "single"],
-    "jsx-quotes": ["error", "prefer-double"],
-    "comma-dangle": ["error", "never"],
-    "max-len": [
-      "error",
-      { "code": 100, "ignoreUrls": true, "ignoreStrings": true, "ignoreComments": true }
-    ]
+//    "no-console": ["warn", { "allow": ["warn", "error"] }]
+    "max-len": "off"
   }
 }
