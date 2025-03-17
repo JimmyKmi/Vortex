@@ -143,7 +143,7 @@ export default function UploadConfigure({
               className="col-span-3"
               placeholder="留空表示不限制"
               value={settings.usageLimit}
-              onChange={e => setSettings(prev => ({ ...prev, usageLimit: e.target.value }))}
+              onChange={(e) => setSettings((prev) => ({ ...prev, usageLimit: e.target.value }))}
             />
           </div>
           {/* 速度限制设置 */}
@@ -157,7 +157,7 @@ export default function UploadConfigure({
               className="col-span-3"
               placeholder="KB/s，留空表示不限制"
               value={settings.speedLimit}
-              onChange={e => setSettings(prev => ({ ...prev, speedLimit: e.target.value }))}
+              onChange={(e) => setSettings((prev) => ({ ...prev, speedLimit: e.target.value }))}
             />
           </div>
           {/* 过期时间设置 */}
@@ -170,7 +170,7 @@ export default function UploadConfigure({
               type="datetime-local"
               className="col-span-3"
               value={settings.expires}
-              onChange={e => setSettings(prev => ({ ...prev, expires: e.target.value }))}
+              onChange={(e) => setSettings((prev) => ({ ...prev, expires: e.target.value }))}
             />
           </div>
           {/* 描述信息设置 */}
@@ -183,7 +183,7 @@ export default function UploadConfigure({
               className="col-span-3"
               placeholder="可选的描述信息"
               value={settings.comment}
-              onChange={e => setSettings(prev => ({ ...prev, comment: e.target.value }))}
+              onChange={(e) => setSettings((prev) => ({ ...prev, comment: e.target.value }))}
             />
           </div>
           {/* 底部按钮区域 */}

@@ -23,7 +23,7 @@ const updateTransferCodeSchema = z.object({
   expires: z.string().datetime().nullable(),
   speedLimit: z
     .number()
-    .refine(val => val === null || SPEED_LIMIT_OPTIONS.includes(val), '无效的速度限制选项')
+    .refine((val) => val === null || SPEED_LIMIT_OPTIONS.includes(val), '无效的速度限制选项')
     .nullable(),
   usageLimit: z.number().min(1).nullable()
 })
@@ -52,17 +52,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (!transferCode) return ResponseThrow('TransferCodeNotFound')
 
     // 验证传输码是否已禁用或过期
-    if (
-      transferCode.disableReason ||
-      (transferCode.expires && new Date(transferCode.expires) < new Date())
-    )
+    if (transferCode.disableReason || (transferCode.expires && new Date(transferCode.expires) < new Date()))
       return ResponseThrow('TransferCodeDisabled')
 
     const json = await request.json()
     const body = updateTransferCodeSchema.parse(json)
 
     // 开启事务
-    const updated = await prisma.$transaction(async tx => {
+    const updated = await prisma.$transaction(async (tx) => {
       // 更新传输码配置
       const updatedCode = await tx.transferCode.update({
         where: {
@@ -119,11 +116,7 @@ export async function PUT(_request: Request, { params }: { params: { id: string 
     if (!transferCode) return ResponseThrow('TransferCodeNotFound')
 
     // 如果已过期，不允许启用
-    if (
-      !transferCode.disableReason &&
-      transferCode.expires &&
-      new Date(transferCode.expires) < new Date()
-    ) {
+    if (!transferCode.disableReason && transferCode.expires && new Date(transferCode.expires) < new Date()) {
       return ResponseThrow('TransferCodeExpired')
     }
 
@@ -157,7 +150,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     if (!transferCode) return ResponseThrow('TransferCodeNotFound')
 
     // 使用事务确保原子性
-    await prisma.$transaction(async tx => {
+    await prisma.$transaction(async (tx) => {
       // S3删除错误追踪
       let s3DeleteError = null
 
@@ -169,8 +162,8 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
 
       // 2. 删除 S3 中的文件
       const filesToDelete = fileRelations
-        .filter(relation => !relation.file.isDirectory)
-        .map(relation => ({
+        .filter((relation) => !relation.file.isDirectory)
+        .map((relation) => ({
           s3BasePath: relation.file.s3BasePath,
           relativePath: relation.file.relativePath
         }))
@@ -206,7 +199,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       // 3. 先删除关联记录，避免外键约束问题
       if (fileRelations.length > 0) {
         // 获取需要删除的文件ID列表
-        const fileIds = fileRelations.map(relation => relation.file.id)
+        const fileIds = fileRelations.map((relation) => relation.file.id)
 
         // 删除文件与传输码的关联
         const deletedRelations = await tx.fileToTransferCode.deleteMany({
@@ -227,11 +220,11 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
         })
 
         // 如果某些文件仍在使用，则从删除列表中移除
-        const stillInUseFileIds = stillInUseFiles.map(f => f.fileId)
+        const stillInUseFileIds = stillInUseFiles.map((f) => f.fileId)
         console.log(`仍在使用的文件IDs: ${stillInUseFileIds.join(', ')}`)
 
         // 只删除不再被其他传输码使用的文件
-        const fileIdsToDelete = fileIds.filter(id => !stillInUseFileIds.includes(id))
+        const fileIdsToDelete = fileIds.filter((id) => !stillInUseFileIds.includes(id))
 
         if (fileIdsToDelete.length > 0) {
           const deletedFiles = await tx.file.deleteMany({

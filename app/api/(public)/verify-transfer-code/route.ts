@@ -43,8 +43,7 @@ export async function POST(req: NextRequest) {
         status: transferCode.type === 'UPLOAD' ? 'PICKING' : 'DOWNLOADING',
         ipAddress: clientIp,
         userAgent: userAgent,
-        linkedTransferCodeId:
-          transferCode.type === 'DOWNLOAD' ? transferCode.sourceTransferCodeId : null
+        linkedTransferCodeId: transferCode.type === 'DOWNLOAD' ? transferCode.sourceTransferCodeId : null
       }
     })
 
@@ -60,7 +59,7 @@ export async function POST(req: NextRequest) {
     })
 
     // 等待会话初始化完成
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     // 创建响应
     const response = NextResponse.json({
@@ -68,10 +67,7 @@ export async function POST(req: NextRequest) {
       data: {
         sessionId: transferSession.id,
         type: transferCode.type,
-        redirectTo:
-          transferCode.type === 'UPLOAD'
-            ? `/upload/${transferSession.id}`
-            : `/download/${transferSession.id}`
+        redirectTo: transferCode.type === 'UPLOAD' ? `/upload/${transferSession.id}` : `/download/${transferSession.id}`
       }
     })
 

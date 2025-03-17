@@ -51,8 +51,8 @@ export function DragDropProvider({ children }: { children: ReactNode }) {
       // 处理文件系统条目
       const processEntry = async (entry: FileSystemEntry): Promise<void> => {
         if (entry.isFile) {
-          const file = await new Promise<File>(resolve => {
-            ;(entry as FileSystemFileEntry).file(file => {
+          const file = await new Promise<File>((resolve) => {
+            ;(entry as FileSystemFileEntry).file((file) => {
               // 添加相对路径属性
               Object.defineProperty(file, 'webkitRelativePath', {
                 value: entry.fullPath.slice(1) // 移除开头的斜杠
@@ -63,17 +63,17 @@ export function DragDropProvider({ children }: { children: ReactNode }) {
           files.push(file)
         } else if (entry.isDirectory) {
           const reader = (entry as FileSystemDirectoryEntry).createReader()
-          const entries = await new Promise<FileSystemEntry[]>(resolve => {
-            reader.readEntries(entries => resolve(entries))
+          const entries = await new Promise<FileSystemEntry[]>((resolve) => {
+            reader.readEntries((entries) => resolve(entries))
           })
-          await Promise.all(entries.map(entry => processEntry(entry)))
+          await Promise.all(entries.map((entry) => processEntry(entry)))
         }
       }
 
       try {
         // 处理所有拖拽的项目
         await Promise.all(
-          items.map(item => {
+          items.map((item) => {
             const entry = item.webkitGetAsEntry()
             if (entry) {
               return processEntry(entry)
@@ -92,7 +92,7 @@ export function DragDropProvider({ children }: { children: ReactNode }) {
 
         // 如果没有文件被添加，可能是因为浏览器不支持文件系统API
         if (files.length === 0 && e.dataTransfer.files.length > 0) {
-          Array.from(e.dataTransfer.files).forEach(file => {
+          Array.from(e.dataTransfer.files).forEach((file) => {
             Object.defineProperty(file, 'webkitRelativePath', {
               value: file.name
             })
@@ -105,7 +105,7 @@ export function DragDropProvider({ children }: { children: ReactNode }) {
         console.error('Error processing dropped files:', error)
         // 降级处理：直接使用文件列表
         const fallbackFiles = Array.from(e.dataTransfer.files)
-        fallbackFiles.forEach(file => {
+        fallbackFiles.forEach((file) => {
           if (!(file as any).webkitRelativePath) {
             Object.defineProperty(file, 'webkitRelativePath', {
               value: file.name

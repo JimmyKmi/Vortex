@@ -55,21 +55,15 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
           </div>
           <div>
             <div className="text-sm font-medium mb-1">速度限制</div>
-            <div className="text-muted-foreground">
-              {data.speedLimit ? `${data.speedLimit / 1024} Mbps` : '不限制'}
-            </div>
+            <div className="text-muted-foreground">{data.speedLimit ? `${data.speedLimit / 1024} Mbps` : '不限制'}</div>
           </div>
           <div>
             <div className="text-sm font-medium mb-1">使用次数</div>
-            <div className="text-muted-foreground">
-              {data.usageLimit ? `${data.usageLimit} 次` : '不限制'}
-            </div>
+            <div className="text-muted-foreground">{data.usageLimit ? `${data.usageLimit} 次` : '不限制'}</div>
           </div>
           <div>
             <div className="text-sm font-medium mb-1">创建时间</div>
-            <div className="text-muted-foreground">
-              {format(new Date(data.createdAt), 'yyyy-MM-dd HH:mm')}
-            </div>
+            <div className="text-muted-foreground">{format(new Date(data.createdAt), 'yyyy-MM-dd HH:mm')}</div>
           </div>
         </div>
         <DialogFooter>

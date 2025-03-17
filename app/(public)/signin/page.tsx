@@ -30,11 +30,7 @@ export default function SignInPage() {
   const [isZitadelLoading, setIsZitadelLoading] = useState(false)
 
   // 使用Suspense包装SearchParamsProvider
-  const SignInContent = ({
-    searchParams
-  }: {
-    searchParams: ReturnType<typeof useSearchParams>
-  }) => {
+  const SignInContent = ({ searchParams }: { searchParams: ReturnType<typeof useSearchParams> }) => {
     // 检查URL中的错误参数
     useEffect(() => {
       const error = searchParams.get('code')
@@ -65,23 +61,11 @@ export default function SignInPage() {
         <form action={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label>邮箱</Label>
-            <Input
-              name="email"
-              type="email"
-              placeholder="请输入邮箱"
-              required
-              disabled={isPending}
-            />
+            <Input name="email" type="email" placeholder="请输入邮箱" required disabled={isPending} />
           </div>
           <div className="space-y-2">
             <Label>密码</Label>
-            <Input
-              name="password"
-              type="password"
-              placeholder="请输入密码"
-              required
-              disabled={isPending}
-            />
+            <Input name="password" type="password" placeholder="请输入密码" required disabled={isPending} />
           </div>
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? (
@@ -93,19 +77,8 @@ export default function SignInPage() {
                   fill="none"
                   viewBox="0 0 24 24"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                 </svg>
               </span>
             ) : (
@@ -132,12 +105,7 @@ export default function SignInPage() {
           )}
 
           {allowZitadel && (
-            <Button
-              onClick={handleZitadelLogin}
-              variant="outline"
-              className="w-full"
-              disabled={isZitadelLoading}
-            >
+            <Button onClick={handleZitadelLogin} variant="outline" className="w-full" disabled={isZitadelLoading}>
               {isZitadelLoading ? (
                 <span className="flex items-center justify-center">
                   <svg
@@ -154,11 +122,7 @@ export default function SignInPage() {
                       stroke="currentColor"
                       strokeWidth="4"
                     ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v8H4z"
-                    ></path>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
                   {zitadelIdpName} 登录中...
                 </span>
@@ -236,7 +200,7 @@ export default function SignInPage() {
   return (
     <Layout width="min" title="登录" buttonType="home" backPath="/">
       <Suspense fallback={<div>加载中...</div>}>
-        <SearchParamsProvider>{props => <SignInContent {...props} />}</SearchParamsProvider>
+        <SearchParamsProvider>{(props) => <SignInContent {...props} />}</SearchParamsProvider>
       </Suspense>
     </Layout>
   )

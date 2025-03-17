@@ -114,12 +114,8 @@ const retryConfig = {
  * @param {Partial<FileToUpload>} updates - 更新的属性
  * @returns {FileToUpload[]} 更新后的文件列表
  */
-const updateFileInList = (
-  files: FileToUpload[],
-  fileId: string,
-  updates: Partial<FileToUpload>
-): FileToUpload[] => {
-  return files.map(f => {
+const updateFileInList = (files: FileToUpload[], fileId: string, updates: Partial<FileToUpload>): FileToUpload[] => {
+  return files.map((f) => {
     if (f.id === fileId) return { ...f, ...updates }
     if (f.type === 'folder' && f.children) {
       return { ...f, children: updateFileInList(f.children, fileId, updates) }
@@ -167,7 +163,7 @@ const generateUploadUrl = async (
     id: string
   }>(axios.post(`/api/transfer-sessions/${sessionId}/upload/generate-upload-url`, params), {
     errorMessage: '获取上传URL失败',
-    onError: error =>
+    onError: (error) =>
       console.error('Generate upload URL error:', {
         error,
         params,
@@ -186,8 +182,9 @@ export default function UploadPage({ params }: PageProps) {
   const [isUploading, setIsUploading] = useState(false)
   const { enableDragDrop, disableDragDrop } = useDragDrop()
   const [showUploadConfirm, setShowUploadConfirm] = useState(false)
-  const { isActive, isValidating, transferInfo, setTransferInfo, checkSessionActive } =
-    useTransferSession({ sessionId })
+  const { isActive, isValidating, transferInfo, setTransferInfo, checkSessionActive } = useTransferSession({
+    sessionId
+  })
   const api = useApi()
   const fileTreeRef = useRef<FileTreeRef>(null)
 
@@ -251,21 +248,24 @@ export default function UploadPage({ params }: PageProps) {
    *
    * @param {React.ChangeEvent<HTMLInputElement>} event - 文件选择事件
    */
-  const handleFileChangeCallback = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!checkSessionActive()) return
-    try {
-      const fileList = event.target.files
-      if (!fileList?.length) return
+  const handleFileChangeCallback = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!checkSessionActive()) return
+      try {
+        const fileList = event.target.files
+        if (!fileList?.length) return
 
-      const files = Array.from(fileList)
-      await processAddFiles(files)
-    } catch (error) {
-      console.error('Error handling file change:', error)
-      toast.error('添加文件时发生错误')
-    } finally {
-      event.target.value = ''
-    }
-  }, [checkSessionActive])
+        const files = Array.from(fileList)
+        await processAddFiles(files)
+      } catch (error) {
+        console.error('Error handling file change:', error)
+        toast.error('添加文件时发生错误')
+      } finally {
+        event.target.value = ''
+      }
+    },
+    [checkSessionActive]
+  )
 
   /**
    * 创建文件输入处理函数
@@ -274,25 +274,25 @@ export default function UploadPage({ params }: PageProps) {
    */
   const createFileInputHandler = useCallback(
     (isDirectory: boolean): (() => void) =>
-    () => {
-      if (!checkSessionActive()) return
+      () => {
+        if (!checkSessionActive()) return
 
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.multiple = true
-      if (isDirectory) input.webkitdirectory = true
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.multiple = true
+        if (isDirectory) input.webkitdirectory = true
 
-      input.onchange = (e: Event) => {
-        handleFileChangeCallback({
-          target: e.target as HTMLInputElement,
-          preventDefault: () => {},
-          stopPropagation: () => {},
-          nativeEvent: e
-        } as React.ChangeEvent<HTMLInputElement>).then()
-      }
+        input.onchange = (e: Event) => {
+          handleFileChangeCallback({
+            target: e.target as HTMLInputElement,
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            nativeEvent: e
+          } as React.ChangeEvent<HTMLInputElement>).then()
+        }
 
-      input.click()
-    },
+        input.click()
+      },
     [checkSessionActive, handleFileChangeCallback]
   )
 
@@ -312,8 +312,8 @@ export default function UploadPage({ params }: PageProps) {
         const newFiles: FileToUpload[] = []
         const duplicates: string[] = []
         const processedPaths = new Set<string>()
-        const currentFiles = await new Promise<FileToUpload[]>(resolve => {
-          setFiles(prev => {
+        const currentFiles = await new Promise<FileToUpload[]>((resolve) => {
+          setFiles((prev) => {
             resolve(prev)
             return prev
           })
@@ -324,7 +324,7 @@ export default function UploadPage({ params }: PageProps) {
 
         // 初始化现有的文件夹树结构
         const initExistingFolderTree = (files: FileToUpload[]) => {
-          files.forEach(file => {
+          files.forEach((file) => {
             if (file.type === 'folder' && file.relativePath) {
               folderTree[file.relativePath] = file
               if (file.children) initExistingFolderTree(file.children)
@@ -435,7 +435,7 @@ export default function UploadPage({ params }: PageProps) {
 
         // 更新所有顶层文件夹的大小
         const updateAllFolderSizes = (files: FileToUpload[]) => {
-          files.forEach(file => {
+          files.forEach((file) => {
             if (file.type === 'folder') updateFolderSize(file)
           })
         }
@@ -443,25 +443,18 @@ export default function UploadPage({ params }: PageProps) {
         updateAllFolderSizes(newFiles)
 
         // 合并新文件到现有结构
-        const mergeFiles = (
-          existingFiles: FileToUpload[],
-          newFilesToAdd: FileToUpload[]
-        ): FileToUpload[] => {
+        const mergeFiles = (existingFiles: FileToUpload[], newFilesToAdd: FileToUpload[]): FileToUpload[] => {
           const result = [...existingFiles]
 
-          newFilesToAdd.forEach(newFile => {
+          newFilesToAdd.forEach((newFile) => {
             const existingFileIndex = result.findIndex(
-              existing =>
-                existing.type === 'folder' && existing.relativePath === newFile.relativePath
+              (existing) => existing.type === 'folder' && existing.relativePath === newFile.relativePath
             )
 
             if (existingFileIndex !== -1 && newFile.type === 'folder') {
               // 如果文件夹已存在，合并子项
               const existingFolder = result[existingFileIndex]
-              existingFolder.children = mergeFiles(
-                existingFolder.children || [],
-                newFile.children || []
-              )
+              existingFolder.children = mergeFiles(existingFolder.children || [], newFile.children || [])
               updateFolderSize(existingFolder)
             } else {
               // 如果是新文件或新文件夹，直接添加
@@ -474,7 +467,7 @@ export default function UploadPage({ params }: PageProps) {
 
         // 处理完成后，根据processedPaths的大小显示成功提示
         if (processedPaths.size > 0) {
-          setFiles(prev => mergeFiles(prev, newFiles))
+          setFiles((prev) => mergeFiles(prev, newFiles))
           toast.success(`成功添加 ${processedPaths.size} 个文件`)
 
           // 添加文件后，自动选中所有文件
@@ -521,7 +514,7 @@ export default function UploadPage({ params }: PageProps) {
       // 开始上传，获取下载码
       await api.call(axios.post(`/api/transfer-sessions/${sessionId}/upload/start`), {
         errorMessage: '启动上传失败',
-        onError: error => {
+        onError: (error) => {
           // 如果返回已经开始上传的错误，则忽略继续执行
           if (error?.name === 'AlreadyStarted') {
             console.log('Upload already started, continuing...')
@@ -535,9 +528,9 @@ export default function UploadPage({ params }: PageProps) {
       if (hasError) return
 
       // 设置所有文件的初始状态为等待
-      setFiles(prev => {
+      setFiles((prev) => {
         const setInitialStatus = (files: FileToUpload[]): FileToUpload[] => {
-          return files.map(f => ({
+          return files.map((f) => ({
             ...f,
             status: 'not_started',
             progress: 0,
@@ -551,7 +544,7 @@ export default function UploadPage({ params }: PageProps) {
       const flattenFiles = (files: FileToUpload[]): FileToUpload[] => {
         const allFiles: FileToUpload[] = []
         const traverse = (items: FileToUpload[]) => {
-          items.forEach(item => {
+          items.forEach((item) => {
             allFiles.push(item)
             if (item.children) traverse(item.children)
           })
@@ -564,17 +557,14 @@ export default function UploadPage({ params }: PageProps) {
 
       // 创建一个函数来处理单个文件的上传
       const processUpload = async (file: FileToUpload) => {
-        const retryUpload = async (
-          stage: 'preparing' | 'uploading' | 'verifying',
-          error: any
-        ): Promise<boolean> => {
+        const retryUpload = async (stage: 'preparing' | 'uploading' | 'verifying', error: any): Promise<boolean> => {
           const stageConfig = retryConfig.stages[stage]
           const currentRetryCount = (file.error?.retryCount || 0) + 1
 
           if (currentRetryCount > stageConfig.maxRetries) return false
 
           // 更新状态为重试中
-          setFiles(prev =>
+          setFiles((prev) =>
             updateFileInList(prev, file.id, {
               status: 'retrying',
               error: {
@@ -592,7 +582,7 @@ export default function UploadPage({ params }: PageProps) {
             : stageConfig.retryDelay
 
           // 等待一段时间后重试
-          await new Promise(resolve => setTimeout(resolve, delay))
+          await new Promise((resolve) => setTimeout(resolve, delay))
           return true
         }
 
@@ -600,7 +590,7 @@ export default function UploadPage({ params }: PageProps) {
           // 先处理文件夹创建
           if (file.type === 'folder') {
             // 更新文件夹状态
-            setFiles(prev =>
+            setFiles((prev) =>
               updateFileInList(prev, file.id, {
                 status: 'completed',
                 progress: 100
@@ -610,7 +600,7 @@ export default function UploadPage({ params }: PageProps) {
           }
 
           // 更新文件状态为准备中
-          setFiles(prev =>
+          setFiles((prev) =>
             updateFileInList(prev, file.id, {
               status: 'preparing',
               progress: 0,
@@ -635,7 +625,7 @@ export default function UploadPage({ params }: PageProps) {
               )
 
               if (!uploadData) {
-                setFiles(prev =>
+                setFiles((prev) =>
                   updateFileInList(prev, file.id, {
                     status: 'error_preparing',
                     error: {
@@ -651,7 +641,7 @@ export default function UploadPage({ params }: PageProps) {
             } catch (error: any) {
               const canRetry = await retryUpload('preparing', error)
               if (!canRetry) {
-                setFiles(prev =>
+                setFiles((prev) =>
                   updateFileInList(prev, file.id, {
                     status: 'error_preparing',
                     error: {
@@ -668,7 +658,7 @@ export default function UploadPage({ params }: PageProps) {
           }
 
           // 更新文件状态为上传中
-          setFiles(prev =>
+          setFiles((prev) =>
             updateFileInList(prev, file.id, {
               status: 'uploading',
               progress: 0,
@@ -691,10 +681,8 @@ export default function UploadPage({ params }: PageProps) {
                 maxBodyLength: Infinity,
                 timeout: 0,
                 onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-                  const percentCompleted = Math.round(
-                    (progressEvent.loaded * 100) / (progressEvent.total || 1)
-                  )
-                  setFiles(prev =>
+                  const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
+                  setFiles((prev) =>
                     updateFileInList(prev, file.id, {
                       progress: percentCompleted,
                       uploadedSize: progressEvent.loaded
@@ -706,7 +694,7 @@ export default function UploadPage({ params }: PageProps) {
             } catch (error: any) {
               const canRetry = await retryUpload('uploading', error)
               if (!canRetry) {
-                setFiles(prev =>
+                setFiles((prev) =>
                   updateFileInList(prev, file.id, {
                     status: 'error_uploading',
                     error: {
@@ -723,7 +711,7 @@ export default function UploadPage({ params }: PageProps) {
           }
 
           // 更新文件状态为校验中
-          setFiles(prev =>
+          setFiles((prev) =>
             updateFileInList(prev, file.id, {
               status: 'verifying',
               progress: 100,
@@ -753,7 +741,7 @@ export default function UploadPage({ params }: PageProps) {
                 const error = new Error('记录上传失败')
                 const canRetry = await retryUpload('verifying', error)
                 if (!canRetry) {
-                  setFiles(prev =>
+                  setFiles((prev) =>
                     updateFileInList(prev, file.id, {
                       status: 'error_verifying',
                       error: {
@@ -772,7 +760,7 @@ export default function UploadPage({ params }: PageProps) {
             } catch (error: any) {
               const canRetry = await retryUpload('verifying', error)
               if (!canRetry) {
-                setFiles(prev =>
+                setFiles((prev) =>
                   updateFileInList(prev, file.id, {
                     status: 'error_verifying',
                     error: {
@@ -789,7 +777,7 @@ export default function UploadPage({ params }: PageProps) {
           }
 
           // 更新文件状态为完成
-          setFiles(prev =>
+          setFiles((prev) =>
             updateFileInList(prev, file.id, {
               status: 'completed',
               progress: 100,
@@ -804,9 +792,7 @@ export default function UploadPage({ params }: PageProps) {
             response: error?.response?.data
           })
           hasError = true
-          toast.error(
-            `上传 ${file.name} 失败: ${error?.response?.data?.message || error?.message || '未知错误'}`
-          )
+          toast.error(`上传 ${file.name} 失败: ${error?.response?.data?.message || error?.message || '未知错误'}`)
         }
       }
 
@@ -851,7 +837,7 @@ export default function UploadPage({ params }: PageProps) {
 
         if (completeResponse) {
           // 更新传输信息状态
-          setTransferInfo(prev => ({
+          setTransferInfo((prev) => ({
             ...prev!,
             status: 'CONFIGURING',
             downloadCode: completeResponse.downloadCode
@@ -860,7 +846,7 @@ export default function UploadPage({ params }: PageProps) {
           toast.success('所有文件上传成功！')
 
           // 等待状态更新完成后再刷新页面
-          await new Promise(resolve => setTimeout(resolve, 500))
+          await new Promise((resolve) => setTimeout(resolve, 500))
           router.refresh()
         }
       }
@@ -885,7 +871,7 @@ export default function UploadPage({ params }: PageProps) {
    */
   const handleSelectionChange = useCallback((newSelectedFiles: Set<string>) => {
     // 避免不必要的更新 - 只有当新旧集合不同时才更新
-    setSelectedFiles(prev => {
+    setSelectedFiles((prev) => {
       // 检查新旧集合是否相同
       if (prev.size !== newSelectedFiles.size) return newSelectedFiles
 
@@ -905,12 +891,11 @@ export default function UploadPage({ params }: PageProps) {
   const handleBatchDelete = () => {
     if (selectedFiles.size === 0) return
 
-    setFiles(prev => {
+    setFiles((prev) => {
       const removeSelectedFiles = (files: FileToUpload[]): FileToUpload[] => {
-        return files.filter(file => {
+        return files.filter((file) => {
           if (selectedFiles.has(file.id)) return false
-          if (file.type === 'folder' && file.children)
-            file.children = removeSelectedFiles(file.children)
+          if (file.type === 'folder' && file.children) file.children = removeSelectedFiles(file.children)
           return true
         })
       }
@@ -927,8 +912,7 @@ export default function UploadPage({ params }: PageProps) {
    */
   const getSelectedFilesCount = (currentFiles: FileToUpload[]): number => {
     return currentFiles.reduce((count, file) => {
-      if (file.type === 'folder')
-        return count + (file.children ? getSelectedFilesCount(file.children) : 0)
+      if (file.type === 'folder') return count + (file.children ? getSelectedFilesCount(file.children) : 0)
       return count + (selectedFiles.has(file.id) ? 1 : 0)
     }, 0)
   }
@@ -1009,22 +993,25 @@ export default function UploadPage({ params }: PageProps) {
     if (fileStatuses.length === 0) return 'not_started'
 
     // 如果所有文件都是 completed，则显示完成
-    if (fileStatuses.every(status => status === 'completed')) return 'completed'
+    if (fileStatuses.every((status) => status === 'completed')) return 'completed'
 
     // 如果所有文件都是 not_started，则显示未上传
-    if (fileStatuses.every(status => status === 'not_started')) return 'not_started'
+    if (fileStatuses.every((status) => status === 'not_started')) return 'not_started'
 
     // 其他情况显示上传中
     return 'uploading'
   }
 
   // 为DragDrop上下文提供的简化版processAddFiles
-  const handleDragDropFiles = useCallback((files: File[]) => {
-    processAddFiles(files).catch(error => {
-      console.error('Error handling drag drop files:', error)
-      toast.error('添加文件时发生错误')
-    })
-  }, [processAddFiles])
+  const handleDragDropFiles = useCallback(
+    (files: File[]) => {
+      processAddFiles(files).catch((error) => {
+        console.error('Error handling drag drop files:', error)
+        toast.error('添加文件时发生错误')
+      })
+    },
+    [processAddFiles]
+  )
 
   /**
    * 组件卸载时清理事件监听和轮询
@@ -1082,11 +1069,10 @@ export default function UploadPage({ params }: PageProps) {
     const currentSelectedFiles = fileTreeRef.current.getSelectedFiles()
 
     // 检查是否全选了所有文件
-    const isFullSelection =
-      allFileIds.length > 0 && allFileIds.every(id => currentSelectedFiles.has(id))
+    const isFullSelection = allFileIds.length > 0 && allFileIds.every((id) => currentSelectedFiles.has(id))
 
     // 检查是否一个文件都没选
-    const isNoSelection = allFileIds.every(id => !currentSelectedFiles.has(id))
+    const isNoSelection = allFileIds.every((id) => !currentSelectedFiles.has(id))
 
     // 全选或未选择任何文件时直接上传
     if (isFullSelection || isNoSelection) {
@@ -1101,9 +1087,7 @@ export default function UploadPage({ params }: PageProps) {
     return (
       <Layout width="middle">
         <div className="flex items-center justify-center min-h-[200px]">
-          <p className="text-muted-foreground">
-            {isValidating ? '正在验证会话...' : '会话异常，请刷新重试'}
-          </p>
+          <p className="text-muted-foreground">{isValidating ? '正在验证会话...' : '会话异常，请刷新重试'}</p>
         </div>
       </Layout>
     )
@@ -1144,9 +1128,7 @@ export default function UploadPage({ params }: PageProps) {
               <Button variant="outline" size="sm" onClick={handleInvertSelection} className="h-8">
                 反选
               </Button>
-              <span className="text-sm text-muted-foreground">
-                已选择 {getSelectedFilesCount(files)} 个文件
-              </span>
+              <span className="text-sm text-muted-foreground">已选择 {getSelectedFilesCount(files)} 个文件</span>
             </div>
             <Button
               variant="destructive"

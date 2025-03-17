@@ -77,9 +77,7 @@ export default function SignUpPage() {
           default: '注册失败，请重试'
         }
 
-        const errorMessage = errorCode
-          ? errorMap[errorCode] || errorMap['default']
-          : errorMap['default']
+        const errorMessage = errorCode ? errorMap[errorCode] || errorMap['default'] : errorMap['default']
 
         setErrors({ general: errorMessage })
       }
@@ -100,12 +98,12 @@ export default function SignUpPage() {
   )
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: e.target.value
     }))
     // 清除对应字段的错误
-    setErrors(prev => {
+    setErrors((prev) => {
       const newErrors = { ...prev }
       delete newErrors[field as keyof typeof errors]
       return newErrors
@@ -167,14 +165,7 @@ export default function SignUpPage() {
               fill="none"
               viewBox="0 0 24 24"
             >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
             注册中...

@@ -65,10 +65,8 @@ export const SYSTEM_SETTINGS: SystemSettingDefinition[] = [
 ]
 
 // 通用的系统设置读取方法
-export async function getSystemSetting<T extends string | boolean | number>(
-  key: string
-): Promise<T> {
-  const settingDefinition = SYSTEM_SETTINGS.find(s => s.key === key)
+export async function getSystemSetting<T extends string | boolean | number>(key: string): Promise<T> {
+  const settingDefinition = SYSTEM_SETTINGS.find((s) => s.key === key)
 
   if (!settingDefinition) {
     throw new Error(`未找到系统设置: ${key}`)

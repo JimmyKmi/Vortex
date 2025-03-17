@@ -13,14 +13,7 @@ import { Label } from '@/components/ui/label'
 import { validatePassword } from '@/lib/validators'
 import { SettingsTitle } from '@/components/settings/settings-title'
 import { useAuthSettings } from '@/hooks/use-auth-settings'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { format } from 'date-fns'
 import {
   AlertDialog,
@@ -142,7 +135,7 @@ export default function AccountSettings() {
         toast.success('删除成功', {
           description: '登录方式已成功删除'
         })
-        setLinkedAccounts(prev => prev.filter(account => account.id !== accountId))
+        setLinkedAccounts((prev) => prev.filter((account) => account.id !== accountId))
       }
     } catch (error: any) {
       const message = error.response?.data?.message || '删除失败，请重试'
@@ -177,19 +170,14 @@ export default function AccountSettings() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {linkedAccounts.map(account => (
-                  <TableRow
-                    key={account.id}
-                    className={`${deletingAccount === account.id ? 'opacity-50' : ''}`}
-                  >
+                {linkedAccounts.map((account) => (
+                  <TableRow key={account.id} className={`${deletingAccount === account.id ? 'opacity-50' : ''}`}>
                     <TableCell className="font-medium capitalize">
                       {account.provider === 'zitadel' ? zitadelIdpName : account.provider}
                     </TableCell>
                     <TableCell>{account.providerAccountId}</TableCell>
                     <TableCell className="capitalize">{account.type}</TableCell>
-                    <TableCell>
-                      {format(new Date(account.createdAt), 'yyyy-MM-dd HH:mm:ss')}
-                    </TableCell>
+                    <TableCell>{format(new Date(account.createdAt), 'yyyy-MM-dd HH:mm:ss')}</TableCell>
                     <TableCell>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -241,20 +229,17 @@ export default function AccountSettings() {
 
         <div>
           <h2 className="text-lg font-medium mb-4">修改密码</h2>
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col sm:flex-row gap-4 w-full max-w-3xl"
-          >
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 w-full max-w-3xl">
             <div className="w-full sm:max-w-[280px] grid gap-2">
               <Label htmlFor="new-password">设置新密码</Label>
               <Input
                 id="new-password"
                 type="password"
                 value={newPassword}
-                onChange={e => {
+                onChange={(e) => {
                   setNewPassword(e.target.value)
                   if (errors.newPassword) {
-                    setErrors(prev => {
+                    setErrors((prev) => {
                       const newErrors = { ...prev }
                       delete newErrors.newPassword
                       return newErrors
@@ -265,9 +250,7 @@ export default function AccountSettings() {
                 placeholder="P@ssuu0rcl"
                 required
               />
-              {errors.newPassword && (
-                <div className="text-red-500 text-sm">{errors.newPassword}</div>
-              )}
+              {errors.newPassword && <div className="text-red-500 text-sm">{errors.newPassword}</div>}
             </div>
             <div className="w-full sm:max-w-[280px] grid gap-2">
               <Label htmlFor="confirm-password">确认新密码</Label>
@@ -275,10 +258,10 @@ export default function AccountSettings() {
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
-                onChange={e => {
+                onChange={(e) => {
                   setConfirmPassword(e.target.value)
                   if (errors.confirmPassword) {
-                    setErrors(prev => {
+                    setErrors((prev) => {
                       const newErrors = { ...prev }
                       delete newErrors.confirmPassword
                       return newErrors
@@ -289,9 +272,7 @@ export default function AccountSettings() {
                 placeholder="P@ssuu0rcl"
                 required
               />
-              {errors.confirmPassword && (
-                <div className="text-red-500 text-sm">{errors.confirmPassword}</div>
-              )}
+              {errors.confirmPassword && <div className="text-red-500 text-sm">{errors.confirmPassword}</div>}
             </div>
             <div className="flex items-end">
               <Button type="submit" disabled={isLoading}>

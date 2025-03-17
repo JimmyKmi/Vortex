@@ -79,7 +79,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     // 批量获取下载URL
     const downloadUrls = await Promise.all(
-      validatedData.files.map(async file => {
+      validatedData.files.map(async (file) => {
         const downloadData = await fileService.getDownloadUrl(file.fileId, session!.transferCodeId)
         return {
           url: downloadData.url,

@@ -77,9 +77,7 @@ export function SettingsSidebar({ ...props }: React.ComponentProps<typeof Sideba
   }
 
   const renderMenuItem = (item: MenuItem) => {
-    const isActive =
-      pathname === item.path ||
-      (item.items && item.items.some(subItem => pathname === subItem.path))
+    const isActive = pathname === item.path || (item.items && item.items.some((subItem) => pathname === subItem.path))
 
     if (item.items) {
       return (
@@ -94,11 +92,11 @@ export function SettingsSidebar({ ...props }: React.ComponentProps<typeof Sideba
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>
-                {item.items.map(subItem => (
+                {item.items.map((subItem) => (
                   <SidebarMenuSubItem key={subItem.path}>
                     <SidebarMenuSubButton asChild isActive={pathname === subItem.path}>
                       <a
-                        onClick={e => {
+                        onClick={(e) => {
                           e.preventDefault()
                           router.push(subItem.path)
                         }}
@@ -118,11 +116,7 @@ export function SettingsSidebar({ ...props }: React.ComponentProps<typeof Sideba
 
     return (
       <SidebarMenuItem key={item.path}>
-        <SidebarMenuButton
-          isActive={isActive}
-          onClick={() => router.push(item.path)}
-          tooltip={item.label}
-        >
+        <SidebarMenuButton isActive={isActive} onClick={() => router.push(item.path)} tooltip={item.label}>
           {item.icon}
           <span>{item.label}</span>
         </SidebarMenuButton>
@@ -134,23 +128,16 @@ export function SettingsSidebar({ ...props }: React.ComponentProps<typeof Sideba
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="border-b border-border/50 p-4">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2 hover:text-primary"
-          >
+          <button onClick={() => router.push('/')} className="flex items-center gap-2 hover:text-primary">
             <ArrowLeft className="h-4 w-4" />
-            <span className="font-semibold group-data-[state=collapsed]:hidden whitespace-nowrap">
-              返回
-            </span>
+            <span className="font-semibold group-data-[state=collapsed]:hidden whitespace-nowrap">返回</span>
           </button>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>设置</SidebarGroupLabel>
-          <SidebarMenu>
-            {menuItems(session?.user?.role as UserRole).map(renderMenuItem)}
-          </SidebarMenu>
+          <SidebarMenu>{menuItems(session?.user?.role as UserRole).map(renderMenuItem)}</SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>

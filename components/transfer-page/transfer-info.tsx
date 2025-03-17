@@ -66,9 +66,7 @@ export function TransferInfo({ transferInfo, className }: TransferInfoProps) {
               剩余次数
             </span>
             <span>
-              {transferInfo.usageLimit
-                ? `${transferInfo.usageLimit - (transferInfo.usedCount || 0)}次`
-                : '不限'}
+              {transferInfo.usageLimit ? `${transferInfo.usageLimit - (transferInfo.usedCount || 0)}次` : '不限'}
             </span>
           </div>
           {transferInfo.comment && (

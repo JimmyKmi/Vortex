@@ -21,12 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const { id: sessionId } = await Promise.resolve(params)
 
     // 验证会话
-    const validationResult = await validateTransferSession(
-      req,
-      sessionId,
-      ['DOWNLOADING', 'COMPLETED'],
-      ['DOWNLOAD']
-    )
+    const validationResult = await validateTransferSession(req, sessionId, ['DOWNLOADING', 'COMPLETED'], ['DOWNLOAD'])
     if (!validationResult.valid) return ResponseThrow(validationResult.code ?? 'InvalidSession')
 
     // 获取会话信息
@@ -50,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!transferCode) return ResponseThrow('InvalidSession')
 
     // 检查压缩状态
-    let downloadData;
+    let downloadData
     switch (transferCode.compressStatus) {
       case 'COMPLETED':
         // 获取压缩包下载链接

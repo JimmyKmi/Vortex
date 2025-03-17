@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useMemo } from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronRight, FileIcon, FolderIcon } from 'lucide-react'
@@ -174,19 +167,19 @@ function FileTreeComponent<T extends FileTreeItem>(
   ref: React.ForwardedRef<FileTreeRef>
 ) {
   // 内部状态管理 - 仅非受控模式使用
-  const [internalSelectedFiles, setInternalSelectedFiles] =
-    useState<Set<string>>(defaultSelectedFiles)
-  const [internalExpandedFolders, setInternalExpandedFolders] =
-    useState<Set<string>>(defaultExpandedFolders)
+  const [internalSelectedFiles, setInternalSelectedFiles] = useState<Set<string>>(defaultSelectedFiles)
+  const [internalExpandedFolders, setInternalExpandedFolders] = useState<Set<string>>(defaultExpandedFolders)
 
   // 实际使用的状态 - 根据模式选择内部或外部状态
-  const selectedFiles = useMemo(() => 
-    mode === 'controlled' ? externalSelectedFiles || new Set() : internalSelectedFiles
-  , [mode, externalSelectedFiles, internalSelectedFiles])
-  
-  const expandedFolders = useMemo(() => 
-    mode === 'controlled' ? externalExpandedFolders || new Set() : internalExpandedFolders
-  , [mode, externalExpandedFolders, internalExpandedFolders])
+  const selectedFiles = useMemo(
+    () => (mode === 'controlled' ? externalSelectedFiles || new Set() : internalSelectedFiles),
+    [mode, externalSelectedFiles, internalSelectedFiles]
+  )
+
+  const expandedFolders = useMemo(
+    () => (mode === 'controlled' ? externalExpandedFolders || new Set() : internalExpandedFolders),
+    [mode, externalExpandedFolders, internalExpandedFolders]
+  )
 
   // 避免在渲染过程中调用父组件的回调函数
   const notifySelectionChange = (newSelection: Set<string>) => {
@@ -262,7 +255,7 @@ function FileTreeComponent<T extends FileTreeItem>(
 
     if (!folder.children?.length) return false
 
-    const selectedChildren = folder.children.filter(child => {
+    const selectedChildren = folder.children.filter((child) => {
       if (child.type === 'folder') return getFolderCheckState(child as T, selectedSet)
       return selectedSet.has(child.id)
     })
@@ -280,10 +273,8 @@ function FileTreeComponent<T extends FileTreeItem>(
         if (file.type === 'folder' && file.children) {
           // 检查当前文件夹是否包含目标文件
           const containsTarget =
-            file.children.some(child => child.id === fileId) ||
-            file.children.some(
-              child => child.type === 'folder' && updateFolder([child as T], [...parentPath, file])
-            )
+            file.children.some((child) => child.id === fileId) ||
+            file.children.some((child) => child.type === 'folder' && updateFolder([child as T], [...parentPath, file]))
 
           if (containsTarget) {
             // 更新当前文件夹的状态
@@ -311,7 +302,7 @@ function FileTreeComponent<T extends FileTreeItem>(
       return externalFileSelect(fileId, checked, file)
     }
 
-    setInternalSelectedFiles(prev => {
+    setInternalSelectedFiles((prev) => {
       const newSet = new Set(prev)
       if (checked) {
         newSet.add(fileId)
@@ -322,7 +313,7 @@ function FileTreeComponent<T extends FileTreeItem>(
       // 如果是文件夹，处理所有子文件
       if (file.type === 'folder') {
         const processChildren = (folder: T) => {
-          folder.children?.forEach(child => {
+          folder.children?.forEach((child) => {
             if (checked) {
               newSet.add(child.id)
             } else {
@@ -352,7 +343,7 @@ function FileTreeComponent<T extends FileTreeItem>(
       return externalToggleFolder(folderId)
     }
 
-    setInternalExpandedFolders(prev => {
+    setInternalExpandedFolders((prev) => {
       const newSet = new Set(prev)
       if (newSet.has(folderId)) {
         newSet.delete(folderId)
@@ -380,7 +371,7 @@ function FileTreeComponent<T extends FileTreeItem>(
       if (checked) {
         // 获取所有文件和文件夹的ID
         const getAllIds = (items: T[]): void => {
-          items.forEach(item => {
+          items.forEach((item) => {
             newSet.add(item.id)
             if (item.type === 'folder' && item.children) {
               getAllIds(item.children as T[])
@@ -406,7 +397,7 @@ function FileTreeComponent<T extends FileTreeItem>(
       return
     }
 
-    setInternalSelectedFiles(prev => {
+    setInternalSelectedFiles((prev) => {
       // 获取所有文件（不包括文件夹）
       const allFileOnlyIds = getAllFileOnlyIds(files)
 
@@ -414,14 +405,14 @@ function FileTreeComponent<T extends FileTreeItem>(
       const newSet = new Set<string>()
 
       // 将当前未选中的文件添加到选择集合中，已选中的则不添加（实现反选）
-      allFileOnlyIds.forEach(id => {
+      allFileOnlyIds.forEach((id) => {
         if (!prev.has(id)) {
           newSet.add(id)
         }
       })
 
       // 更新所有文件夹的状态
-      files.forEach(file => {
+      files.forEach((file) => {
         if (file.type === 'folder') {
           updateParentFoldersState(file.id, newSet)
         }
@@ -474,7 +465,7 @@ function FileTreeComponent<T extends FileTreeItem>(
         <TableCell className="w-[40px]">
           <Checkbox
             checked={checked}
-            onCheckedChange={checked => handleFileSelect(file.id, checked as boolean, file)}
+            onCheckedChange={(checked) => handleFileSelect(file.id, checked as boolean, file)}
             disabled={disabled}
           />
         </TableCell>
@@ -488,11 +479,7 @@ function FileTreeComponent<T extends FileTreeItem>(
                 onClick={() => handleToggleFolder(file.id)}
                 disabled={disabled}
               >
-                {isExpanded ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
+                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </Button>
             ) : (
               <div className="w-6 h-6" />
@@ -517,9 +504,7 @@ function FileTreeComponent<T extends FileTreeItem>(
     return (
       <React.Fragment key={file.id}>
         {renderRow ? renderRow(file, defaultRow) : defaultRow}
-        {isFolder &&
-          isExpanded &&
-          file.children?.map(child => renderFileItem(child as T, depth + 1))}
+        {isFolder && isExpanded && file.children?.map((child) => renderFileItem(child as T, depth + 1))}
       </React.Fragment>
     )
   }
@@ -533,9 +518,9 @@ function FileTreeComponent<T extends FileTreeItem>(
               checked={
                 files.length > 0 &&
                 // 只比较文件（不是文件夹）的数量，解决文件夹选中逻辑变更后的全选检测问题
-                getAllFileOnlyIds(files).every(id => selectedFiles.has(id))
+                getAllFileOnlyIds(files).every((id) => selectedFiles.has(id))
               }
-              onCheckedChange={checked => handleSelectAll(checked as boolean)}
+              onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
               disabled={disabled || files.length === 0}
             />
           </TableHead>
@@ -544,7 +529,7 @@ function FileTreeComponent<T extends FileTreeItem>(
           {customHeaders || (renderStatus && <TableHead className="text-right">状态</TableHead>)}
         </TableRow>
       </TableHeader>
-      <TableBody>{files.map(file => renderFileItem(file))}</TableBody>
+      <TableBody>{files.map((file) => renderFileItem(file))}</TableBody>
     </Table>
   )
 }

@@ -3,22 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { toast } from 'sonner'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SettingsLayout } from '@/components/settings/settings-layout'
 import { Input } from '@/components/ui/input'
 import { Loader2, Save } from 'lucide-react'
@@ -47,7 +34,7 @@ export default function SystemSettingsPage() {
       try {
         const response = await axios.get('/api/management/system-settings')
         const settings = response.data.reduce((acc: Record<string, string>, setting: any) => {
-          const settingDefinition = SYSTEM_SETTINGS.find(s => s.key === setting.key)
+          const settingDefinition = SYSTEM_SETTINGS.find((s) => s.key === setting.key)
           if (settingDefinition) {
             if (settingDefinition.type === 'boolean') {
               acc[setting.key] = setting.value === 'true' ? 'true' : 'false'
@@ -68,14 +55,14 @@ export default function SystemSettingsPage() {
   }, [])
 
   const handleSettingChange = (key: string, value: string) => {
-    const settingDefinition = SYSTEM_SETTINGS.find(s => s.key === key)
+    const settingDefinition = SYSTEM_SETTINGS.find((s) => s.key === key)
     if (settingDefinition?.type === 'boolean') {
-      setEditedSettings(prev => ({
+      setEditedSettings((prev) => ({
         ...prev,
         [key]: value === 'true' ? 'true' : 'false'
       }))
     } else {
-      setEditedSettings(prev => ({ ...prev, [key]: value }))
+      setEditedSettings((prev) => ({ ...prev, [key]: value }))
     }
   }
 
@@ -85,7 +72,7 @@ export default function SystemSettingsPage() {
     try {
       setIsSaving(true)
       const updatePromises = Object.entries(editedSettings).map(([key, value]) => {
-        const settingDefinition = SYSTEM_SETTINGS.find(s => s.key === key)
+        const settingDefinition = SYSTEM_SETTINGS.find((s) => s.key === key)
         if (!settingDefinition) {
           throw new Error(`未找到设置项: ${key}`)
         }
@@ -95,7 +82,7 @@ export default function SystemSettingsPage() {
 
       await Promise.all(updatePromises)
 
-      setSystemSettings(prev => ({ ...prev, ...editedSettings }))
+      setSystemSettings((prev) => ({ ...prev, ...editedSettings }))
       setEditedSettings({})
 
       toast.success('系统设置已更新', {
@@ -120,10 +107,7 @@ export default function SystemSettingsPage() {
     switch (setting.type) {
       case 'boolean':
         return (
-          <Select
-            value={currentValue}
-            onValueChange={value => handleSettingChange(setting.key, value)}
-          >
+          <Select value={currentValue} onValueChange={(value) => handleSettingChange(setting.key, value)}>
             <SelectTrigger>
               <SelectValue placeholder="选择值" />
             </SelectTrigger>
@@ -136,15 +120,12 @@ export default function SystemSettingsPage() {
       case 'string':
         if (setting.options && Array.isArray(setting.options)) {
           return (
-            <Select
-              value={String(currentValue)}
-              onValueChange={value => handleSettingChange(setting.key, value)}
-            >
+            <Select value={String(currentValue)} onValueChange={(value) => handleSettingChange(setting.key, value)}>
               <SelectTrigger>
                 <SelectValue placeholder="选择值" />
               </SelectTrigger>
               <SelectContent>
-                {setting.options.map(option => (
+                {setting.options.map((option) => (
                   <SelectItem key={option} value={option}>
                     {setting.optionsMap?.[option]?.name || option}
                   </SelectItem>
@@ -156,7 +137,7 @@ export default function SystemSettingsPage() {
         return (
           <Input
             value={String(currentValue)}
-            onChange={e => handleSettingChange(setting.key, e.target.value)}
+            onChange={(e) => handleSettingChange(setting.key, e.target.value)}
             placeholder="输入值"
           />
         )
@@ -165,7 +146,7 @@ export default function SystemSettingsPage() {
           <Input
             type="number"
             value={String(currentValue)}
-            onChange={e => handleSettingChange(setting.key, e.target.value)}
+            onChange={(e) => handleSettingChange(setting.key, e.target.value)}
             placeholder="输入数值"
           />
         )
@@ -237,7 +218,7 @@ export default function SystemSettingsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {SYSTEM_SETTINGS.map(setting => (
+              {SYSTEM_SETTINGS.map((setting) => (
                 <TableRow key={setting.key}>
                   <TableCell>
                     <div className="font-medium">{setting.name}</div>
@@ -261,11 +242,7 @@ export default function SystemSettingsPage() {
           </Table>
 
           <div className="flex justify-end mt-4">
-            <Button
-              onClick={handleSaveSettings}
-              disabled={!hasChanges || isSaving}
-              className="w-48 right-0"
-            >
+            <Button onClick={handleSaveSettings} disabled={!hasChanges || isSaving} className="w-48 right-0">
               {isSaving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

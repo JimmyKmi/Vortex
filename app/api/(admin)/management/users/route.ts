@@ -26,7 +26,7 @@ export const GET = auth(async () => {
 })
 
 // 更新用户角色和状态
-export const PUT = auth(async req => {
+export const PUT = auth(async (req) => {
   try {
     const { userId, role, enabled, forceRelogin } = await req.json()
 

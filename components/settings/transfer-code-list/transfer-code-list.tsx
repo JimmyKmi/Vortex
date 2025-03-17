@@ -64,7 +64,7 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
       setIsDeleting(true)
       await axios.delete('/api/transfer-codes', {
         data: {
-          ids: selectedRows.map(row => row.id)
+          ids: selectedRows.map((row) => row.id)
         }
       })
       toast.success('批量删除成功')
@@ -82,7 +82,7 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
     try {
       setIsDisabling(true)
       await axios.put('/api/transfer-codes', {
-        ids: selectedRows.map(row => row.id),
+        ids: selectedRows.map((row) => row.id),
         action: 'disable'
       })
       toast.success('批量禁用成功')
@@ -99,7 +99,7 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
     try {
       setIsDisabling(true)
       await axios.put('/api/transfer-codes', {
-        ids: selectedRows.map(row => row.id),
+        ids: selectedRows.map((row) => row.id),
         action: 'enable'
       })
       toast.success('批量启用成功')
@@ -116,7 +116,7 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
 
   // 过滤数据
   const filteredData = data.filter(
-    item =>
+    (item) =>
       item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.comment && item.comment.toLowerCase().includes(searchQuery.toLowerCase()))
   )
@@ -127,7 +127,7 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
         <Input
           placeholder="搜索传输码或描述..."
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
         />
         <Button
@@ -141,21 +141,11 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
         </Button>
         {selectedRows.length > 0 && (
           <>
-            <Button
-              variant="ghost"
-              onClick={handleBatchDisable}
-              disabled={isDeleting || isDisabling}
-              size="sm"
-            >
+            <Button variant="ghost" onClick={handleBatchDisable} disabled={isDeleting || isDisabling} size="sm">
               <CircleOff className="h-4 w-4" />
               禁用
             </Button>
-            <Button
-              variant="ghost"
-              onClick={handleBatchEnable}
-              disabled={isDeleting || isDisabling}
-              size="sm"
-            >
+            <Button variant="ghost" onClick={handleBatchEnable} disabled={isDeleting || isDisabling} size="sm">
               <Circle className="h-4 w-4" />
               启用
             </Button>

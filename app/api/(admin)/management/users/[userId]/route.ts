@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 
 // 删除用户
-export const DELETE = auth(async req => {
+export const DELETE = auth(async (req) => {
   if (!req.auth?.user?.role) return NextResponse.json({ status: 403 })
 
   try {

@@ -13,28 +13,14 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { format } from 'date-fns'
 import type { TransferCode } from '@/components/settings/transfer-code-list'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 // 定义客户端可用的常量，避免从服务器路由导入
 const SPEED_LIMIT_OPTIONS: number[] = [
@@ -112,11 +98,7 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccessAction }: 
                 <FormItem>
                   <FormLabel>描述</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="例如：项目演示文件（选填）"
-                      {...field}
-                      value={field.value || ''}
-                    />
+                    <Textarea placeholder="例如：项目演示文件（选填）" {...field} value={field.value || ''} />
                   </FormControl>
                   <FormDescription>简短描述此快传码的用途</FormDescription>
                   <FormMessage />
@@ -145,7 +127,7 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccessAction }: 
                   <FormLabel>速度限制</FormLabel>
                   <Select
                     value={field.value?.toString() ?? '0'}
-                    onValueChange={value => field.onChange(value === '0' ? null : parseInt(value))}
+                    onValueChange={(value) => field.onChange(value === '0' ? null : parseInt(value))}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -154,7 +136,7 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccessAction }: 
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="0">不限制</SelectItem>
-                      {SPEED_LIMIT_OPTIONS.map(speed => (
+                      {SPEED_LIMIT_OPTIONS.map((speed) => (
                         <SelectItem key={speed} value={speed.toString()}>
                           {speed / 1024} Mbps
                         </SelectItem>
@@ -176,7 +158,7 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccessAction }: 
                       type="number"
                       placeholder="不限制"
                       value={field.value || ''}
-                      onChange={e => field.onChange(e.target.value || '')}
+                      onChange={(e) => field.onChange(e.target.value || '')}
                     />
                   </FormControl>
                   <FormDescription>可选，限制使用次数</FormDescription>

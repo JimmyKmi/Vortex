@@ -62,9 +62,7 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
             <div>{data.comment || '-'}</div>
 
             <div className="text-muted-foreground">过期时间</div>
-            <div>
-              {data.expires ? format(new Date(data.expires), 'yyyy-MM-dd HH:mm') : '永不过期'}
-            </div>
+            <div>{data.expires ? format(new Date(data.expires), 'yyyy-MM-dd HH:mm') : '永不过期'}</div>
 
             <div className="text-muted-foreground">速度限制</div>
             <div>{data.speedLimit ? `${data.speedLimit} KB/s` : '不限制'}</div>

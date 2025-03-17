@@ -3,12 +3,7 @@
 import { useState } from 'react'
 import { Row } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal } from 'lucide-react'
 import {
   AlertDialog,
@@ -52,11 +47,9 @@ export function ActionColumn<T extends TransferCode>({
   const [isLoading, setIsLoading] = useState(false)
 
   const isDisabled =
-    !!row.original.disableReason ||
-    !!(row.original.expires && new Date(row.original.expires) < new Date())
+    !!row.original.disableReason || !!(row.original.expires && new Date(row.original.expires) < new Date())
   const isExpired =
-    !row.original.disableReason &&
-    !!(row.original.expires && new Date(row.original.expires) < new Date())
+    !row.original.disableReason && !!(row.original.expires && new Date(row.original.expires) < new Date())
 
   const handleToggleStatus = async () => {
     try {
@@ -125,11 +118,7 @@ export function ActionColumn<T extends TransferCode>({
       </DropdownMenu>
 
       {DetailDialogComponent && (
-        <DetailDialogComponent
-          open={detailDialogOpen}
-          onOpenChangeAction={setDetailDialogOpen}
-          data={row.original}
-        />
+        <DetailDialogComponent open={detailDialogOpen} onOpenChangeAction={setDetailDialogOpen} data={row.original} />
       )}
 
       {EditDialogComponent && (
