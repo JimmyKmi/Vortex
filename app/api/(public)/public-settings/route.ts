@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getSystemSetting } from '@/lib/config/system-settings'
 
 // 定义可以公开访问的设置项
