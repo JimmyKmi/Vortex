@@ -144,19 +144,6 @@ export default function DownloadPage({ params }: PageProps) {
   }, [downloadMode, downloadProgress])
 
   /**
-   * 获取所有文件ID（包括文件夹内的文件）
-   */
-  const getAllFileIds = (files: DownloadFile[]): string[] => {
-    return files.reduce((acc: string[], file) => {
-      acc.push(file.id)
-      if (file.type === 'folder' && file.children) {
-        acc.push(...getAllFileIds(file.children))
-      }
-      return acc
-    }, [])
-  }
-
-  /**
    * 处理反选
    */
   const handleInvertSelection = () => {
