@@ -4,7 +4,7 @@ import { getSystemSetting } from '@/lib/config/system-settings'
 // 定义可以公开访问的设置项
 const PUBLIC_SETTINGS = ['ALLOW_ZITADEL_LOGIN', 'ALLOW_REGISTRATION', 'ZITADEL_IDP_NAME']
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const settings = await Promise.all(
       PUBLIC_SETTINGS.map(async key => {

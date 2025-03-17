@@ -8,9 +8,8 @@
     "start": "npx prisma migrate deploy && next start",
     "install-package": "npm i --legacy-peer-deps",
     "install-dev": "npm i --save-dev prettier eslint-plugin-prettier eslint-config-prettier @typescript-eslint/eslint-plugin @typescript-eslint/parser jest @testing-library/react @testing-library/jest-dom --legacy-peer-deps",
-    "lint": "next lint",
     "format": "npx prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
-    "lint:check": "npm run lint && npx prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
+    "lint:check": "next lint && npx prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "test": "npx jest",
     "security-check": "node scripts/security-check.js",
     "prepare": "npm run security-check"

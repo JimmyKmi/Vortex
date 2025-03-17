@@ -16,7 +16,7 @@ const THEME_KEY = 'preferredTheme'
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('light')
   const [systemTheme, setSystemTheme] = useState<Theme>('light')
-  const [isSystemTheme, setIsSystemTheme] = useState(true)
+  const [, setIsSystemTheme] = useState(true)
   const [isClient, setIsClient] = useState(false)
 
   // 检测是否在客户端

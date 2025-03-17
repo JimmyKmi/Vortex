@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SYSTEM_SETTINGS } from '@/lib/config/system-settings'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const settings = await prisma.systemSettings.findMany()
     return NextResponse.json(settings)

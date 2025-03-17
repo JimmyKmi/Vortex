@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 
 // 获取用户列表
-export const GET = auth(async req => {
+export const GET = auth(async () => {
   try {
     const users = await prisma.user.findMany({
       select: {

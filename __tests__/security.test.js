@@ -7,7 +7,7 @@ describe('Security Check Tests', () => {
     const scriptPath = path.resolve(__dirname, '../scripts/security-check.js')
 
     let exitCode = 0
-    let output = ''
+    let output
 
     try {
       // Run the script with node and capture the output

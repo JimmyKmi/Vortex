@@ -1,4 +1,3 @@
-import axios from 'axios'
 import { toast } from 'sonner'
 import { getApiErrorMessage } from '@/lib/utils/error-messages'
 

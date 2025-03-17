@@ -40,11 +40,6 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
   }
 
   const { status, label } = getStatusInfo()
-  const typeMap = {
-    UPLOAD: '上传',
-    COLLECTION: '采集',
-    DOWNLOAD: '下载'
-  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChangeAction}>

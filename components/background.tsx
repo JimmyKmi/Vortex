@@ -8,7 +8,7 @@ interface BackgroundProps {
   className?: string
 }
 
-const Background: React.FC<BackgroundProps> = ({ className }) => {
+const Background: React.FC<BackgroundProps> = () => {
   const { theme } = useTheme()
 
   useEffect(() => {
