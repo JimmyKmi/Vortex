@@ -244,59 +244,6 @@ export default function UploadPage({ params }: PageProps) {
   )
 
   /**
-   * 处理文件选择事件
-   *
-   * @param {React.ChangeEvent<HTMLInputElement>} event - 文件选择事件
-   */
-  const handleFileChangeCallback = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (!checkSessionActive()) return
-      try {
-        const fileList = event.target.files
-        if (!fileList?.length) return
-
-        const files = Array.from(fileList)
-        await processAddFiles(files)
-      } catch (error) {
-        console.error('Error handling file change:', error)
-        toast.error('添加文件时发生错误')
-      } finally {
-        event.target.value = ''
-      }
-    },
-    [checkSessionActive]
-  )
-
-  /**
-   * 创建文件输入处理函数
-   * @param {boolean} isDirectory - 是否为文件夹选择
-   * @returns {() => void} 文件选择处理函数
-   */
-  const createFileInputHandler = useCallback(
-    (isDirectory: boolean): (() => void) =>
-      () => {
-        if (!checkSessionActive()) return
-
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.multiple = true
-        if (isDirectory) input.webkitdirectory = true
-
-        input.onchange = (e: Event) => {
-          handleFileChangeCallback({
-            target: e.target as HTMLInputElement,
-            preventDefault: () => {},
-            stopPropagation: () => {},
-            nativeEvent: e
-          } as React.ChangeEvent<HTMLInputElement>).then()
-        }
-
-        input.click()
-      },
-    [checkSessionActive, handleFileChangeCallback]
-  )
-
-  /**
    * 处理文件添加
    *
    * 主要流程：
@@ -486,6 +433,59 @@ export default function UploadPage({ params }: PageProps) {
       }
     },
     [isFileDuplicate]
+  )
+
+  /**
+   * 处理文件选择事件
+   *
+   * @param {React.ChangeEvent<HTMLInputElement>} event - 文件选择事件
+   */
+  const handleFileChangeCallback = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!checkSessionActive()) return
+      try {
+        const fileList = event.target.files
+        if (!fileList?.length) return
+
+        const files = Array.from(fileList)
+        await processAddFiles(files)
+      } catch (error) {
+        console.error('Error handling file change:', error)
+        toast.error('添加文件时发生错误')
+      } finally {
+        event.target.value = ''
+      }
+    },
+    [checkSessionActive, processAddFiles]
+  )
+
+  /**
+   * 创建文件输入处理函数
+   * @param {boolean} isDirectory - 是否为文件夹选择
+   * @returns {() => void} 文件选择处理函数
+   */
+  const createFileInputHandler = useCallback(
+    (isDirectory: boolean): (() => void) =>
+      () => {
+        if (!checkSessionActive()) return
+
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.multiple = true
+        if (isDirectory) input.webkitdirectory = true
+
+        input.onchange = (e: Event) => {
+          handleFileChangeCallback({
+            target: e.target as HTMLInputElement,
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            nativeEvent: e
+          } as React.ChangeEvent<HTMLInputElement>).then()
+        }
+
+        input.click()
+      },
+    [checkSessionActive, handleFileChangeCallback]
   )
 
   /**
