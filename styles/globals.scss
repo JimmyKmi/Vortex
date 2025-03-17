@@ -1,4 +1,4 @@
-@forward "jimmykmi-ui/globals";
+@forward 'jimmykmi-ui/globals';
 
 @tailwind base;
 @tailwind components;
@@ -90,4 +90,4 @@
   body {
     @apply bg-background text-foreground;
   }
-} 
+}

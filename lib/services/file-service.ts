@@ -1,32 +1,32 @@
-import {prisma} from "@/lib/prisma"
-import {S3StorageService} from "@/lib/s3/storage"
-import {s3Client} from "@/lib/s3/client"
-import {getSystemSetting} from "@/lib/config/system-settings"
-import {getSignedUrl} from "@aws-sdk/s3-request-presigner"
-import {GetObjectCommand} from "@aws-sdk/client-s3"
-import {S3_CONFIG} from "@/lib/env"
+import { prisma } from '@/lib/prisma'
+import { S3StorageService } from '@/lib/s3/storage'
+import { s3Client } from '@/lib/s3/client'
+import { getSystemSetting } from '@/lib/config/system-settings'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3_CONFIG } from '@/lib/env'
 import crypto from 'crypto'
 import archiver from 'archiver'
-import {Readable} from 'stream'
-import {PassThrough} from 'stream'
-import {Upload} from "@aws-sdk/lib-storage"
+import { Readable } from 'stream'
+import { PassThrough } from 'stream'
+import { Upload } from '@aws-sdk/lib-storage'
 
 interface FileParams {
-  name: string;
-  mimeType?: string;
-  relativePath?: string;
-  isDirectory?: boolean;
-  parentId?: string;
-  transferCodeId: string;
-  userId: string;
-  sessionId?: string;
+  name: string
+  mimeType?: string
+  relativePath?: string
+  isDirectory?: boolean
+  parentId?: string
+  transferCodeId: string
+  userId: string
+  sessionId?: string
 }
 
 interface FileUploadParams extends FileParams {
-  mimeType: string;
-  size: number;
-  s3BasePath: string;
-  uploadToken: string;
+  mimeType: string
+  size: number
+  s3BasePath: string
+  uploadToken: string
 }
 
 export class FileService {
@@ -43,14 +43,14 @@ export class FileService {
    */
   private async verifyUploadToken(token: string, s3BasePath: string): Promise<boolean> {
     const uploadToken = await prisma.uploadToken.findUnique({
-      where: {token}
+      where: { token }
     })
 
     if (!uploadToken) return false
 
     // 验证令牌是否过期
     if (uploadToken.expiresAt < new Date()) {
-      await prisma.uploadToken.delete({where: {token}})
+      await prisma.uploadToken.delete({ where: { token } })
       return false
     }
 
@@ -58,7 +58,7 @@ export class FileService {
     if (uploadToken.s3BasePath !== s3BasePath) return false
 
     // 验证成功后删除令牌（一次性使用）
-    await prisma.uploadToken.delete({where: {token}})
+    await prisma.uploadToken.delete({ where: { token } })
     return true
   }
 
@@ -68,8 +68,8 @@ export class FileService {
    */
   private async getSessionS3BasePath(sessionId: string): Promise<string> {
     const session = await prisma.transferSession.findUnique({
-      where: {id: sessionId},
-      select: {linkedTransferCodeId: true}
+      where: { id: sessionId },
+      select: { linkedTransferCodeId: true }
     })
 
     if (!session) throw new Error('会话不存在')
@@ -84,7 +84,7 @@ export class FileService {
    */
   async getUploadUrl(params: FileParams) {
     try {
-      const {name, mimeType, relativePath, transferCodeId, sessionId} = params
+      const { name, mimeType, relativePath, transferCodeId, sessionId } = params
       const uploadUrlExpireSeconds = await getSystemSetting<number>('UPLOAD_URL_EXPIRE_SECONDS')
 
       // 获取S3基础路径
@@ -101,10 +101,10 @@ export class FileService {
       })
 
       // 生成预签名URL
-      const {url, fields} = await this.s3Service.createPresignedPost({
+      const { url, fields } = await this.s3Service.createPresignedPost({
         Key: this.s3Service.getFullS3Key(s3BasePath, relativePath || name),
         Fields: {
-          'success_action_status': '200',
+          success_action_status: '200',
           'Content-Type': mimeType || 'application/octet-stream'
         },
         Expires: uploadUrlExpireSeconds
@@ -127,14 +127,7 @@ export class FileService {
    * 创建文件夹记录
    */
   async createFolderRecord(params: FileParams) {
-    const {
-      name,
-      relativePath,
-      parentId,
-      transferCodeId,
-      userId,
-      sessionId
-    } = params
+    const { name, relativePath, parentId, transferCodeId, userId, sessionId } = params
 
     // 获取S3基础路径
     const s3BasePath = await this.getSessionS3BasePath(sessionId!)
@@ -239,7 +232,7 @@ export class FileService {
         }
       })
 
-      if (!file) throw new Error("文件不存在或无权访问")
+      if (!file) throw new Error('文件不存在或无权访问')
 
       // 获取预签名下载URL
       const command = new GetObjectCommand({
@@ -252,10 +245,9 @@ export class FileService {
         expiresIn: downloadUrlExpireSeconds
       })
 
-      return {url}
-
+      return { url }
     } catch (error) {
-      console.error("Get download URL error:", error)
+      console.error('Get download URL error:', error)
       throw error
     }
   }
@@ -277,9 +269,9 @@ export class FileService {
         expiresIn: downloadUrlExpireSeconds
       })
 
-      return {url}
+      return { url }
     } catch (error) {
-      console.error("Get compress download URL error:", error)
+      console.error('Get compress download URL error:', error)
       throw error
     }
   }
@@ -305,7 +297,7 @@ export class FileService {
         }
       })
 
-      if (!file) throw new Error("文件不存在或无权访问")
+      if (!file) throw new Error('文件不存在或无权访问')
 
       // 从S3下载文件
       const getCommand = new GetObjectCommand({
@@ -313,21 +305,21 @@ export class FileService {
         Key: this.s3Service.getFullS3Key(file.s3BasePath, file.relativePath)
       })
 
-      const {Body} = await this.s3Client.send(getCommand)
-      if (!Body) throw new Error("无法获取文件内容")
+      const { Body } = await this.s3Client.send(getCommand)
+      if (!Body) throw new Error('无法获取文件内容')
 
       // 创建临时压缩包只包含当前文件
       const archive = archiver('zip', {
-        zlib: {level: 1} // 使用最低压缩级别以提高性能
+        zlib: { level: 1 } // 使用最低压缩级别以提高性能
       })
 
       // 设置错误处理
-      archive.on('error', (err) => {
+      archive.on('error', err => {
         console.error('Archiver error:', err)
       })
 
       // 设置警告处理
-      archive.on('warning', (err) => {
+      archive.on('warning', err => {
         if (err.code === 'ENOENT') {
           console.warn('压缩警告 (ENOENT):', err)
         } else {
@@ -360,7 +352,7 @@ export class FileService {
       // 等待上传完成
       await upload.done()
     } catch (error) {
-      console.error("Add file to compress error:", error)
+      console.error('Add file to compress error:', error)
       throw error
     }
   }
@@ -379,7 +371,7 @@ export class FileService {
               transferCodeId
             }
           },
-          isDirectory: false  // 只获取文件,不包括文件夹
+          isDirectory: false // 只获取文件,不包括文件夹
         }
       })
 
@@ -388,12 +380,12 @@ export class FileService {
         const emptyArchive = archiver('zip')
         const passThrough = new PassThrough()
         emptyArchive.pipe(passThrough)
-        
+
         // 添加一个空文件
         emptyArchive.append('这个文件夹是空的', { name: 'README.txt' })
-        
+
         await emptyArchive.finalize()
-        
+
         // 上传到S3
         const upload = new Upload({
           client: this.s3Client,
@@ -403,27 +395,27 @@ export class FileService {
             Body: passThrough
           }
         })
-        
+
         await upload.done()
         return
       }
-      
+
       // 创建压缩包
       const archive = archiver('zip', {
-        zlib: {level: 1}  // 使用最低压缩级别，提高速度
+        zlib: { level: 1 } // 使用最低压缩级别，提高速度
       })
-      
+
       // 设置错误处理
-      archive.on('error', (err) => {
+      archive.on('error', err => {
         console.error('压缩包创建错误:', err)
       })
-      
+
       // 创建通道用于上传到S3
       const passThrough = new PassThrough()
       archive.pipe(passThrough)
-      
+
       // 设置警告处理
-      archive.on('warning', (err) => {
+      archive.on('warning', err => {
         if (err.code === 'ENOENT') {
           console.warn('压缩警告 (ENOENT):', err)
         } else {
@@ -435,11 +427,11 @@ export class FileService {
       const batchSize = 5 // 调整批处理大小
       let processedFiles = 0
       const totalFiles = files.length
-      
+
       try {
         for (let i = 0; i < files.length; i += batchSize) {
           const batch = files.slice(i, i + batchSize)
-          
+
           // 顺序处理文件，避免并发问题
           for (const file of batch) {
             try {
@@ -449,7 +441,7 @@ export class FileService {
                 Key: this.s3Service.getFullS3Key(file.s3BasePath, file.relativePath)
               })
 
-              const {Body} = await this.s3Client.send(getCommand)
+              const { Body } = await this.s3Client.send(getCommand)
               if (!Body) continue
 
               // 添加文件到压缩包，保持目录结构
@@ -457,43 +449,41 @@ export class FileService {
                 name: file.name,
                 prefix: file.relativePath ? file.relativePath.split('/').slice(0, -1).join('/') : ''
               })
-              
+
               // 增加处理文件计数
               processedFiles++
-              
+
               // 更新压缩进度 - 还原原始进度计算逻辑
               const progress = Math.round((processedFiles / totalFiles) * 100)
               await prisma.transferCode.update({
-                where: {id: transferCodeId},
+                where: { id: transferCodeId },
                 data: {
                   compressProgress: progress
                 }
               })
-              
+
               // 给一点时间处理流，避免内存爆炸
               await new Promise(resolve => setTimeout(resolve, 300))
-              
             } catch (error) {
               console.error(`处理文件失败 ${file.id}:`, error)
             }
           }
-          
+
           // 每批处理完成后，给系统一点喘息时间，释放内存
           await new Promise(resolve => setTimeout(resolve, 1000))
         }
       } catch (error) {
         console.error('处理文件过程中出错:', error)
       }
-      
+
       // 设置完成回调
-      let finalized = false
       archive.on('end', () => {
-        finalized = true
+        // 完成压缩
       })
-      
+
       // 完成压缩但不等待
       archive.finalize()
-      
+
       // 上传到S3
       try {
         const upload = new Upload({
@@ -511,8 +501,8 @@ export class FileService {
         throw error
       }
     } catch (error) {
-      console.error("Finalize compress error:", error)
+      console.error('Finalize compress error:', error)
       throw error
     }
   }
-} 
+}

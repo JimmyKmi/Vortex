@@ -3,11 +3,11 @@
  * 提供传输会话状态的查询和更新功能
  */
 
-import {NextRequest} from "next/server"
-import {prisma} from "@/lib/prisma"
-import {validateTransferSession} from "@/lib/utils/transfer-session"
-import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
-import {TransferCodeType} from "@/types/transfer-session"
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { validateTransferSession } from '@/lib/utils/transfer-session'
+import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
+import { TransferCodeType } from '@/types/transfer-session'
 
 interface StatusResponse {
   id: string
@@ -28,47 +28,52 @@ interface StatusResponse {
  */
 export async function GET(
   req: NextRequest,
-  {params}: { params: { id: string } }
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
-    const {id: sessionId} = await Promise.resolve(params)
+    const { id: sessionId } = await Promise.resolve(params)
 
     // 一次性获取所有需要的数据
     const session = await prisma.transferSession.findUnique({
-      where: {id: sessionId},
+      where: { id: sessionId },
       include: {
         transferCode: {
           include: {
             _count: {
-              select: {usages: true}
+              select: { usages: true }
             },
             user: {
-              select: {name: true}
+              select: { name: true }
             }
           }
         },
         linkedTransferCode: {
-          select: {code: true}
+          select: { code: true }
         }
       }
     })
 
-    if (!session?.transferCode) return ResponseThrow("InvalidSession")
+    if (!session?.transferCode) return ResponseThrow('InvalidSession')
 
     // 使用validateTransferSession进行验证，传入已查询的会话信息
     const validationResult = await validateTransferSession(
-      req, sessionId, [], [session.transferCode.type as TransferCodeType], session
+      req,
+      sessionId,
+      [],
+      [session.transferCode.type as TransferCodeType],
+      session
     )
-    if (!validationResult.valid) return ResponseThrow(validationResult.code ?? "InvalidSession")
+    if (!validationResult.valid) return ResponseThrow(validationResult.code ?? 'InvalidSession')
 
     // 由于验证通过，我们知道session和相关数据一定存在
     const transferCode = session.transferCode
 
     // 传输码被禁用
-    if (transferCode.disableReason) return ResponseThrow("TransferCodeDisabled")
+    if (transferCode.disableReason) return ResponseThrow('TransferCodeDisabled')
 
     // 传输码过期
-    if (transferCode.expires && transferCode.expires < new Date()) return ResponseThrow("TransferCodeExpired")
+    if (transferCode.expires && transferCode.expires < new Date())
+      return ResponseThrow('TransferCodeExpired')
 
     // 返回完整的传输会话信息
     return ResponseSuccess<StatusResponse>({
@@ -84,7 +89,7 @@ export async function GET(
       status: session.status
     })
   } catch (error) {
-    console.error("Get session status error:", error)
-    return ResponseThrow("InternalServerError")
+    console.error('Get session status error:', error)
+    return ResponseThrow('InternalServerError')
   }
-} 
+}

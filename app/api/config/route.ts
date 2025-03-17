@@ -6,8 +6,8 @@ export async function GET() {
   const config = {
     appName: process.env.APP_NAME || DEFAULT_APP_NAME,
     footer: process.env.APP_FOOTER || DEFAULT_FOOTER,
-    footerLink: process.env.APP_FOOTER_LINK || DEFAULT_FOOTER_LINK,
+    footerLink: process.env.APP_FOOTER_LINK || DEFAULT_FOOTER_LINK
   }
-  
+
   return ResponseSuccess(config)
-} 
+}

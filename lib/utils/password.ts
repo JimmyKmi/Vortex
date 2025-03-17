@@ -18,4 +18,4 @@ export function saltAndHashPassword(password: string): string {
  */
 export function comparePassword(plainPassword: string, hashedPassword: string): boolean {
   return bcrypt.compareSync(plainPassword, hashedPassword)
-} 
+}

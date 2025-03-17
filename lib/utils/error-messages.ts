@@ -1,33 +1,33 @@
 // 错误码映射表
 const errorMessages: { [key: string]: string } = {
   // 通用错误
-  'ServerError': '服务器错误',
-  'DatabaseError': '数据库错误',
-  'InvalidParams': '无效的参数',
-  'ValidationError': '验证失败',
-  'Unauthorized': '请先登录',
+  ServerError: '服务器错误',
+  DatabaseError: '数据库错误',
+  InvalidParams: '无效的参数',
+  ValidationError: '验证失败',
+  Unauthorized: '请先登录',
 
   // 会话相关
-  'InvalidSession': '无效的会话',
-  'InvalidSession1': '无效的会话',
-  'InvalidSession2': '无效的会话',
-  'InvalidSession3': '无效的会话',
-  'InvalidSession4': '无效的会话',
-  'InvalidSession5': '无效的会话',
-  'InvalidSession6': '无效的会话',
-  'InvalidSession7': '源传输码不存在',
-  'SessionExpired': '会话已过期',
+  InvalidSession: '无效的会话',
+  InvalidSession1: '无效的会话',
+  InvalidSession2: '无效的会话',
+  InvalidSession3: '无效的会话',
+  InvalidSession4: '无效的会话',
+  InvalidSession5: '无效的会话',
+  InvalidSession6: '无效的会话',
+  InvalidSession7: '源传输码不存在',
+  SessionExpired: '会话已过期',
 
   // 传输码相关
-  'TransferCodeNotFound': '传输码不存在',
-  'TransferCodeDisabled': '传输码已被禁用',
-  'TransferCodeExpired': '传输码已过期',
-  'TransferCodeUsageExceeded': '该传输码已达到使用次数上限',
-  'InvalidTransferCode': '传输码过期或被禁用',
-  'GetUploadUrlFailed': '获取上传 URL 失败',
-  'CreateFileRecordFailed': '创建文件记录失败',
-  'InvalidRequest': '无效的请求',
-  'InvalidFileList': '获取文件列表失败，该传输码可能没有关联任何文件',
+  TransferCodeNotFound: '传输码不存在',
+  TransferCodeDisabled: '传输码已被禁用',
+  TransferCodeExpired: '传输码已过期',
+  TransferCodeUsageExceeded: '该传输码已达到使用次数上限',
+  InvalidTransferCode: '传输码过期或被禁用',
+  GetUploadUrlFailed: '获取上传 URL 失败',
+  CreateFileRecordFailed: '创建文件记录失败',
+  InvalidRequest: '无效的请求',
+  InvalidFileList: '获取文件列表失败，该传输码可能没有关联任何文件'
 }
 
 /**
@@ -45,7 +45,7 @@ export function getErrorMessage(code: string): string {
  * @returns 格式化后的错误消息
  */
 export const getApiErrorMessage = (error: any) => {
-  const code = error.response?.data?.code || error.code || "UnknownError"
-  
-  return errorMessages[code] || error.message || "未知错误"
-} 
+  const code = error.response?.data?.code || error.code || 'UnknownError'
+
+  return errorMessages[code] || error.message || '未知错误'
+}

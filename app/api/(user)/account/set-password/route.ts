@@ -1,24 +1,18 @@
-import { auth } from "@/auth"
-import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { saltAndHashPassword } from "@/lib/utils/password"
+import { auth } from '@/auth'
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { saltAndHashPassword } from '@/lib/utils/password'
 
 export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user?.id) {
-    return NextResponse.json(
-      { code: "Unauthorized" },
-      { status: 401 }
-    )
+    return NextResponse.json({ code: 'Unauthorized' }, { status: 401 })
   }
 
   const { newPassword } = await request.json()
-  
+
   if (!newPassword) {
-    return NextResponse.json(
-      { code: "MissingNewPassword" },
-      { status: 400 }
-    )
+    return NextResponse.json({ code: 'MissingNewPassword' }, { status: 400 })
   }
 
   // 获取用户账户
@@ -43,10 +37,7 @@ export async function POST(request: Request) {
       }
     })
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    )
+    return NextResponse.json({ success: true }, { status: 200 })
   }
 
   // 如果已有credentials账户，更新密码
@@ -55,8 +46,5 @@ export async function POST(request: Request) {
     data: { password: hashedPassword }
   })
 
-  return NextResponse.json(
-    { success: true },
-    { status: 200 }
-  )
+  return NextResponse.json({ success: true }, { status: 200 })
 }

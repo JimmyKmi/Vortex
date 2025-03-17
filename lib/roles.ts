@@ -6,7 +6,7 @@ export enum UserRole {
 export interface RoleDefinition {
   name: string
   description: string
-  level: number  // 权限等级，数字越大权限越高
+  level: number // 权限等级，数字越大权限越高
 }
 
 export const ROLE_DEFINITIONS: Record<UserRole, RoleDefinition> = {

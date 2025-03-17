@@ -12,9 +12,9 @@
  * ```
  */
 
-"use client"
+'use client'
 
-import {useEffect, useCallback, useRef} from "react"
+import { useEffect, useCallback, useRef } from 'react'
 
 /**
  * 活动检测钩子的参数接口
@@ -25,10 +25,10 @@ import {useEffect, useCallback, useRef} from "react"
  * @property {boolean} [enabled=true] - 是否启用活动检测，默认为true
  */
 interface UseActivityDetectorProps {
-  onActivityAction: () => void          // 检测到用户活动时的回调
-  onInactivity?: () => void            // 用户不活动达到阈值时的回调
-  inactivityTime?: number              // 不活动时间阈值（毫秒）
-  enabled?: boolean                     // 是否启用检测
+  onActivityAction: () => void // 检测到用户活动时的回调
+  onInactivity?: () => void // 用户不活动达到阈值时的回调
+  inactivityTime?: number // 不活动时间阈值（毫秒）
+  enabled?: boolean // 是否启用检测
 }
 
 /**
@@ -36,11 +36,11 @@ interface UseActivityDetectorProps {
  * @param {UseActivityDetectorProps} props - 钩子配置参数
  */
 export function useActivityDetector({
-                                      onActivityAction,
-                                      onInactivity,
-                                      inactivityTime = 20 * 60 * 1000,     // 默认20分钟
-                                      enabled = true
-                                    }: UseActivityDetectorProps) {
+  onActivityAction,
+  onInactivity,
+  inactivityTime = 20 * 60 * 1000, // 默认20分钟
+  enabled = true
+}: UseActivityDetectorProps) {
   const inactivityTimeout = useRef<NodeJS.Timeout>()
   const lastActivityTime = useRef<number>(Date.now())
 
@@ -55,12 +55,13 @@ export function useActivityDetector({
     if (inactivityTimeout.current) clearTimeout(inactivityTimeout.current)
 
     // 设置新的不活动定时器
-    if (onInactivity) inactivityTimeout.current = setTimeout(() => {
-      const currentInactiveTime = Date.now() - lastActivityTime.current
-      if (currentInactiveTime >= inactivityTime) {
-        onInactivity()
-      }
-    }, inactivityTime)
+    if (onInactivity)
+      inactivityTimeout.current = setTimeout(() => {
+        const currentInactiveTime = Date.now() - lastActivityTime.current
+        if (currentInactiveTime >= inactivityTime) {
+          onInactivity()
+        }
+      }, inactivityTime)
 
     // 触发活动回调
     onActivityAction()
@@ -69,14 +70,7 @@ export function useActivityDetector({
   useEffect(() => {
     if (!enabled) return
 
-    const events = [
-      "mousemove",
-      "mousedown",
-      "keydown",
-      "touchstart",
-      "scroll",
-      "focus"
-    ]
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'focus']
 
     events.forEach(event => {
       window.addEventListener(event, handleActivity)
@@ -97,4 +91,4 @@ export function useActivityDetector({
       if (inactivityTimeout.current) clearTimeout(inactivityTimeout.current)
     }
   }, [enabled, handleActivity, inactivityTime, onInactivity])
-} 
+}

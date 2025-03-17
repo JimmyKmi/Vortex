@@ -1,21 +1,11 @@
 // 管理员路径
-const ADMIN_PATH_PREFIXES = [
-  '/api/management',
-  '/settings/platform'
-] as const
+const ADMIN_PATH_PREFIXES = ['/api/management', '/settings/platform'] as const
 
 // 用户路径
-const USER_PATH_PREFIXES = [
-  '/api/account',
-  '/api/transfer-codes',
-  '/settings'
-] as const
+const USER_PATH_PREFIXES = ['/api/account', '/api/transfer-codes', '/settings'] as const
 
 // 认证路径
-const AUTH_PATHS_PREFIXES = [
-  '/signin',
-  '/signup'
-] as const
+const AUTH_PATHS_PREFIXES = ['/signin', '/signup'] as const
 
 /**
  * 检查路径是否需要管理员权限
@@ -42,4 +32,4 @@ export function isUserPath(pathname: string): boolean {
  */
 export function isAuthPath(pathname: string): boolean {
   return AUTH_PATHS_PREFIXES.some(prefix => pathname.startsWith(prefix))
-} 
+}

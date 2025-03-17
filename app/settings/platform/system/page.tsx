@@ -1,23 +1,36 @@
 'use client'
 
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import {Button} from "@/components/ui/button"
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
-import {toast} from "sonner"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
-import {SettingsLayout} from '@/components/settings/settings-layout'
-import {Input} from "@/components/ui/input"
-import {Loader2, Save} from "lucide-react"
-import {SYSTEM_SETTINGS, SystemSettingDefinition} from '@/lib/config/system-settings'
-import {SettingsTitle} from "@/components/settings/settings-title"
-import {UserRole, ROLE_DEFINITIONS} from '@/lib/roles'
-import {useSession} from 'next-auth/react'
-import {notFound} from 'next/navigation'
-import {Skeleton} from "@/components/ui/skeleton"
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table'
+import { toast } from 'sonner'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { SettingsLayout } from '@/components/settings/settings-layout'
+import { Input } from '@/components/ui/input'
+import { Loader2, Save } from 'lucide-react'
+import { SYSTEM_SETTINGS, SystemSettingDefinition } from '@/lib/config/system-settings'
+import { SettingsTitle } from '@/components/settings/settings-title'
+import { UserRole, ROLE_DEFINITIONS } from '@/lib/roles'
+import { useSession } from 'next-auth/react'
+import { notFound } from 'next/navigation'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function SystemSettingsPage() {
-  const {data: session, status} = useSession()
+  const { data: session, status } = useSession()
   const [system_settings, setSystemSettings] = useState<Record<string, string>>({})
   const [editedSettings, setEditedSettings] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
@@ -45,9 +58,9 @@ export default function SystemSettingsPage() {
           return acc
         }, {})
         setSystemSettings(settings)
-      } catch (error) {
-        toast.error("获取系统设置失败", {
-          description: "无法加载系统设置"
+      } catch (_error) {
+        toast.error('获取系统设置失败', {
+          description: '无法加载系统设置'
         })
       }
     }
@@ -62,7 +75,7 @@ export default function SystemSettingsPage() {
         [key]: value === 'true' ? 'true' : 'false'
       }))
     } else {
-      setEditedSettings(prev => ({...prev, [key]: value}))
+      setEditedSettings(prev => ({ ...prev, [key]: value }))
     }
   }
 
@@ -77,21 +90,21 @@ export default function SystemSettingsPage() {
           throw new Error(`未找到设置项: ${key}`)
         }
 
-        return axios.put('/api/management/system-settings', {key, value})
+        return axios.put('/api/management/system-settings', { key, value })
       })
 
       await Promise.all(updatePromises)
 
-      setSystemSettings(prev => ({...prev, ...editedSettings}))
+      setSystemSettings(prev => ({ ...prev, ...editedSettings }))
       setEditedSettings({})
 
-      toast.success("系统设置已更新", {
-        description: "所有修改已保存成功"
+      toast.success('系统设置已更新', {
+        description: '所有修改已保存成功'
       })
     } catch (error) {
       console.error('保存设置时发生错误:', error)
-      toast.error("更新失败", {
-        description: error instanceof Error ? error.message : "无法更新系统设置"
+      toast.error('更新失败', {
+        description: error instanceof Error ? error.message : '无法更新系统设置'
       })
     } finally {
       setIsSaving(false)
@@ -99,7 +112,8 @@ export default function SystemSettingsPage() {
   }
 
   const renderSettingInput = (setting: SystemSettingDefinition) => {
-    const currentValue = editedSettings[setting.key] ??
+    const currentValue =
+      editedSettings[setting.key] ??
       system_settings[setting.key] ??
       (setting.type === 'boolean' ? String(setting.defaultValue) : setting.defaultValue)
 
@@ -108,10 +122,10 @@ export default function SystemSettingsPage() {
         return (
           <Select
             value={currentValue}
-            onValueChange={(value) => handleSettingChange(setting.key, value)}
+            onValueChange={value => handleSettingChange(setting.key, value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="选择值"/>
+              <SelectValue placeholder="选择值" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="true">是</SelectItem>
@@ -124,13 +138,13 @@ export default function SystemSettingsPage() {
           return (
             <Select
               value={String(currentValue)}
-              onValueChange={(value) => handleSettingChange(setting.key, value)}
+              onValueChange={value => handleSettingChange(setting.key, value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="选择值"/>
+                <SelectValue placeholder="选择值" />
               </SelectTrigger>
               <SelectContent>
-                {setting.options.map((option) => (
+                {setting.options.map(option => (
                   <SelectItem key={option} value={option}>
                     {setting.optionsMap?.[option]?.name || option}
                   </SelectItem>
@@ -142,7 +156,7 @@ export default function SystemSettingsPage() {
         return (
           <Input
             value={String(currentValue)}
-            onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+            onChange={e => handleSettingChange(setting.key, e.target.value)}
             placeholder="输入值"
           />
         )
@@ -151,7 +165,7 @@ export default function SystemSettingsPage() {
           <Input
             type="number"
             value={String(currentValue)}
-            onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+            onChange={e => handleSettingChange(setting.key, e.target.value)}
             placeholder="输入数值"
           />
         )
@@ -170,7 +184,7 @@ export default function SystemSettingsPage() {
             <Skeleton className="h-4 w-96" />
             <Skeleton className="h-px w-full mt-3" />
           </div>
-          
+
           <div className="relative">
             <div className="rounded-md border">
               <div className="p-4">
@@ -180,7 +194,7 @@ export default function SystemSettingsPage() {
                   <Skeleton className="h-4 w-32 mr-8" />
                   <Skeleton className="h-4 w-32" />
                 </div>
-                
+
                 {/* 表格内容骨架屏 - 生成5行 */}
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className="flex items-start py-4 border-b last:border-0">
@@ -198,7 +212,7 @@ export default function SystemSettingsPage() {
                 ))}
               </div>
             </div>
-            
+
             {/* 保存按钮骨架屏 */}
             <div className="flex justify-end mt-4">
               <Skeleton className="h-10 w-48" />
@@ -211,10 +225,7 @@ export default function SystemSettingsPage() {
 
   return (
     <SettingsLayout title="系统设置">
-      <SettingsTitle
-        title="系统设置"
-        description="管理系统的全局配置"
-      />
+      <SettingsTitle title="系统设置" description="管理系统的全局配置" />
       <div className="relative space-y-4">
         <div className="relative">
           <Table>
@@ -226,21 +237,23 @@ export default function SystemSettingsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {SYSTEM_SETTINGS.map((setting) => (
+              {SYSTEM_SETTINGS.map(setting => (
                 <TableRow key={setting.key}>
                   <TableCell>
                     <div className="font-medium">{setting.name}</div>
                     <div className="text-xs text-muted-foreground">{setting.description}</div>
                   </TableCell>
-                  <TableCell>
-                    {renderSettingInput(setting)}
-                  </TableCell>
-                  <TableCell className={!setting.defaultValue ? "text-muted-foreground" : ""}>
+                  <TableCell>{renderSettingInput(setting)}</TableCell>
+                  <TableCell className={!setting.defaultValue ? 'text-muted-foreground' : ''}>
                     {setting.key === 'DEFAULT_USER_ROLE'
                       ? ROLE_DEFINITIONS[setting.defaultValue as UserRole].name
                       : setting.type === 'boolean'
-                        ? (String(setting.defaultValue) === 'true' ? '是' : '否')
-                        : (setting.defaultValue ? String(setting.defaultValue) : "无")}
+                        ? String(setting.defaultValue) === 'true'
+                          ? '是'
+                          : '否'
+                        : setting.defaultValue
+                          ? String(setting.defaultValue)
+                          : '无'}
                   </TableCell>
                 </TableRow>
               ))}
@@ -255,12 +268,12 @@ export default function SystemSettingsPage() {
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   保存中...
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4"/>
+                  <Save className="mr-2 h-4 w-4" />
                   保存更改
                 </>
               )}
@@ -270,4 +283,4 @@ export default function SystemSettingsPage() {
       </div>
     </SettingsLayout>
   )
-} 
+}

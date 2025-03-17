@@ -16,9 +16,9 @@ const THEME_KEY = 'preferredTheme'
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('light')
   const [systemTheme, setSystemTheme] = useState<Theme>('light')
-  const [isSystemTheme, setIsSystemTheme] = useState(true)
+  const [, setIsSystemTheme] = useState(true)
   const [isClient, setIsClient] = useState(false)
-  
+
   // 检测是否在客户端
   useEffect(() => {
     setIsClient(true)
@@ -29,11 +29,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!isClient) return
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    
+
     const updateSystemTheme = (isDark: boolean) => {
       const newSystemTheme = isDark ? 'dark' : 'light'
       setSystemTheme(newSystemTheme)
-      
+
       const storedTheme = localStorage.getItem(THEME_KEY)
       if (storedTheme === newSystemTheme) localStorage.removeItem(THEME_KEY)
       if (!storedTheme) setTheme(newSystemTheme)
@@ -94,11 +94,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }
 
   return (
-    <ThemeContext.Provider value={{ 
-      theme, 
-      toggleTheme,
-      isSystemTheme: isClient ? !localStorage.getItem(THEME_KEY) : true
-    }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        toggleTheme,
+        isSystemTheme: isClient ? !localStorage.getItem(THEME_KEY) : true
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   )
@@ -109,4 +111,3 @@ export const useTheme = () => {
   if (context === undefined) throw new Error('useTheme must be used within a ThemeProvider')
   return context
 }
-

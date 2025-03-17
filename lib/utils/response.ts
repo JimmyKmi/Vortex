@@ -3,7 +3,7 @@
  * 提供标准的Restful响应格式和错误处理
  */
 
-import { NextResponse } from "next/server"
+import { NextResponse } from 'next/server'
 
 /**
  * 标准错误码定义
@@ -12,7 +12,7 @@ import { NextResponse } from "next/server"
 export const ErrorCodes = {
   // 成功
   Success: { status: 200 },
-  
+
   // 客户端错误 (4xx)
   InvalidParams: { status: 400 },
   Unauthorized: { status: 401 },
@@ -20,19 +20,19 @@ export const ErrorCodes = {
   NotFound: { status: 404 },
   MethodNotAllowed: { status: 405 },
   Conflict: { status: 409 },
-  
+
   // 会话相关错误
   InvalidSession: { status: 401 },
-  
+
   // 传输相关错误
   TransferCodeExpired: { status: 401 },
   TransferCodeDisabled: { status: 403 },
   TransferCodeNotFound: { status: 404 },
-  
+
   // 服务器错误 (5xx)
   InternalServerError: { status: 500 },
   DatabaseError: { status: 500 },
-  ServiceUnavailable: { status: 503 },
+  ServiceUnavailable: { status: 503 }
 } as const
 
 // 错误码类型
@@ -55,10 +55,13 @@ export interface ApiResponse<T = undefined> {
  * return ResponseSuccess({ user: { id: 1, name: 'test' } })
  */
 export function ResponseSuccess<T>(data?: T, init?: ResponseInit): NextResponse {
-  return NextResponse.json({ 
-    code: "Success", 
-    ...(data !== undefined && { data })
-  } satisfies ApiResponse<T>, init)
+  return NextResponse.json(
+    {
+      code: 'Success',
+      ...(data !== undefined && { data })
+    } satisfies ApiResponse<T>,
+    init
+  )
 }
 
 /**
@@ -73,14 +76,7 @@ export function ResponseSuccess<T>(data?: T, init?: ResponseInit): NextResponse 
  * // 使用自定义错误码和状态码
  * return ResponseThrow("CustomError", 400)
  */
-export function ResponseThrow(
-  code: ErrorCode, 
-  status?: number,
-  init?: ResponseInit
-): NextResponse {
-  const finalStatus = (ErrorCodes[code as keyof typeof ErrorCodes]?.status ?? status ?? 500)
-  return NextResponse.json(
-    { code } satisfies ApiResponse, 
-    { ...init, status: finalStatus }
-  )
-} 
+export function ResponseThrow(code: ErrorCode, status?: number, init?: ResponseInit): NextResponse {
+  const finalStatus = ErrorCodes[code as keyof typeof ErrorCodes]?.status ?? status ?? 500
+  return NextResponse.json({ code } satisfies ApiResponse, { ...init, status: finalStatus })
+}

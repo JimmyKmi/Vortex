@@ -1,13 +1,13 @@
-import {cookies} from "next/headers"
+import { cookies } from 'next/headers'
 import {
   TransferSessionCookie,
   TRANSFER_SESSION_CONFIG,
   TransferSessionStatus,
   TransferSession,
   TransferCodeType
-} from "@/types/transfer-session"
-import {NextResponse, NextRequest} from "next/server"
-import {PrismaClient} from "@prisma/client"
+} from '@/types/transfer-session'
+import { NextResponse, NextRequest } from 'next/server'
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -25,10 +25,11 @@ export async function getSessionCookie(
 
   let cookieValue: string | undefined
 
-  if (req) {    // 从请求中获取Cookie
+  if (req) {
+    // 从请求中获取Cookie
     cookieValue = req.cookies.get(cookieName)?.value
   } else {
-    const cookieStore = await cookies()    // 从服务器端获取Cookie
+    const cookieStore = await cookies() // 从服务器端获取Cookie
     cookieValue = cookieStore.get(cookieName)?.value
   }
 
@@ -54,11 +55,7 @@ export async function setSessionCookie(
 ): Promise<void> {
   const cookieName = `${TRANSFER_SESSION_CONFIG.COOKIE_PREFIX}${transferCodeId}`
 
-  response.cookies.set(
-    cookieName,
-    JSON.stringify(session),
-    TRANSFER_SESSION_CONFIG.COOKIE_OPTIONS
-  )
+  response.cookies.set(cookieName, JSON.stringify(session), TRANSFER_SESSION_CONFIG.COOKIE_OPTIONS)
 }
 
 /**
@@ -79,7 +76,7 @@ export async function deleteSessionCookie(transferCodeId: string): Promise<void>
 export function isSessionExpired(updatedAt: Date | string): boolean {
   const activityTime = new Date(updatedAt).getTime()
   const currentTime = Date.now()
-  const expirationTime = activityTime + 10 * 60 * 1000  // 10分钟过期时间
+  const expirationTime = activityTime + 10 * 60 * 1000 // 10分钟过期时间
   return currentTime > expirationTime
 }
 
@@ -99,20 +96,22 @@ export async function validateTransferSession(
   allowedTypes: TransferCodeType[] = [],
   existingSession?: any
 ): Promise<{
-  valid: boolean;
-  code?: string;
-  session?: TransferSession;
+  valid: boolean
+  code?: string
+  session?: TransferSession
 }> {
   try {
     // 使用已有会话信息或重新查询
-    const dbSession = existingSession || await prisma.transferSession.findUnique({
-      where: {id: sessionId},
-      include: {
-        transferCode: true
-      }
-    })
+    const dbSession =
+      existingSession ||
+      (await prisma.transferSession.findUnique({
+        where: { id: sessionId },
+        include: {
+          transferCode: true
+        }
+      }))
 
-    if (!dbSession) return {valid: false, code: "InvalidSession"}
+    if (!dbSession) return { valid: false, code: 'InvalidSession' }
 
     // 转换为 TransferSession 类型
     const session = {
@@ -122,38 +121,44 @@ export async function validateTransferSession(
     } as TransferSession
 
     // 验证会话状态是否在允许列表中
-    if (allowedStatus.length > 0 && !allowedStatus.includes(session.status)) return {
-      valid: false, code: "InvalidSession"
-    }
+    if (allowedStatus.length > 0 && !allowedStatus.includes(session.status))
+      return {
+        valid: false,
+        code: 'InvalidSession'
+      }
 
     // 验证传输类型是否在允许列表中
     if (
       allowedTypes.length > 0 &&
       session.transferCode &&
       !allowedTypes.includes(session.transferCode.type as TransferCodeType)
-    ) return {
-      valid: false, code: "InvalidTransferType"
-    }
+    )
+      return {
+        valid: false,
+        code: 'InvalidTransferType'
+      }
 
     // 验证会话Cookie
     const sessionCookie = await getSessionCookie(session.transferCodeId, req)
-    if (!sessionCookie ||
+    if (
+      !sessionCookie ||
       sessionCookie.sessionId !== sessionId ||
-      sessionCookie.fingerprint !== session.fingerprint) {
-      return {valid: false, code: "InvalidSession"}
+      sessionCookie.fingerprint !== session.fingerprint
+    ) {
+      return { valid: false, code: 'InvalidSession' }
     }
 
     // 检查会话是否已过期
     if (isSessionExpired(session.updatedAt)) {
       await prisma.transferSession.delete({
-        where: {id: sessionId}
+        where: { id: sessionId }
       })
-      return {valid: false, code: "InvalidSession"}
+      return { valid: false, code: 'InvalidSession' }
     }
 
-    return {valid: true, session}
+    return { valid: true, session }
   } catch (error) {
-    console.error("Validate transfer session error:", error)
-    return {valid: false, code: "ServerError"}
+    console.error('Validate transfer session error:', error)
+    return { valid: false, code: 'ServerError' }
   }
-} 
+}

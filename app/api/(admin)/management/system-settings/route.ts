@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SYSTEM_SETTINGS } from '@/lib/config/system-settings'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const settings = await prisma.systemSettings.findMany()
     return NextResponse.json(settings)
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const { key, value } = await req.json()
-    
+
     // 验证设置项是否合法
     const settingDefinition = SYSTEM_SETTINGS.find(s => s.key === key)
     if (!settingDefinition) {
@@ -29,9 +29,11 @@ export async function PUT(req: NextRequest) {
         processedValue = String(value)
         break
       case 'string':
-        if (settingDefinition.options && 
-            Array.isArray(settingDefinition.options) && 
-            !settingDefinition.options.includes(String(value))) {
+        if (
+          settingDefinition.options &&
+          Array.isArray(settingDefinition.options) &&
+          !settingDefinition.options.includes(String(value))
+        ) {
           return NextResponse.json({ error: '无效的选项值' }, { status: 400 })
         }
         processedValue = String(value)

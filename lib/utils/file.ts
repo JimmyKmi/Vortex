@@ -11,4 +11,4 @@ export const formatFileSize = (bytes: number): string => {
   })
   // 如果长度超过 10 个字符，截断并添加省略号
   return (formatted.length > 10 ? formatted.slice(0, 8) + '...' : formatted) + ' KB'
-} 
+}

@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma"
-import { isSessionExpired } from "@/lib/utils/transfer-session"
-import { S3StorageService } from "@/lib/s3/storage"
+import { prisma } from '@/lib/prisma'
+import { isSessionExpired } from '@/lib/utils/transfer-session'
+import { S3StorageService } from '@/lib/s3/storage'
 
 /**
  * 清理过期和无用的数据
@@ -11,7 +11,7 @@ import { S3StorageService } from "@/lib/s3/storage"
  */
 export async function cleanupTask() {
   try {
-    console.log("执行清理任务")
+    console.log('执行清理任务')
     const now = new Date()
 
     // 1. 清理过期会话
@@ -21,11 +21,11 @@ export async function cleanupTask() {
         updatedAt: true
       }
     })
-    
+
     const expiredSessionIds = sessions
       .filter(session => isSessionExpired(session.updatedAt))
       .map(session => session.id)
-    
+
     if (expiredSessionIds.length > 0) {
       const deletedSessions = await prisma.transferSession.deleteMany({
         where: {
@@ -47,7 +47,7 @@ export async function cleanupTask() {
         disableReason: null
       },
       data: {
-        disableReason: "LIMIT"
+        disableReason: 'LIMIT'
       }
     })
 
@@ -72,7 +72,7 @@ export async function cleanupTask() {
       // 先从S3存储中删除文件
       try {
         const s3Service = S3StorageService.getInstance()
-        
+
         // 准备要删除的文件列表
         const filesToDelete = orphanedFiles
           .filter(file => file.s3BasePath && file.relativePath !== undefined)
@@ -80,7 +80,7 @@ export async function cleanupTask() {
             s3BasePath: file.s3BasePath,
             relativePath: file.relativePath
           }))
-        
+
         if (filesToDelete.length > 0) {
           await s3Service.deleteFiles(filesToDelete)
           console.log(`删除S3文件: ${filesToDelete.length}个`)
@@ -88,7 +88,7 @@ export async function cleanupTask() {
       } catch (error) {
         console.error(`S3文件删除错误:`, error instanceof Error ? error.message : '未知错误')
       }
-      
+
       // 删除数据库中的孤立文件记录
       await prisma.file.deleteMany({
         where: {
@@ -100,8 +100,8 @@ export async function cleanupTask() {
       console.log(`清理孤立文件记录: ${orphanedFiles.length}个`)
     }
 
-    console.log("清理任务完成")
+    console.log('清理任务完成')
   } catch (error) {
-    console.error("清理任务错误:", error)
+    console.error('清理任务错误:', error)
   }
 }
