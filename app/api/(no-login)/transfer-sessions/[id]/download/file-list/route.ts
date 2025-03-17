@@ -178,14 +178,6 @@ export async function GET(
       return ResponseThrow("InvalidSession")
     }
 
-    console.log("Session found:", {
-      id: session.id,
-      status: session.status,
-      hasTransferCode: !!session.transferCode,
-      hasLinkedTransferCode: !!session.linkedTransferCode,
-      linkedTransferCodeId: session.linkedTransferCodeId
-    })
-
     if (!session.transferCode) {
       console.error("Transfer code not found for session:", sessionId)
       return ResponseThrow("InvalidSession")

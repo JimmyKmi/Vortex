@@ -238,10 +238,10 @@ export const {handlers, auth, signOut} = NextAuth({
   },
   logger: {
     error(code, ...message) {
-      console.log(code, message)
+      console.error(code, message)
     },
     warn(code, ...message) {
-      console.log(code, message)
+      console.warn(code, message)
     },
     debug(code, ...message) {
       console.log(code, message)
