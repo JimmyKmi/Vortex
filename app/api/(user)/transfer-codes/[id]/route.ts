@@ -181,7 +181,6 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
             Key: `compress/${id}/archive.zip`
           })
           await s3Client.send(command)
-          console.log(`已删除传输码 ${id} 的压缩包`)
         } catch (compressError) {
           // 压缩包可能不存在，忽略该错误
           console.log(
@@ -207,7 +206,6 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
             transferCodeId: id
           }
         })
-        console.log(`已删除 ${deletedRelations.count} 个文件关联记录`)
 
         // 检查这些文件是否还被其他传输码使用
         const stillInUseFiles = await tx.fileToTransferCode.findMany({
@@ -221,7 +219,6 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
 
         // 如果某些文件仍在使用，则从删除列表中移除
         const stillInUseFileIds = stillInUseFiles.map((f) => f.fileId)
-        console.log(`仍在使用的文件IDs: ${stillInUseFileIds.join(', ')}`)
 
         // 只删除不再被其他传输码使用的文件
         const fileIdsToDelete = fileIds.filter((id) => !stillInUseFileIds.includes(id))
@@ -234,7 +231,6 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
               }
             }
           })
-          console.log(`已删除 ${deletedFiles.count} 个文件记录`)
         }
       }
 

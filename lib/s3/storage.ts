@@ -108,7 +108,6 @@ export class S3StorageService {
     }
 
     const s3Key = this.getFullS3Key(s3BasePath, relativePath)
-    console.log(`Deleting single file: ${s3Key}`)
 
     try {
       const command = new DeleteObjectCommand({
@@ -166,7 +165,6 @@ export class S3StorageService {
     const useSingleDelete = validFiles.length < 5 // 少量文件时直接使用单个删除
 
     if (useSingleDelete) {
-      console.log(`Using individual delete for ${validFiles.length} files`)
       // 单个文件逐个删除
       for (const file of validFiles) {
         try {
@@ -192,8 +190,6 @@ export class S3StorageService {
       batches.push(validFiles.slice(i, i + batchSize))
     }
 
-    console.log(`Batch deleting ${validFiles.length} files in ${batches.length} batches`)
-
     // 逐批处理删除
     let hasError = false
 
@@ -203,11 +199,6 @@ export class S3StorageService {
         return { Key: key }
       })
 
-      // 打印第一个对象的信息以便调试
-      if (objects.length > 0) {
-        console.log(`Sample delete object: ${JSON.stringify(objects[0])}`)
-      }
-
       try {
         const command = new DeleteObjectsCommand({
           Bucket: S3_CONFIG.bucket,
@@ -215,14 +206,12 @@ export class S3StorageService {
         })
 
         await s3Client.send(command)
-        console.log(`Successfully deleted batch of ${objects.length} objects`)
       } catch (error) {
         hasError = true
         const errorMsg = error instanceof Error ? error.message : 'Unknown error'
         console.error(`Failed to delete S3 batch: ${errorMsg}`)
 
         // 尝试使用单个删除作为备选
-        console.log('Falling back to individual delete for failed batch')
         for (const file of batch) {
           try {
             await this.deleteFile(file.s3BasePath, file.relativePath)
