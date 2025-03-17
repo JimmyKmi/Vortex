@@ -265,7 +265,7 @@ export default function UploadPage({ params }: PageProps) {
     } finally {
       event.target.value = ''
     }
-  }, [checkSessionActive, processAddFiles])
+  }, [checkSessionActive])
 
   /**
    * 创建文件输入处理函数

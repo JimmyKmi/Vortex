@@ -12,7 +12,7 @@
     "no-unused-vars": "off", // ESLint
     "@typescript-eslint/no-unused-vars": "warn", // TypeScript
     "@typescript-eslint/no-explicit-any": "off",
-//    "no-console": ["warn", { "allow": ["warn", "error"] }]
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
     "max-len": "off"
   }
 }
