@@ -56,7 +56,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (!sessionId) return ResponseThrow('InvalidSession')
 
     // 获取会话信息
-    let session = await prisma.transferSession.findUnique({
+    const session = await prisma.transferSession.findUnique({
       where: { id: sessionId },
       include: {
         transferCode: {

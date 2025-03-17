@@ -477,9 +477,8 @@ export class FileService {
       }
 
       // 设置完成回调
-      let finalized = false
       archive.on('end', () => {
-        finalized = true
+        // 完成压缩
       })
 
       // 完成压缩但不等待

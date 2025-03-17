@@ -50,10 +50,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (!transferCode) return ResponseThrow('InvalidSession')
 
     // 检查压缩状态
+    let downloadData;
     switch (transferCode.compressStatus) {
       case 'COMPLETED':
         // 获取压缩包下载链接
-        const downloadData = await fileService.getCompressDownloadUrl(session.transferCodeId)
+        downloadData = await fileService.getCompressDownloadUrl(session.transferCodeId)
         return ResponseSuccess({
           status: 'COMPLETED',
           url: downloadData.url

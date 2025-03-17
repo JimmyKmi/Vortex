@@ -4,7 +4,7 @@ import { cleanupTask } from './cleanup'
 let cleanupInterval: NodeJS.Timeout | null = null
 
 // 存储调度器状态
-let schedulerStatus = {
+const schedulerStatus = {
   isRunning: false,
   startedAt: null as Date | null
 }

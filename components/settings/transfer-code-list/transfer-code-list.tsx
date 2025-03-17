@@ -51,12 +51,12 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
   // 暴露刷新方法给父组件
   useEffect(() => {
     if (onRefreshRef) onRefreshRef.current = fetchData
-  }, [onRefreshRef])
+  }, [onRefreshRef, fetchData])
 
   // 组件挂载时获取数据
   useEffect(() => {
     void fetchData()
-  }, [type])
+  }, [type, fetchData])
 
   // 批量删除处理
   const handleBatchDelete = async () => {

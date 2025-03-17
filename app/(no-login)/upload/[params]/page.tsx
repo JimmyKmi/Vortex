@@ -194,7 +194,7 @@ export default function UploadPage({ params }: PageProps) {
   /**
    * 根据文件路径查找文件
    */
-  const getFileByPath = (fileList: FileToUpload[], path: string): FileToUpload | null => {
+  const getFileByPath = useCallback((fileList: FileToUpload[], path: string): FileToUpload | null => {
     const normalizedPath = path.replace(/\\/g, '/').toLowerCase()
 
     for (const file of fileList) {
@@ -211,7 +211,7 @@ export default function UploadPage({ params }: PageProps) {
     }
 
     return null
-  }
+  }, [])
 
   // 计算默认选中的文件，只在files变化时更新
   const computeDefaultSelectedFiles = useCallback(() => {
@@ -243,7 +243,7 @@ export default function UploadPage({ params }: PageProps) {
     (path: string): boolean => {
       return getFileByPath(files, path) !== null
     },
-    [files]
+    [files, getFileByPath]
   )
 
   /**
@@ -251,36 +251,28 @@ export default function UploadPage({ params }: PageProps) {
    *
    * @param {React.ChangeEvent<HTMLInputElement>} event - 文件选择事件
    */
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChangeCallback = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!checkSessionActive()) return
     try {
       const fileList = event.target.files
       if (!fileList?.length) return
 
       const files = Array.from(fileList)
-      files.forEach(file => {
-        if (!(file as any).webkitRelativePath) {
-          Object.defineProperty(file, 'webkitRelativePath', {
-            value: file.name
-          })
-        }
-      })
-      await processAddFiles(files)
+      await processAddFiles(files, event.target.webkitdirectory)
     } catch (error) {
       console.error('Error handling file change:', error)
       toast.error('添加文件时发生错误')
     } finally {
       event.target.value = ''
     }
-  }
+  }, [checkSessionActive, processAddFiles])
 
   /**
-   * 创建文件输入处理器
-   *
+   * 创建文件输入处理函数
    * @param {boolean} isDirectory - 是否为文件夹选择
    * @returns {() => void} 文件选择处理函数
    */
-  const createFileInputHandler =
+  const createFileInputHandler = useCallback(
     (isDirectory: boolean): (() => void) =>
     () => {
       if (!checkSessionActive()) return
@@ -291,7 +283,7 @@ export default function UploadPage({ params }: PageProps) {
       if (isDirectory) input.webkitdirectory = true
 
       input.onchange = (e: Event) => {
-        handleFileChange({
+        handleFileChangeCallback({
           target: e.target as HTMLInputElement,
           preventDefault: () => {},
           stopPropagation: () => {},
@@ -300,7 +292,9 @@ export default function UploadPage({ params }: PageProps) {
       }
 
       input.click()
-    }
+    },
+    [checkSessionActive, handleFileChangeCallback]
+  )
 
   /**
    * 处理文件添加
@@ -313,7 +307,7 @@ export default function UploadPage({ params }: PageProps) {
    * @param {File[]} files - 文件列表
    */
   const processAddFiles = useCallback(
-    async (files: File[]) => {
+    async (files: File[], isDirectory: boolean) => {
       try {
         const newFiles: FileToUpload[] = []
         const duplicates: string[] = []
@@ -412,7 +406,11 @@ export default function UploadPage({ params }: PageProps) {
                 children: []
               }
               folderTree[currentPath] = newFolder
-              parentFolder ? parentFolder.children!.push(newFolder) : newFiles.push(newFolder)
+              if (parentFolder) {
+                parentFolder.children!.push(newFolder)
+              } else {
+                newFiles.push(newFolder)
+              }
             }
             parentFolder = folderTree[currentPath]
           }
@@ -427,7 +425,11 @@ export default function UploadPage({ params }: PageProps) {
             relativePath: filePath,
             file
           }
-          parentFolder ? parentFolder.children!.push(newFile) : newFiles.push(newFile)
+          if (parentFolder) {
+            parentFolder.children!.push(newFile)
+          } else {
+            newFiles.push(newFile)
+          }
           processedPaths.add(normalizedPath)
         }
 
@@ -871,16 +873,6 @@ export default function UploadPage({ params }: PageProps) {
   }
 
   /**
-   * 获取所有文件ID（包括文件夹内的文件）
-   */
-  const getAllFileIds = (files: FileToUpload[]): string[] =>
-    files.reduce((acc: string[], file) => {
-      acc.push(file.id)
-      if (file.type === 'folder' && file.children) acc.push(...getAllFileIds(file.children))
-      return acc
-    }, [])
-
-  /**
    * 处理反选
    */
   const handleInvertSelection = () => {
@@ -1026,12 +1018,20 @@ export default function UploadPage({ params }: PageProps) {
     return 'uploading'
   }
 
+  // 为DragDrop上下文提供的简化版processAddFiles
+  const handleDragDropFiles = useCallback((files: File[]) => {
+    processAddFiles(files, false).catch(error => {
+      console.error('Error handling drag drop files:', error)
+      toast.error('添加文件时发生错误')
+    })
+  }, [processAddFiles])
+
   /**
    * 组件卸载时清理事件监听和轮询
    */
   useEffect(() => {
     if (isActive) {
-      enableDragDrop(processAddFiles)
+      enableDragDrop(handleDragDropFiles)
     } else {
       disableDragDrop()
     }
@@ -1039,7 +1039,7 @@ export default function UploadPage({ params }: PageProps) {
     return () => {
       disableDragDrop()
     }
-  }, [isActive, enableDragDrop, disableDragDrop, processAddFiles])
+  }, [isActive, enableDragDrop, disableDragDrop, handleDragDropFiles])
 
   /**
    * 处理URL查询参数
@@ -1058,7 +1058,7 @@ export default function UploadPage({ params }: PageProps) {
       // 清除 URL 参数，防止刷新页面时重复触发
       router.replace(`/upload/${sessionId}`, { scroll: false })
     }
-  }, [sessionId, router, checkSessionActive])
+  }, [sessionId, router, checkSessionActive, createFileInputHandler])
 
   /**
    * 检查是否需要显示上传确认对话框
@@ -1067,19 +1067,17 @@ export default function UploadPage({ params }: PageProps) {
     if (!fileTreeRef.current) return
 
     // 获取所有的文件（不包括文件夹）
-    const allFileIds = (() => {
-      const getAllFileIdsHelper = (items: FileToUpload[]): string[] => {
-        return items.reduce((acc: string[], item) => {
-          if (item.type === 'file') {
-            acc.push(item.id)
-          } else if (item.type === 'folder' && item.children) {
-            acc.push(...getAllFileIdsHelper(item.children))
-          }
-          return acc
-        }, [])
-      }
-      return getAllFileIdsHelper(files)
-    })()
+    const getAllFileIdsHelper = (items: FileToUpload[]): string[] => {
+      return items.reduce((acc: string[], item) => {
+        if (item.type === 'file') {
+          acc.push(item.id)
+        } else if (item.type === 'folder' && item.children) {
+          acc.push(...getAllFileIdsHelper(item.children))
+        }
+        return acc
+      }, [])
+    }
+    const allFileIds = getAllFileIdsHelper(files)
 
     const currentSelectedFiles = fileTreeRef.current.getSelectedFiles()
 
@@ -1091,7 +1089,11 @@ export default function UploadPage({ params }: PageProps) {
     const isNoSelection = allFileIds.every(id => !currentSelectedFiles.has(id))
 
     // 全选或未选择任何文件时直接上传
-    isFullSelection || isNoSelection ? void handleUpload() : setShowUploadConfirm(true)
+    if (isFullSelection || isNoSelection) {
+      void handleUpload()
+    } else {
+      setShowUploadConfirm(true)
+    }
   }
 
   // 根据验证状态显示加载页面
@@ -1125,7 +1127,7 @@ export default function UploadPage({ params }: PageProps) {
     <Layout width="middle" title="文件上传" buttonType="back">
       <TransferInfo transferInfo={transferInfo} />
 
-      <input type="file" multiple onChange={handleFileChange} className="hidden" id="file-upload" />
+      <input type="file" multiple onChange={handleFileChangeCallback} className="hidden" id="file-upload" />
 
       {files.length === 0 && (
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">

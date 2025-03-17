@@ -34,7 +34,7 @@ export default function UploadComplete({ transferInfo }: { transferInfo: Transfe
       setIsCopied(true)
       toast.success('下载码已复制到剪贴板')
       setTimeout(() => setIsCopied(false), 2000)
-    } catch (err) {
+    } catch (_err) {
       toast.error('复制失败，请手动复制')
     }
   }

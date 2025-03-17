@@ -147,7 +147,7 @@ export async function DELETE(request: Request) {
     let json
     try {
       json = await request.json()
-    } catch (parseError) {
+    } catch (_parseError) {
       return ResponseThrow('InvalidParams')
     }
 
@@ -309,7 +309,7 @@ export async function DELETE(request: Request) {
     try {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error(`Failed to batch delete transfer codes: ${errorMessage}`)
-    } catch (loggingError) {
+    } catch (_loggingError) {
       console.error('Error while logging')
     }
     return ResponseThrow('DatabaseError')

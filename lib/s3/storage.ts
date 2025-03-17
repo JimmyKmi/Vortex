@@ -8,7 +8,7 @@ import { PrismaClient } from '@prisma/client'
 const isServer = typeof window === 'undefined'
 
 // 只在服务器端导入和初始化Prisma客户端
-isServer ? new PrismaClient() : undefined
+const prismaClient = isServer ? new PrismaClient() : undefined;
 
 export class S3StorageService {
   private static instance: S3StorageService

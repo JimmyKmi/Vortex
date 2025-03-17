@@ -1,8 +1,12 @@
 import { startScheduler, getSchedulerStatus as getTaskSchedulerStatus } from '@/lib/tasks/scheduler'
 
 // 使用全局变量来保持初始化状态
+// 注意：在全局声明中必须使用var，因为这些属性将附加到global对象上
+// 使用let或const在全局声明中不会正确地挂载到global对象
 declare global {
+  // eslint-disable-next-line no-var
   var __isInitialized: boolean | undefined
+  // eslint-disable-next-line no-var
   var __isInitializing: boolean | undefined
 }
 

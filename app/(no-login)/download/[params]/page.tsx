@@ -301,7 +301,7 @@ export default function DownloadPage({ params }: PageProps) {
                 onError: () => console.error(`下载URL生成失败，重试次数: ${retryCount + 1}`)
               }
             )
-          } catch (error) {
+          } catch (_error) {
             // 处理错误
             retryCount++
 

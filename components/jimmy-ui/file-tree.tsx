@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react'
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useMemo } from 'react'
 import {
   Table,
   TableBody,
@@ -180,10 +180,13 @@ function FileTreeComponent<T extends FileTreeItem>(
     useState<Set<string>>(defaultExpandedFolders)
 
   // 实际使用的状态 - 根据模式选择内部或外部状态
-  const selectedFiles =
+  const selectedFiles = useMemo(() => 
     mode === 'controlled' ? externalSelectedFiles || new Set() : internalSelectedFiles
-  const expandedFolders =
+  , [mode, externalSelectedFiles, internalSelectedFiles])
+  
+  const expandedFolders = useMemo(() => 
     mode === 'controlled' ? externalExpandedFolders || new Set() : internalExpandedFolders
+  , [mode, externalExpandedFolders, internalExpandedFolders])
 
   // 避免在渲染过程中调用父组件的回调函数
   const notifySelectionChange = (newSelection: Set<string>) => {
@@ -285,7 +288,11 @@ function FileTreeComponent<T extends FileTreeItem>(
           if (containsTarget) {
             // 更新当前文件夹的状态
             const checked = getFolderCheckState(file, selectedSet)
-            checked ? selectedSet.add(file.id) : selectedSet.delete(file.id)
+            if (checked) {
+              selectedSet.add(file.id)
+            } else {
+              selectedSet.delete(file.id)
+            }
             return true
           }
         }
@@ -306,13 +313,21 @@ function FileTreeComponent<T extends FileTreeItem>(
 
     setInternalSelectedFiles(prev => {
       const newSet = new Set(prev)
-      checked ? newSet.add(fileId) : newSet.delete(fileId)
+      if (checked) {
+        newSet.add(fileId)
+      } else {
+        newSet.delete(fileId)
+      }
 
       // 如果是文件夹，处理所有子文件
       if (file.type === 'folder') {
         const processChildren = (folder: T) => {
           folder.children?.forEach(child => {
-            checked ? newSet.add(child.id) : newSet.delete(child.id)
+            if (checked) {
+              newSet.add(child.id)
+            } else {
+              newSet.delete(child.id)
+            }
             if (child.type === 'folder') processChildren(child as T)
           })
         }
@@ -339,7 +354,11 @@ function FileTreeComponent<T extends FileTreeItem>(
 
     setInternalExpandedFolders(prev => {
       const newSet = new Set(prev)
-      newSet.has(folderId) ? newSet.delete(folderId) : newSet.add(folderId)
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId)
+      } else {
+        newSet.add(folderId)
+      }
 
       // 通知父组件（但不在渲染过程中）
       notifyExpandChange(newSet)
@@ -415,28 +434,19 @@ function FileTreeComponent<T extends FileTreeItem>(
     })
   }
 
-  // 当文件列表变化时，可能需要更新选择状态
+  // 当文件列表变化时，更新父文件夹的状态
   useEffect(() => {
-    if (mode === 'uncontrolled' && files.length > 0) {
-      // 确保所有文件夹的状态与子文件一致
-      setInternalSelectedFiles(prev => {
-        const newSet = new Set(prev)
-        files.forEach(file => {
-          if (file.type === 'folder') {
-            updateParentFoldersState(file.id, newSet)
-          }
-        })
-        return newSet
-      })
+    if (mode === 'uncontrolled') {
+      updateParentFoldersState(files, internalSelectedFiles, setInternalSelectedFiles)
     }
-  }, [files, mode])
+  }, [files, mode, internalSelectedFiles, updateParentFoldersState])
 
   // 当初始选择状态变化时，通知父组件，但确保在渲染完成后
   useEffect(() => {
     if (mode === 'uncontrolled' && defaultSelectedFiles.size > 0) {
       notifySelectionChange(internalSelectedFiles)
     }
-  }, [defaultSelectedFiles])
+  }, [defaultSelectedFiles, mode, internalSelectedFiles, notifySelectionChange])
 
   // 暴露给父组件的方法
   useImperativeHandle(

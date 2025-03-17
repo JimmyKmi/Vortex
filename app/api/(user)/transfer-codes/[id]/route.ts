@@ -278,7 +278,7 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     try {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error(`Failed to delete transfer code: ${errorMessage}`)
-    } catch (loggingError) {
+    } catch (_loggingError) {
       console.error('Error while logging')
     }
     return ResponseThrow('DatabaseError')
