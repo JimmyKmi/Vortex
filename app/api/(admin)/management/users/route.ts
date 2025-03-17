@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 
 // 获取用户列表
-export const GET = auth(async (req) => {
+export const GET = auth(async req => {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -11,7 +11,7 @@ export const GET = auth(async (req) => {
         name: true,
         email: true,
         role: true,
-        enabled: true,
+        enabled: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -21,15 +21,12 @@ export const GET = auth(async (req) => {
     return NextResponse.json(users)
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    return NextResponse.json(
-      { error: '获取用户列表失败' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '获取用户列表失败' }, { status: 500 })
   }
 })
 
 // 更新用户角色和状态
-export const PUT = auth(async (req) => {
+export const PUT = auth(async req => {
   try {
     const { userId, role, enabled, forceRelogin } = await req.json()
 
@@ -40,7 +37,7 @@ export const PUT = auth(async (req) => {
         ...(typeof enabled === 'boolean' && { enabled }),
         ...(forceRelogin && {
           sessions: {
-            deleteMany: {}  // 删除用户所有会话，强制重新登录
+            deleteMany: {} // 删除用户所有会话，强制重新登录
           }
         })
       }
@@ -49,9 +46,6 @@ export const PUT = auth(async (req) => {
     return NextResponse.json(user)
   } catch (error) {
     console.error('更新用户失败:', error)
-    return NextResponse.json(
-      { error: '更新用户失败' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: '更新用户失败' }, { status: 500 })
   }
-}) 
+})

@@ -1,15 +1,15 @@
-"use client"
+'use client'
 
-import { useRef } from "react"
-import { getColumns } from "./columns"
-import { TransferCodeList, RefreshCallback } from "@/components/settings/transfer-code-list"
-import { CreateDialog } from "./create-dialog"
+import { useRef } from 'react'
+import { getColumns } from './columns'
+import { TransferCodeList, RefreshCallback } from '@/components/settings/transfer-code-list'
+import { CreateDialog } from './create-dialog'
 import { SettingsLayout } from '@/components/settings/settings-layout'
 import { SettingsTitle } from '@/components/settings/settings-title'
 
 export default function MyUploadCodePage() {
   const refreshRef = useRef<RefreshCallback>()
-  
+
   return (
     <SettingsLayout title="我的上传码">
       <SettingsTitle
@@ -18,12 +18,8 @@ export default function MyUploadCodePage() {
       >
         <CreateDialog onSuccess={() => refreshRef.current?.()} />
       </SettingsTitle>
-      
-      <TransferCodeList
-        type="UPLOAD"
-        getColumnsAction={getColumns}
-        onRefreshRef={refreshRef}
-      />
+
+      <TransferCodeList type="UPLOAD" getColumnsAction={getColumns} onRefreshRef={refreshRef} />
     </SettingsLayout>
   )
-} 
+}

@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import {useEffect, useState} from "react"
-import {DataTable} from "@/components/ui/data-table"
-import {Button} from "@/components/ui/button"
+import { useEffect, useState } from 'react'
+import { DataTable } from '@/components/ui/data-table'
+import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,21 +11,17 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import axios from "axios"
-import {toast} from "sonner"
-import {getApiErrorMessage} from "@/lib/utils/error-messages"
-import {Skeleton} from "@/components/ui/skeleton"
-import {Input} from "@/components/ui/input"
-import {Trash2, CircleOff, RefreshCw, Circle} from "lucide-react"
-import {TransferCode, TransferCodeListProps} from "./types"
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
+import axios from 'axios'
+import { toast } from 'sonner'
+import { getApiErrorMessage } from '@/lib/utils/error-messages'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import { Trash2, CircleOff, RefreshCw, Circle } from 'lucide-react'
+import { TransferCode, TransferCodeListProps } from './types'
 
-export function TransferCodeList({
-                                   type,
-                                   getColumnsAction,
-                                   onRefreshRef,
-                                 }: TransferCodeListProps) {
+export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: TransferCodeListProps) {
   // 状态管理
   const [data, setData] = useState<TransferCode[]>([]) // 存储传输码数据
   const [loading, setLoading] = useState(true) // 加载状态
@@ -33,20 +29,20 @@ export function TransferCodeList({
   const [isDeleting, setIsDeleting] = useState(false) // 删除状态
   const [isDisabling, setIsDisabling] = useState(false) // 禁用状态
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false) // 删除对话框状态
-  const [searchQuery, setSearchQuery] = useState("") // 搜索查询
+  const [searchQuery, setSearchQuery] = useState('') // 搜索查询
 
   // 获取传输码数据
   const fetchData = async () => {
     try {
       setLoading(true)
       const response = await axios.get(`/api/transfer-codes?type=${type}`)
-      if (response.data.code === "Success") {
+      if (response.data.code === 'Success') {
         setData(response.data.data)
         setSelectedRows([]) // 重置选中状态
       }
     } catch (error) {
-      console.error("Failed to fetch transfer codes:", error)
-      toast.error("获取数据失败", {description: getApiErrorMessage(error)})
+      console.error('Failed to fetch transfer codes:', error)
+      toast.error('获取数据失败', { description: getApiErrorMessage(error) })
     } finally {
       setLoading(false)
     }
@@ -66,16 +62,16 @@ export function TransferCodeList({
   const handleBatchDelete = async () => {
     try {
       setIsDeleting(true)
-      await axios.delete("/api/transfer-codes", {
+      await axios.delete('/api/transfer-codes', {
         data: {
           ids: selectedRows.map(row => row.id)
         }
       })
-      toast.success("批量删除成功")
+      toast.success('批量删除成功')
       await fetchData()
       setDeleteDialogOpen(false)
     } catch (error: any) {
-      toast.error("批量删除失败", {description: getApiErrorMessage(error)})
+      toast.error('批量删除失败', { description: getApiErrorMessage(error) })
     } finally {
       setIsDeleting(false)
     }
@@ -85,14 +81,14 @@ export function TransferCodeList({
   const handleBatchDisable = async () => {
     try {
       setIsDisabling(true)
-      await axios.put("/api/transfer-codes", {
+      await axios.put('/api/transfer-codes', {
         ids: selectedRows.map(row => row.id),
-        action: "disable"
+        action: 'disable'
       })
-      toast.success("批量禁用成功")
+      toast.success('批量禁用成功')
       await fetchData()
     } catch (error: any) {
-      toast.error("批量禁用失败", {description: getApiErrorMessage(error)})
+      toast.error('批量禁用失败', { description: getApiErrorMessage(error) })
     } finally {
       setIsDisabling(false)
     }
@@ -102,26 +98,27 @@ export function TransferCodeList({
   const handleBatchEnable = async () => {
     try {
       setIsDisabling(true)
-      await axios.put("/api/transfer-codes", {
+      await axios.put('/api/transfer-codes', {
         ids: selectedRows.map(row => row.id),
-        action: "enable"
+        action: 'enable'
       })
-      toast.success("批量启用成功")
+      toast.success('批量启用成功')
       await fetchData()
     } catch (error: any) {
-      toast.error("批量启用失败", {description: getApiErrorMessage(error)})
+      toast.error('批量启用失败', { description: getApiErrorMessage(error) })
     } finally {
       setIsDisabling(false)
     }
   }
 
   // 获取表格列配置
-  const columns = getColumnsAction({onRefresh: fetchData})
+  const columns = getColumnsAction({ onRefresh: fetchData })
 
   // 过滤数据
-  const filteredData = data.filter(item =>
-    item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.comment && item.comment.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredData = data.filter(
+    item =>
+      item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.comment && item.comment.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   return (
@@ -130,7 +127,7 @@ export function TransferCodeList({
         <Input
           placeholder="搜索传输码或描述..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           className="max-w-sm"
         />
         <Button
@@ -140,7 +137,7 @@ export function TransferCodeList({
           disabled={loading}
           className="text-yellow-700 dark:text-yellow-500 hover:text-yellow-600 ml-3"
         >
-          <RefreshCw className="h-4 w-4"/>
+          <RefreshCw className="h-4 w-4" />
         </Button>
         {selectedRows.length > 0 && (
           <>
@@ -150,7 +147,7 @@ export function TransferCodeList({
               disabled={isDeleting || isDisabling}
               size="sm"
             >
-              <CircleOff className="h-4 w-4"/>
+              <CircleOff className="h-4 w-4" />
               禁用
             </Button>
             <Button
@@ -159,7 +156,7 @@ export function TransferCodeList({
               disabled={isDeleting || isDisabling}
               size="sm"
             >
-              <Circle className="h-4 w-4"/>
+              <Circle className="h-4 w-4" />
               启用
             </Button>
             <Button
@@ -169,7 +166,7 @@ export function TransferCodeList({
               size="icon"
               className="text-destructive hover:text-destructive dark:text-red-500 dark:hover:text-red-600"
             >
-              <Trash2 className="h-4 w-4"/>
+              <Trash2 className="h-4 w-4" />
             </Button>
           </>
         )}
@@ -177,18 +174,14 @@ export function TransferCodeList({
 
       {loading ? (
         <div className="space-y-4">
-          <Skeleton className="h-12 w-full"/>
-          <Skeleton className="h-12 w-full"/>
-          <Skeleton className="h-12 w-full"/>
-          <Skeleton className="h-12 w-full"/>
-          <Skeleton className="h-12 w-full"/>
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={filteredData}
-          onRowSelectionChange={setSelectedRows}
-        />
+        <DataTable columns={columns} data={filteredData} onRowSelectionChange={setSelectedRows} />
       )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -206,11 +199,11 @@ export function TransferCodeList({
               disabled={isDeleting}
               className="bg-destructive hover:bg-destructive/90"
             >
-              {isDeleting ? "删除中..." : "删除"}
+              {isDeleting ? '删除中...' : '删除'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
   )
-} 
+}

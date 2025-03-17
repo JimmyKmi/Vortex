@@ -26,19 +26,21 @@ export const validateEmail = (email: string): ValidationResult => {
     }
   }
 
-  return {isValid: true}
+  return { isValid: true }
 }
 
 export const validatePassword = (password: string): ValidationResult => {
-  if (!password) return {
-    isValid: false,
-    error: '密码不能为空'
-  }
+  if (!password)
+    return {
+      isValid: false,
+      error: '密码不能为空'
+    }
 
-  if (password.length < 8 || password.length > 64) return {
-    isValid: false,
-    error: '密码长度应在8-64位'
-  }
+  if (password.length < 8 || password.length > 64)
+    return {
+      isValid: false,
+      error: '密码长度应在8-64位'
+    }
 
   const hasLetterAndNumber = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,64}$/.test(password)
   if (!hasLetterAndNumber) {
@@ -48,7 +50,7 @@ export const validatePassword = (password: string): ValidationResult => {
     }
   }
 
-  return {isValid: true}
+  return { isValid: true }
 }
 
 export const validateName = (name: string): ValidationResult => {
@@ -66,5 +68,5 @@ export const validateName = (name: string): ValidationResult => {
     }
   }
 
-  return {isValid: true}
-} 
+  return { isValid: true }
+}

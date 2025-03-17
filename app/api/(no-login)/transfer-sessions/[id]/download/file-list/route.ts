@@ -3,11 +3,11 @@
  * 提供下载会话关联的文件列表，包含文件夹结构
  */
 
-import {NextRequest} from "next/server"
-import {prisma} from "@/lib/prisma"
-import {validateTransferSession} from "@/lib/utils/transfer-session"
-import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
-import {formatFileSize} from "@/lib/utils/file"
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { validateTransferSession } from '@/lib/utils/transfer-session'
+import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
+import { formatFileSize } from '@/lib/utils/file'
 
 interface FileNode {
   id: string
@@ -26,7 +26,7 @@ interface FileNode {
  */
 function buildFileTree(files: any[]): FileNode[] {
   if (!Array.isArray(files)) {
-    console.error("Invalid files input:", files)
+    console.error('Invalid files input:', files)
     return []
   }
 
@@ -37,7 +37,7 @@ function buildFileTree(files: any[]): FileNode[] {
   files.forEach(file => {
     try {
       if (!file?.relativePath) {
-        console.error("File missing relativePath:", file)
+        console.error('File missing relativePath:', file)
         return
       }
 
@@ -75,7 +75,7 @@ function buildFileTree(files: any[]): FileNode[] {
         }
       }
     } catch (error) {
-      console.error("Error creating folder structure:", error)
+      console.error('Error creating folder structure:', error)
     }
   })
 
@@ -83,7 +83,7 @@ function buildFileTree(files: any[]): FileNode[] {
   files.forEach(file => {
     try {
       if (!file?.id || !file?.name || !file?.relativePath) {
-        console.error("Invalid file object:", file)
+        console.error('Invalid file object:', file)
         return
       }
 
@@ -116,7 +116,7 @@ function buildFileTree(files: any[]): FileNode[] {
         }
       }
     } catch (error) {
-      console.error("Error adding file to tree:", error)
+      console.error('Error adding file to tree:', error)
     }
   })
 
@@ -136,7 +136,7 @@ function buildFileTree(files: any[]): FileNode[] {
     try {
       calculateFolderSize(node)
     } catch (error) {
-      console.error("Error calculating folder size for node:", node, error)
+      console.error('Error calculating folder size for node:', node, error)
     }
   })
 
@@ -149,58 +149,66 @@ function buildFileTree(files: any[]): FileNode[] {
  */
 export async function GET(
   req: NextRequest,
-  {params}: { params: { id: string } }
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   try {
-    const {id: sessionId} = await Promise.resolve(params)
+    const { id: sessionId } = await Promise.resolve(params)
 
     if (!sessionId) {
-      console.error("Missing session ID")
-      return ResponseThrow("InvalidSession")
+      console.error('Missing session ID')
+      return ResponseThrow('InvalidSession')
     }
 
-    console.log("Fetching session:", sessionId)
+    console.log('Fetching session:', sessionId)
 
     // 获取会话信息
-    const session = await prisma.transferSession.findUnique({
-      where: {id: sessionId},
-      include: {
-        transferCode: true,
-        linkedTransferCode: true
-      }
-    }).catch(error => {
-      console.error("Database query error:", error)
-      return null
-    })
+    const session = await prisma.transferSession
+      .findUnique({
+        where: { id: sessionId },
+        include: {
+          transferCode: true,
+          linkedTransferCode: true
+        }
+      })
+      .catch(error => {
+        console.error('Database query error:', error)
+        return null
+      })
 
     if (!session) {
-      console.error("Session not found:", sessionId)
-      return ResponseThrow("InvalidSession")
+      console.error('Session not found:', sessionId)
+      return ResponseThrow('InvalidSession')
     }
 
     if (!session.transferCode) {
-      console.error("Transfer code not found for session:", sessionId)
-      return ResponseThrow("InvalidSession")
+      console.error('Transfer code not found for session:', sessionId)
+      return ResponseThrow('InvalidSession')
     }
 
     // 验证会话
-    const validationResult = await validateTransferSession(req, sessionId, ["DOWNLOADING"], ["DOWNLOAD"], session)
+    const validationResult = await validateTransferSession(
+      req,
+      sessionId,
+      ['DOWNLOADING'],
+      ['DOWNLOAD'],
+      session
+    )
     if (!validationResult.valid) {
-      console.error("Session validation failed:", {
+      console.error('Session validation failed:', {
         code: validationResult.code,
         sessionId,
         sessionStatus: session.status
       })
-      return ResponseThrow(validationResult.code ?? "InvalidSession")
+      return ResponseThrow(validationResult.code ?? 'InvalidSession')
     }
 
     // 获取文件列表
     if (!session.transferCodeId) {
-      console.error("Transfer code not found for session:", {
+      console.error('Transfer code not found for session:', {
         sessionId,
         transferCodeId: session.transferCodeId
       })
-      return ResponseThrow("InvalidSession")
+      return ResponseThrow('InvalidSession')
     }
 
     // 获取传输码关联的文件
@@ -226,14 +234,14 @@ export async function GET(
     })
 
     if (!transferCode) {
-      console.error("Transfer code not found:", {
+      console.error('Transfer code not found:', {
         sessionId,
         transferCodeId: session.transferCodeId
       })
-      return ResponseThrow("InvalidSession")
+      return ResponseThrow('InvalidSession')
     }
 
-    console.log("Transfer code found:", {
+    console.log('Transfer code found:', {
       id: transferCode.id,
       type: transferCode.type,
       filesCount: transferCode.files.length
@@ -241,7 +249,7 @@ export async function GET(
 
     // 如果没有文件，返回空数组
     if (!transferCode.files.length) {
-      console.log("No files found for transfer code:", {
+      console.log('No files found for transfer code:', {
         sessionId,
         transferCodeId: session.transferCodeId,
         transferCodeType: transferCode.type
@@ -250,18 +258,20 @@ export async function GET(
     }
 
     // 构建文件树
-    console.log("Building file tree for files:", {
+    console.log('Building file tree for files:', {
       sessionId,
       filesCount: transferCode.files.length
     })
 
-    const fileTree = buildFileTree(transferCode.files.map(f => ({
-      ...f.file,
-      id: f.fileId
-    })))
+    const fileTree = buildFileTree(
+      transferCode.files.map(f => ({
+        ...f.file,
+        id: f.fileId
+      }))
+    )
     return ResponseSuccess(fileTree)
   } catch (error) {
-    console.error("Get download file list error:", error)
-    return ResponseThrow("InternalServerError")
+    console.error('Get download file list error:', error)
+    return ResponseThrow('InternalServerError')
   }
-} 
+}

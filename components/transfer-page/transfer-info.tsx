@@ -1,31 +1,25 @@
-import React, {useState} from 'react'
-import {Button} from "@/components/ui/button"
-import {
-  User,
-  Calendar,
-  Hash,
-  Clock,
-  Copy
-} from 'lucide-react'
-import {toast} from "sonner"
-import {TransferInfo as TransferInfoType} from "@/types/transfer-session"
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { User, Calendar, Hash, Clock, Copy } from 'lucide-react'
+import { toast } from 'sonner'
+import { TransferInfo as TransferInfoType } from '@/types/transfer-session'
 
 interface TransferInfoProps {
-  transferInfo: TransferInfoType;
-  className?: string;
+  transferInfo: TransferInfoType
+  className?: string
 }
 
-export function TransferInfo({transferInfo, className}: TransferInfoProps) {
+export function TransferInfo({ transferInfo, className }: TransferInfoProps) {
   const [isCopied, setIsCopied] = useState(false)
 
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(transferInfo?.code || '')
       setIsCopied(true)
-      toast.success("传输码已复制到剪贴板")
+      toast.success('传输码已复制到剪贴板')
       setTimeout(() => setIsCopied(false), 2000)
     } catch (err) {
-      toast.error("复制失败，请手动复制")
+      toast.error('复制失败，请手动复制')
     }
   }
 
@@ -40,41 +34,41 @@ export function TransferInfo({transferInfo, className}: TransferInfoProps) {
             onClick={handleCopyCode}
             className="text-sm text-muted-foreground hover:text-foreground p-0 flex items-center gap-1"
           >
-            <Copy className="h-4 w-4"/>
-            {isCopied ? "复制成功" : "复制传输码"}
+            <Copy className="h-4 w-4" />
+            {isCopied ? '复制成功' : '复制传输码'}
           </Button>
         </div>
         <div className="grid gap-y-2 gap-x-5 text-sm grid-cols-1 sm:grid-cols-2">
           <div className="flex justify-between">
             <span className="text-muted-foreground flex items-center gap-1">
-              <User className="h-4 w-4"/>
+              <User className="h-4 w-4" />
               创建者
             </span>
-            <span>{transferInfo.createdBy || "未知"}</span>
+            <span>{transferInfo.createdBy || '未知'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-4 w-4"/>
+              <Calendar className="h-4 w-4" />
               创建时间
             </span>
             <span>{new Date(transferInfo.createdAt).toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground flex items-center gap-1">
-              <Hash className="h-4 w-4"/>
+              <Hash className="h-4 w-4" />
               使用限制
             </span>
-            <span>{transferInfo.usageLimit ? `${transferInfo.usageLimit}次` : "不限"}</span>
+            <span>{transferInfo.usageLimit ? `${transferInfo.usageLimit}次` : '不限'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground flex items-center gap-1">
-              <Clock className="h-4 w-4"/>
+              <Clock className="h-4 w-4" />
               剩余次数
             </span>
             <span>
               {transferInfo.usageLimit
                 ? `${transferInfo.usageLimit - (transferInfo.usedCount || 0)}次`
-                : "不限"}
+                : '不限'}
             </span>
           </div>
           {transferInfo.comment && (
@@ -87,4 +81,4 @@ export function TransferInfo({transferInfo, className}: TransferInfoProps) {
       </div>
     </div>
   )
-} 
+}

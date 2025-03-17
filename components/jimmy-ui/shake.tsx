@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo} from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
 interface ShakeProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -18,11 +18,7 @@ const createShakeStyles = () => {
   return styleElement
 }
 
-const Shake: React.FC<ShakeProps> = ({ 
-  children,
-  className,
-  ...props
-}) => {
+const Shake: React.FC<ShakeProps> = ({ children, className, ...props }) => {
   // 动态生成样式
   useEffect(() => {
     const style = createShakeStyles()
@@ -43,7 +39,7 @@ const Shake: React.FC<ShakeProps> = ({
       r2: `${Math.random() * 10 - 5}deg`,
       x3: `${Math.random() * 3 - 1.5}px`,
       y3: `${Math.random() * 3 - 1.5}px`,
-      r3: `${Math.random() * 10 - 5}deg`,
+      r3: `${Math.random() * 10 - 5}deg`
     })
   }, [])
 
@@ -51,7 +47,7 @@ const Shake: React.FC<ShakeProps> = ({
     if (typeof child === 'string') {
       return child.split('').map((char, index) => {
         const { x1, y1, r1, x2, y2, r2, x3, y3, r3 } = getCharParams()
-        
+
         const style = {
           '--x1': x1,
           '--y1': y1,

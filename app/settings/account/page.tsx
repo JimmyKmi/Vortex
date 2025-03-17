@@ -1,27 +1,27 @@
 'use client'
 
-import {useSession} from 'next-auth/react'
-import {useRouter} from 'next/navigation'
-import React, {useEffect} from 'react'
-import {SettingsLayout} from '@/components/settings/settings-layout'
-import {useState} from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect } from 'react'
+import { SettingsLayout } from '@/components/settings/settings-layout'
+import { useState } from 'react'
 import axios from 'axios'
-import {toast} from "sonner"
-import {Button} from '@/components/ui/button'
-import {Input} from '@/components/ui/input'
-import {Label} from '@/components/ui/label'
-import {validatePassword} from '@/lib/validators'
-import {SettingsTitle} from '@/components/settings/settings-title'
-import {useAuthSettings} from '@/hooks/use-auth-settings'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { validatePassword } from '@/lib/validators'
+import { SettingsTitle } from '@/components/settings/settings-title'
+import { useAuthSettings } from '@/hooks/use-auth-settings'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {format} from "date-fns"
+  TableRow
+} from '@/components/ui/table'
+import { format } from 'date-fns'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +31,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import {Loader2, Trash2} from "lucide-react"
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog'
+import { Loader2, Trash2 } from 'lucide-react'
 
 interface LinkedAccount {
   id: string
@@ -44,9 +44,9 @@ interface LinkedAccount {
 }
 
 export default function AccountSettings() {
-  const {data: session, status} = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
-  const {zitadelIdpName} = useAuthSettings()
+  const { zitadelIdpName } = useAuthSettings()
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -72,7 +72,7 @@ export default function AccountSettings() {
       }
     } catch (error) {
       console.error('Failed to fetch linked accounts:', error)
-      toast.error("获取关联账号失败")
+      toast.error('获取关联账号失败')
     }
   }
 
@@ -111,11 +111,11 @@ export default function AccountSettings() {
     try {
       setIsLoading(true)
       await axios.post('/api/account/set-password', {
-        newPassword,
+        newPassword
       })
 
-      toast.success("密码已更新", {
-        description: "您的密码已成功修改"
+      toast.success('密码已更新', {
+        description: '您的密码已成功修改'
       })
 
       // 清空表单
@@ -126,8 +126,8 @@ export default function AccountSettings() {
       // 刷新关联账号列表
       await fetchLinkedAccounts()
     } catch (error: any) {
-      toast.error("更新失败", {
-        description: error.response?.data?.code || "密码更新失败，请重试"
+      toast.error('更新失败', {
+        description: error.response?.data?.code || '密码更新失败，请重试'
       })
     } finally {
       setIsLoading(false)
@@ -139,14 +139,14 @@ export default function AccountSettings() {
       setDeletingAccount(accountId)
       const response = await axios.delete(`/api/account/linked-accounts/${accountId}`)
       if (response.data.code === 'Success') {
-        toast.success("删除成功", {
-          description: "登录方式已成功删除"
+        toast.success('删除成功', {
+          description: '登录方式已成功删除'
         })
         setLinkedAccounts(prev => prev.filter(account => account.id !== accountId))
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || "删除失败，请重试"
-      toast.error("删除失败", {
+      const message = error.response?.data?.message || '删除失败，请重试'
+      toast.error('删除失败', {
         description: message
       })
     } finally {
@@ -160,10 +160,7 @@ export default function AccountSettings() {
 
   return (
     <SettingsLayout title="账号设置">
-      <SettingsTitle
-        title="账号设置"
-        description="管理您的账号信息和安全设置"
-      />
+      <SettingsTitle title="账号设置" description="管理您的账号信息和安全设置" />
 
       <div className="space-y-8">
         <div>
@@ -180,10 +177,11 @@ export default function AccountSettings() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {linkedAccounts.map((account) => (
-                  <TableRow key={account.id} className={`${
-                    deletingAccount === account.id ? "opacity-50" : ""
-                  }`}>
+                {linkedAccounts.map(account => (
+                  <TableRow
+                    key={account.id}
+                    className={`${deletingAccount === account.id ? 'opacity-50' : ''}`}
+                  >
                     <TableCell className="font-medium capitalize">
                       {account.provider === 'zitadel' ? zitadelIdpName : account.provider}
                     </TableCell>
@@ -202,9 +200,9 @@ export default function AccountSettings() {
                             disabled={deletingAccount === account.id}
                           >
                             {deletingAccount === account.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin"/>
+                              <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <Trash2 className="h-4 w-4"/>
+                              <Trash2 className="h-4 w-4" />
                             )}
                           </Button>
                         </AlertDialogTrigger>
@@ -243,18 +241,21 @@ export default function AccountSettings() {
 
         <div>
           <h2 className="text-lg font-medium mb-4">修改密码</h2>
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 w-full max-w-3xl">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col sm:flex-row gap-4 w-full max-w-3xl"
+          >
             <div className="w-full sm:max-w-[280px] grid gap-2">
               <Label htmlFor="new-password">设置新密码</Label>
               <Input
                 id="new-password"
                 type="password"
                 value={newPassword}
-                onChange={(e) => {
+                onChange={e => {
                   setNewPassword(e.target.value)
                   if (errors.newPassword) {
                     setErrors(prev => {
-                      const newErrors = {...prev}
+                      const newErrors = { ...prev }
                       delete newErrors.newPassword
                       return newErrors
                     })
@@ -274,11 +275,11 @@ export default function AccountSettings() {
                 id="confirm-password"
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => {
+                onChange={e => {
                   setConfirmPassword(e.target.value)
                   if (errors.confirmPassword) {
                     setErrors(prev => {
-                      const newErrors = {...prev}
+                      const newErrors = { ...prev }
                       delete newErrors.confirmPassword
                       return newErrors
                     })
@@ -294,7 +295,7 @@ export default function AccountSettings() {
             </div>
             <div className="flex items-end">
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "更新中..." : "更新密码"}
+                {isLoading ? '更新中...' : '更新密码'}
               </Button>
             </div>
           </form>

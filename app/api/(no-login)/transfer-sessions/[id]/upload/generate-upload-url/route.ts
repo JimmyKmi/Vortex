@@ -1,9 +1,9 @@
-import {NextRequest} from "next/server"
-import {FileService} from "@/lib/services/file-service"
-import {prisma} from "@/lib/prisma"
-import {z} from "zod"
-import {validateTransferSession} from "@/lib/utils/transfer-session"
-import {ResponseSuccess, ResponseThrow} from "@/lib/utils/response"
+import { NextRequest } from 'next/server'
+import { FileService } from '@/lib/services/file-service'
+import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
+import { validateTransferSession } from '@/lib/utils/transfer-session'
+import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 
 const fileService = new FileService()
 
@@ -43,7 +43,7 @@ const requestSchema = z.object({
   mimeType: z.string().optional(),
   size: z.number().optional(),
   relativePath: z.string().optional(),
-  isDirectory: z.boolean().optional(),
+  isDirectory: z.boolean().optional()
 })
 
 // 创建文件记录
@@ -51,13 +51,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   try {
     const body = await request.json()
     const validatedData = requestSchema.parse(body)
-    const {id: sessionId} = await Promise.resolve(params)
+    const { id: sessionId } = await Promise.resolve(params)
 
-    if (!sessionId) return ResponseThrow("InvalidSession")
+    if (!sessionId) return ResponseThrow('InvalidSession')
 
     // 获取会话信息
     let session = await prisma.transferSession.findUnique({
-      where: {id: sessionId},
+      where: { id: sessionId },
       include: {
         transferCode: {
           include: {
@@ -68,8 +68,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     })
 
     // 验证会话
-    const validationResult = await validateTransferSession(request, sessionId, ["UPLOADING"], ["UPLOAD"], session)
-    if (!validationResult.valid) return ResponseThrow(validationResult.code ?? "InvalidSession")
+    const validationResult = await validateTransferSession(
+      request,
+      sessionId,
+      ['UPLOADING'],
+      ['UPLOAD'],
+      session
+    )
+    if (!validationResult.valid) return ResponseThrow(validationResult.code ?? 'InvalidSession')
 
     if (validatedData.isDirectory) {
       const folder = await fileService.createFolderRecord({
@@ -89,11 +95,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       sessionId: sessionId
     })
     return ResponseSuccess(uploadData)
-
   } catch (error: any) {
     // 记录详细的错误信息
-    console.error("Get upload URL error:", {
-      message: error?.message || "Unknown error",
+    console.error('Get upload URL error:', {
+      message: error?.message || 'Unknown error',
       stack: error?.stack,
       cause: error?.cause,
       validationError: error instanceof z.ZodError ? error.errors : undefined,
@@ -101,9 +106,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     })
 
     // 如果是验证错误，返回 400
-    if (error instanceof z.ZodError) return ResponseThrow("ValidationError")
+    if (error instanceof z.ZodError) return ResponseThrow('ValidationError')
 
     // 如果是其他错误，返回 500
-    return ResponseThrow("GetUploadUrlFailed")
+    return ResponseThrow('GetUploadUrlFailed')
   }
-} 
+}

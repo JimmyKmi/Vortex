@@ -1,18 +1,18 @@
-"use client"
+'use client'
 
-import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
+import { format } from 'date-fns'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import type { TransferCode } from "@/components/settings/transfer-code-list"
-import { Copy } from "lucide-react"
-import { toast } from "sonner"
+  DialogTitle
+} from '@/components/ui/dialog'
+import type { TransferCode } from '@/components/settings/transfer-code-list'
+import { Copy } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface DetailDialogProps {
   open: boolean
@@ -23,7 +23,7 @@ interface DetailDialogProps {
 export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogProps) {
   const handleCopyCode = () => {
     void navigator.clipboard.writeText(data.code)
-    toast.success("已复制到剪贴板")
+    toast.success('已复制到剪贴板')
   }
 
   return (
@@ -31,31 +31,21 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>快传码详情</DialogTitle>
-          <DialogDescription>
-            查看快传码的详细信息
-          </DialogDescription>
+          <DialogDescription>查看快传码的详细信息</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <div className="text-sm font-medium mb-1">传输码</div>
             <div className="flex items-center gap-2">
-              <code className="bg-muted px-2 py-1 rounded text-lg font-mono">
-                {data.code}
-              </code>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCopyCode}
-              >
+              <code className="bg-muted px-2 py-1 rounded text-lg font-mono">{data.code}</code>
+              <Button variant="outline" size="icon" onClick={handleCopyCode}>
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
           </div>
           <div>
             <div className="text-sm font-medium mb-1">描述</div>
-            <div className="text-muted-foreground">
-              {data.comment || "无"}
-            </div>
+            <div className="text-muted-foreground">{data.comment || '无'}</div>
           </div>
           <div>
             <div className="text-sm font-medium mb-1">过期时间</div>
@@ -83,11 +73,9 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => onOpenChangeAction(false)}>
-            关闭
-          </Button>
+          <Button onClick={() => onOpenChangeAction(false)}>关闭</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
-} 
+}

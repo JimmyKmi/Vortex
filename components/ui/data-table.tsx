@@ -1,6 +1,6 @@
 // Jimmy edited from https://ui.shadcn.com/docs/components/data-table
 
-"use client"
+'use client'
 
 import {
   ColumnDef,
@@ -9,8 +9,8 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getPaginationRowModel,
-  useReactTable,
-} from "@tanstack/react-table"
+  useReactTable
+} from '@tanstack/react-table'
 
 import {
   Table,
@@ -18,18 +18,18 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { 
+  TableRow
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+  SelectValue
+} from '@/components/ui/select'
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -42,7 +42,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   onRowSelectionChange,
-  pageSize = 20, // 默认每页20条
+  pageSize = 20 // 默认每页20条
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
@@ -57,23 +57,23 @@ export function DataTable<TData, TValue>({
     enableRowSelection: true,
     initialState: {
       pagination: {
-        pageSize,
-      },
+        pageSize
+      }
     },
     onRowSelectionChange: (updater: any) => {
-      const selectedRows = typeof updater === 'function'
-        ? updater(table.getState().rowSelection)
-        : updater
+      const selectedRows =
+        typeof updater === 'function' ? updater(table.getState().rowSelection) : updater
       setRowSelection(selectedRows)
-      const rows = table.getFilteredRowModel().rows
-        .filter((row) => selectedRows[row.id])
-        .map((row) => row.original)
+      const rows = table
+        .getFilteredRowModel()
+        .rows.filter(row => selectedRows[row.id])
+        .map(row => row.original)
       onRowSelectionChange?.(rows as TData[])
     },
     state: {
       sorting,
-      rowSelection,
-    },
+      rowSelection
+    }
   })
 
   return (
@@ -81,17 +81,14 @@ export function DataTable<TData, TValue>({
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
+            {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map(header => {
                   return (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   )
                 })}
@@ -100,12 +97,9 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
+              table.getRowModel().rows.map(row => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                  {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -129,7 +123,7 @@ export function DataTable<TData, TValue>({
             <p className="text-sm font-medium">每页行数</p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
-              onValueChange={(value) => {
+              onValueChange={value => {
                 table.setPageSize(Number(value))
               }}
             >
@@ -137,7 +131,7 @@ export function DataTable<TData, TValue>({
                 <SelectValue placeholder={table.getState().pagination.pageSize} />
               </SelectTrigger>
               <SelectContent side="top">
-                {[10, 20, 30, 50, 100, 200, 300].map((pageSize) => (
+                {[10, 20, 30, 50, 100, 200, 300].map(pageSize => (
                   <SelectItem key={pageSize} value={`${pageSize}`}>
                     {pageSize}
                   </SelectItem>
@@ -160,10 +154,12 @@ export function DataTable<TData, TValue>({
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-2">
-            {Array.from({ length: table.getPageCount() }, (_, i) => i + 1).map((pageNumber) => (
+            {Array.from({ length: table.getPageCount() }, (_, i) => i + 1).map(pageNumber => (
               <Button
                 key={pageNumber}
-                variant={pageNumber === table.getState().pagination.pageIndex + 1 ? "default" : "outline"}
+                variant={
+                  pageNumber === table.getState().pagination.pageIndex + 1 ? 'default' : 'outline'
+                }
                 className="h-8 w-8 p-0"
                 onClick={() => table.setPageIndex(pageNumber - 1)}
               >
@@ -184,4 +180,4 @@ export function DataTable<TData, TValue>({
       </div>
     </div>
   )
-} 
+}

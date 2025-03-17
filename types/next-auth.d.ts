@@ -34,6 +34,12 @@ declare module 'next-auth/jwt' {
 
 declare module 'next-auth/providers/oauth' {
   interface OAuthConfig<P> {
-    signIn?: (params: { user: User; account: any; profile: P; email: any; credentials: any }) => Promise<boolean>
+    signIn?: (params: {
+      user: User
+      account: any
+      profile: P
+      email: any
+      credentials: any
+    }) => Promise<boolean>
   }
 }

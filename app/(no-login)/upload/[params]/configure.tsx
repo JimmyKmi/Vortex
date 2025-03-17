@@ -6,33 +6,33 @@
 
 'use client'
 
-import {useState} from 'react'
-import {useParams} from 'next/navigation'
-import {Button} from "@/components/ui/button"
-import {Check, Copy} from "lucide-react"
-import {toast} from "sonner"
-import {Label} from "@/components/ui/label"
-import {Input} from "@/components/ui/input"
-import {Textarea} from "@/components/ui/textarea"
+import { useState } from 'react'
+import { useParams } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Check, Copy } from 'lucide-react'
+import { toast } from 'sonner'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import axios from 'axios'
 import Layout from '@/components/layout'
-import {getApiErrorMessage} from "@/lib/utils/error-messages"
-import {TransferSessionStatus} from "@/types/transfer-session"
+import { getApiErrorMessage } from '@/lib/utils/error-messages'
+import { TransferSessionStatus } from '@/types/transfer-session'
 
 /**
  * 传输信息接口定义
  * @interface TransferInfo
  */
 interface TransferInfo {
-  id: string                    // 传输会话ID
-  code: string                  // 传输码
-  type: string                  // 传输类型
-  comment: string | null        // 传输说明
-  expires: string | null        // 过期时间
-  createdAt: string             // 创建时间
-  createdBy: string | null      // 创建者
-  usageLimit: number | null     // 使用次数限制
-  downloadCode: string | null   // 下载码
+  id: string // 传输会话ID
+  code: string // 传输码
+  type: string // 传输类型
+  comment: string | null // 传输说明
+  expires: string | null // 过期时间
+  createdAt: string // 创建时间
+  createdBy: string | null // 创建者
+  usageLimit: number | null // 使用次数限制
+  downloadCode: string | null // 下载码
   status: TransferSessionStatus // 会话状态
 }
 
@@ -43,11 +43,11 @@ interface TransferInfo {
  * @param {(info: TransferInfo) => void} props.onStatusChangeAction - 状态变更回调函数
  */
 export default function UploadConfigure({
-                                          transferInfo: initialTransferInfo,
-                                          onStatusChangeAction
-                                        }: {
-  transferInfo: TransferInfo;
-  onStatusChangeAction: (info: TransferInfo) => void;
+  transferInfo: initialTransferInfo,
+  onStatusChangeAction
+}: {
+  transferInfo: TransferInfo
+  onStatusChangeAction: (info: TransferInfo) => void
 }) {
   const params = useParams()
   const [isLoading, setIsLoading] = useState(false)
@@ -55,10 +55,10 @@ export default function UploadConfigure({
 
   // 下载码设置状态
   const [settings, setSettings] = useState({
-    usageLimit: '',    // 使用次数限制
-    comment: '',       // 描述信息
-    expires: '',       // 过期时间
-    speedLimit: '',    // 速度限制
+    usageLimit: '', // 使用次数限制
+    comment: '', // 描述信息
+    expires: '', // 过期时间
+    speedLimit: '' // 速度限制
   })
   const [isCopied, setIsCopied] = useState(false)
 
@@ -85,7 +85,7 @@ export default function UploadConfigure({
         // 更新本地状态
         const updatedInfo: TransferInfo = {
           ...transferInfo,
-          status: "COMPLETED" as TransferSessionStatus,
+          status: 'COMPLETED' as TransferSessionStatus,
           usageLimit: settings.usageLimit ? parseInt(settings.usageLimit) : null,
           comment: settings.comment || null,
           expires: settings.expires || null
@@ -121,18 +121,12 @@ export default function UploadConfigure({
 
   return (
     <Layout width="min" title="下载码设置" buttonType="back">
-
       <div className="space-y-4">
         {/* 下载码显示区域 */}
         <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
           <span className="text-xl font-mono">{transferInfo.downloadCode}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCopyCode}
-            className="shrink-0"
-          >
-            {isCopied ? (<Check className="h-4 w-4"/>) : (<Copy className="h-4 w-4"/>)}
+          <Button variant="ghost" size="icon" onClick={handleCopyCode} className="shrink-0">
+            {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>
         </div>
 
@@ -149,7 +143,7 @@ export default function UploadConfigure({
               className="col-span-3"
               placeholder="留空表示不限制"
               value={settings.usageLimit}
-              onChange={(e) => setSettings(prev => ({...prev, usageLimit: e.target.value}))}
+              onChange={e => setSettings(prev => ({ ...prev, usageLimit: e.target.value }))}
             />
           </div>
           {/* 速度限制设置 */}
@@ -163,7 +157,7 @@ export default function UploadConfigure({
               className="col-span-3"
               placeholder="KB/s，留空表示不限制"
               value={settings.speedLimit}
-              onChange={(e) => setSettings(prev => ({...prev, speedLimit: e.target.value}))}
+              onChange={e => setSettings(prev => ({ ...prev, speedLimit: e.target.value }))}
             />
           </div>
           {/* 过期时间设置 */}
@@ -176,7 +170,7 @@ export default function UploadConfigure({
               type="datetime-local"
               className="col-span-3"
               value={settings.expires}
-              onChange={(e) => setSettings(prev => ({...prev, expires: e.target.value}))}
+              onChange={e => setSettings(prev => ({ ...prev, expires: e.target.value }))}
             />
           </div>
           {/* 描述信息设置 */}
@@ -189,7 +183,7 @@ export default function UploadConfigure({
               className="col-span-3"
               placeholder="可选的描述信息"
               value={settings.comment}
-              onChange={(e) => setSettings(prev => ({...prev, comment: e.target.value}))}
+              onChange={e => setSettings(prev => ({ ...prev, comment: e.target.value }))}
             />
           </div>
           {/* 底部按钮区域 */}
@@ -202,4 +196,4 @@ export default function UploadConfigure({
       </div>
     </Layout>
   )
-} 
+}

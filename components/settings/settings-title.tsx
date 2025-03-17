@@ -6,24 +6,16 @@ interface SettingsTitleProps {
   children?: React.ReactNode
 }
 
-export function SettingsTitle({title, description, children}: SettingsTitleProps) {
+export function SettingsTitle({ title, description, children }: SettingsTitleProps) {
   return (
     <div className="mb-2">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{title}</h1>
-          {description && (
-            <p className="text-sm text-muted-foreground mt-1">
-              {description}
-            </p>
-          )}
+          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>
-        {children && (
-          <div className="ml-4">
-            {children}
-          </div>
-        )}
+        {children && <div className="ml-4">{children}</div>}
       </div>
     </div>
   )
-} 
+}

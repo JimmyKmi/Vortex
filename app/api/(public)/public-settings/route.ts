@@ -7,26 +7,27 @@ const PUBLIC_SETTINGS = ['ALLOW_ZITADEL_LOGIN', 'ALLOW_REGISTRATION', 'ZITADEL_I
 export async function GET(req: NextRequest) {
   try {
     const settings = await Promise.all(
-      PUBLIC_SETTINGS.map(async (key) => {
+      PUBLIC_SETTINGS.map(async key => {
         // 根据设置项的类型获取值
-        const value = key === 'ZITADEL_IDP_NAME'
-          ? await getSystemSetting<string>(key)
-          : await getSystemSetting<boolean>(key)
+        const value =
+          key === 'ZITADEL_IDP_NAME'
+            ? await getSystemSetting<string>(key)
+            : await getSystemSetting<boolean>(key)
         return { key, value }
       })
     )
 
-    const settingsObject = settings.reduce((acc, { key, value }) => {
-      acc[key] = value
-      return acc
-    }, {} as Record<string, string | boolean>)
+    const settingsObject = settings.reduce(
+      (acc, { key, value }) => {
+        acc[key] = value
+        return acc
+      },
+      {} as Record<string, string | boolean>
+    )
 
     return NextResponse.json(settingsObject)
   } catch (error) {
     console.error('获取公开设置失败:', error)
-    return NextResponse.json(
-      { error: 'ServerError' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'ServerError' }, { status: 500 })
   }
-} 
+}

@@ -1,21 +1,21 @@
 'use client'
 
-import React, {useState, useEffect, useCallback, KeyboardEvent} from 'react'
-import {useRouter} from 'next/navigation'
+import React, { useState, useEffect, useCallback, KeyboardEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import Layout from '@/components/layout'
-import {Input} from "@/components/ui/input"
-import {Button} from "@/components/ui/button"
-import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert"
-import {Label} from "@/components/ui/label"
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Label } from '@/components/ui/label'
 import axios from 'axios'
 import Link from 'next/link'
-import {toast} from "sonner"
-import {useAuthSettings} from '@/hooks/use-auth-settings'
-import {registerSchema} from '@/lib/zod'
+import { toast } from 'sonner'
+import { useAuthSettings } from '@/hooks/use-auth-settings'
+import { registerSchema } from '@/lib/zod'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const {allowRegistration} = useAuthSettings()
+  const { allowRegistration } = useAuthSettings()
 
   const [formData, setFormData] = useState({
     email: '',
@@ -33,8 +33,8 @@ export default function SignUpPage() {
   // 如果注册关闭，重定向
   useEffect(() => {
     if (!allowRegistration) {
-      toast.error("普通注册已关闭", {
-        description: "系统当前不允许普通注册，请使用第三方登录"
+      toast.error('普通注册已关闭', {
+        description: '系统当前不允许普通注册，请使用第三方登录'
       })
       router.replace('/signin')
     }
@@ -50,13 +50,12 @@ export default function SignUpPage() {
 
       const response = await axios.post('/api/register', validatedData)
 
-      if (response.data.code === "Success") {
-        toast.success("注册成功", {
-          description: "您的账号已创建成功，请登录"
+      if (response.data.code === 'Success') {
+        toast.success('注册成功', {
+          description: '您的账号已创建成功，请登录'
         })
-        router.push("/signin")
+        router.push('/signin')
       }
-
     } catch (error: any) {
       if (error.name === 'ZodError') {
         // Zod 验证错误
@@ -70,19 +69,19 @@ export default function SignUpPage() {
         // API 错误
         const errorCode = error.response?.data?.code
         const errorMap: { [key: string]: string } = {
-          'UserAlreadyExists': '该邮箱已被注册',
-          'InvalidParams': '输入数据不合法',
-          'RegistrationClosed': '当前系统已关闭注册',
-          'AdapterError': '系统错误，请联系管理员',
-          'InternalServerError': '服务器错误，请稍后重试',
-          'default': '注册失败，请重试'
+          UserAlreadyExists: '该邮箱已被注册',
+          InvalidParams: '输入数据不合法',
+          RegistrationClosed: '当前系统已关闭注册',
+          AdapterError: '系统错误，请联系管理员',
+          InternalServerError: '服务器错误，请稍后重试',
+          default: '注册失败，请重试'
         }
 
         const errorMessage = errorCode
-          ? (errorMap[errorCode] || errorMap['default'])
+          ? errorMap[errorCode] || errorMap['default']
           : errorMap['default']
 
-        setErrors({general: errorMessage})
+        setErrors({ general: errorMessage })
       }
     } finally {
       setIsRegistering(false)
@@ -90,12 +89,15 @@ export default function SignUpPage() {
   }, [formData, router])
 
   // 处理回车键注册
-  const handleKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      void handleRegister()
-    }
-  }, [handleRegister])
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        void handleRegister()
+      }
+    },
+    [handleRegister]
+  )
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -104,7 +106,7 @@ export default function SignUpPage() {
     }))
     // 清除对应字段的错误
     setErrors(prev => {
-      const newErrors = {...prev}
+      const newErrors = { ...prev }
       delete newErrors[field as keyof typeof errors]
       return newErrors
     })
@@ -115,9 +117,7 @@ export default function SignUpPage() {
       {errors.general && (
         <Alert variant="destructive">
           <AlertTitle>注册失败</AlertTitle>
-          <AlertDescription>
-            {errors.general}
-          </AlertDescription>
+          <AlertDescription>{errors.general}</AlertDescription>
         </Alert>
       )}
       <div className="space-y-2">
@@ -130,9 +130,7 @@ export default function SignUpPage() {
           onChange={handleInputChange('name')}
           className={errors.name ? 'border-red-500' : ''}
         />
-        {errors.name && (
-          <div className="text-red-500 text-sm">{errors.name}</div>
-        )}
+        {errors.name && <div className="text-red-500 text-sm">{errors.name}</div>}
       </div>
 
       <div className="space-y-2">
@@ -145,9 +143,7 @@ export default function SignUpPage() {
           onChange={handleInputChange('email')}
           className={errors.email ? 'border-red-500' : ''}
         />
-        {errors.email && (
-          <div className="text-red-500 text-sm">{errors.email}</div>
-        )}
+        {errors.email && <div className="text-red-500 text-sm">{errors.email}</div>}
       </div>
 
       <div className="space-y-2">
@@ -160,25 +156,32 @@ export default function SignUpPage() {
           onChange={handleInputChange('password')}
           className={errors.password ? 'border-red-500' : ''}
         />
-        {errors.password && (
-          <div className="text-red-500 text-sm">{errors.password}</div>
-        )}
+        {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
       </div>
-      <Button
-        onClick={handleRegister}
-        disabled={isRegistering}
-        className="w-full"
-      >
+      <Button onClick={handleRegister} disabled={isRegistering} className="w-full">
         {isRegistering ? (
           <span className="flex items-center justify-center">
-              <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none"
-                   viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-              </svg>
-              注册中...
-            </span>
-        ) : '注册'}
+            <svg
+              className="animate-spin h-5 w-5 mr-2"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            注册中...
+          </span>
+        ) : (
+          '注册'
+        )}
       </Button>
 
       <div className="text-center text-sm text-gray-500">

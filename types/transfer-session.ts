@@ -1,8 +1,8 @@
-import {TransferCode} from "@prisma/client"
-import { NODE_ENV } from "@/lib/env"
+import { TransferCode } from '@prisma/client'
+import { NODE_ENV } from '@/lib/env'
 
 // 传输码类型
-export type TransferCodeType = "UPLOAD" | "DOWNLOAD" | "COLLECTION"
+export type TransferCodeType = 'UPLOAD' | 'DOWNLOAD' | 'COLLECTION'
 
 // 传输会话状态
 // PICKING -     上传/采集        选择文件中
@@ -10,8 +10,8 @@ export type TransferCodeType = "UPLOAD" | "DOWNLOAD" | "COLLECTION"
 // UPLOADING -   上传/采集        上传中/上传中
 // CONFIGURING - 上传            上传完成，配置下载
 // DOWNLOADING - 下载            下载中
-export type UploadSessionStatus = "PICKING" | "UPLOADING" | "CONFIGURING" | "COMPLETED"
-export type DownloadSessionStatus = "DOWNLOADING" | "COMPLETED"
+export type UploadSessionStatus = 'PICKING' | 'UPLOADING' | 'CONFIGURING' | 'COMPLETED'
+export type DownloadSessionStatus = 'DOWNLOADING' | 'COMPLETED'
 export type TransferSessionStatus = UploadSessionStatus | DownloadSessionStatus
 
 /**
@@ -19,16 +19,16 @@ export type TransferSessionStatus = UploadSessionStatus | DownloadSessionStatus
  * 用于在前端展示传输会话的基本信息
  */
 export interface TransferInfo {
-  id: string                    // 传输会话ID
-  code: string                  // 传输码
-  type: string                  // 传输类型
-  comment: string | null        // 传输说明
-  expires: string | null        // 过期时间
-  createdAt: string            // 创建时间
-  createdBy: string | null     // 创建者
-  usageLimit: number | null    // 使用次数限制
-  usedCount?: number           // 已使用次数（可选）
-  downloadCode: string | null   // 下载码
+  id: string // 传输会话ID
+  code: string // 传输码
+  type: string // 传输类型
+  comment: string | null // 传输说明
+  expires: string | null // 过期时间
+  createdAt: string // 创建时间
+  createdBy: string | null // 创建者
+  usageLimit: number | null // 使用次数限制
+  usedCount?: number // 已使用次数（可选）
+  downloadCode: string | null // 下载码
   status: TransferSessionStatus // 会话状态
 }
 
@@ -54,14 +54,14 @@ export interface TransferSessionCookie {
 // 会话配置
 export const TRANSFER_SESSION_CONFIG = {
   // Cookie名称前缀
-  COOKIE_PREFIX: "transfer-session-",
+  COOKIE_PREFIX: 'transfer-session-',
   // Cookie配置
   COOKIE_OPTIONS: {
     httpOnly: true,
-    secure: NODE_ENV === "production",
-    sameSite: "lax" as const,
-    path: "/",
-    domain: NODE_ENV === "production" ? undefined : "localhost",
+    secure: NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    domain: NODE_ENV === 'production' ? undefined : 'localhost',
     maxAge: 24 * 60 * 60 // 1天（单位：秒）
   }
-} 
+}

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+import { prisma } from '@/lib/prisma'
 
 // 生成6位随机传输码
 export async function generateTransferCode() {
@@ -11,7 +11,7 @@ export async function generateTransferCode() {
     for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length))
     }
-    
+
     // 检查是否已存在
     const existing = await prisma.transferCode.findUnique({
       where: { code }
@@ -20,4 +20,4 @@ export async function generateTransferCode() {
   } while (!isUnique)
 
   return code
-} 
+}

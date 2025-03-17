@@ -1,15 +1,15 @@
 'use client'
 
-import React, {useEffect} from 'react'
-import {ShaderGradientCanvas, ShaderGradient} from '@shadergradient/react'
-import {useTheme} from "@/contexts/theme-context";
+import React, { useEffect } from 'react'
+import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react'
+import { useTheme } from '@/contexts/theme-context'
 
 interface BackgroundProps {
   className?: string
 }
 
-const Background: React.FC<BackgroundProps> = ({className}) => {
-  const {theme} = useTheme();
+const Background: React.FC<BackgroundProps> = ({ className }) => {
+  const { theme } = useTheme()
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -23,18 +23,20 @@ const Background: React.FC<BackgroundProps> = ({className}) => {
         left: 0,
         width: '100vw',
         height: '100vh',
-        zIndex: -1,
+        zIndex: -1
       }}
     >
       {/*https://www.shadergradient.co/customize*/}
       <ShaderGradient
         // Shape
-        type={theme === 'dark' ? "sphere" : "plane"}
-        shader="defaults" uStrength={0.7} uDensity={4.1}
+        type={theme === 'dark' ? 'sphere' : 'plane'}
+        shader="defaults"
+        uStrength={0.7}
+        uDensity={4.1}
         // Colors
-        color1={theme === 'dark' ? "#000080" : "#ffffff"}
-        color2={theme === 'dark' ? "#000000" : "#abb6ff"}
-        color3={theme === 'dark' ? "#000000" : "#ff8985"}
+        color1={theme === 'dark' ? '#000080' : '#ffffff'}
+        color2={theme === 'dark' ? '#000000' : '#abb6ff'}
+        color3={theme === 'dark' ? '#000000' : '#ff8985'}
         grain="on" // 噪点
         brightness={theme === 'dark' ? 1.2 : 1.2}
         // Motion
@@ -48,7 +50,9 @@ const Background: React.FC<BackgroundProps> = ({className}) => {
         positionX={0}
         positionY={theme === 'dark' ? -1.2 : 0}
         positionZ={0}
-        rotationX={0} rotationY={0} rotationZ={theme === 'dark' ? 30 : 60}
+        rotationX={0}
+        rotationY={0}
+        rotationZ={theme === 'dark' ? 30 : 60}
       />
     </ShaderGradientCanvas>
   )

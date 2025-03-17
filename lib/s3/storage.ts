@@ -1,11 +1,8 @@
-import {
-  DeleteObjectCommand,
-  DeleteObjectsCommand
-} from "@aws-sdk/client-s3"
-import {createPresignedPost} from "@aws-sdk/s3-presigned-post"
-import {s3Client} from "./client"
-import {S3_CONFIG} from "../env"
-import {PrismaClient} from "@prisma/client"
+import { DeleteObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3'
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
+import { s3Client } from './client'
+import { S3_CONFIG } from '../env'
+import { PrismaClient } from '@prisma/client'
 
 // 检查是否在服务器端运行
 const isServer = typeof window === 'undefined'
@@ -16,8 +13,7 @@ isServer ? new PrismaClient() : undefined
 export class S3StorageService {
   private static instance: S3StorageService
 
-  private constructor() {
-  }
+  private constructor() {}
 
   public static getInstance(): S3StorageService {
     if (!S3StorageService.instance) S3StorageService.instance = new S3StorageService()
@@ -32,8 +28,8 @@ export class S3StorageService {
   public async generateS3BasePath(linkedTransferCodeId: string): Promise<string> {
     // 确保只在服务器端执行
     if (!isServer) {
-      console.warn('尝试在客户端生成S3路径，这应该只在服务器端执行');
-      return `transfer/${linkedTransferCodeId}`;
+      console.warn('尝试在客户端生成S3路径，这应该只在服务器端执行')
+      return `transfer/${linkedTransferCodeId}`
     }
     return `transfer/${linkedTransferCodeId}`
   }
@@ -70,25 +66,25 @@ export class S3StorageService {
    * @returns 预签名URL和表单字段
    */
   async createPresignedPost(params: {
-    Key: string;
-    Fields?: Record<string, string>;
-    Expires?: number;
+    Key: string
+    Fields?: Record<string, string>
+    Expires?: number
   }): Promise<{
-    url: string;
-    fields: Record<string, string>;
+    url: string
+    fields: Record<string, string>
   }> {
     // 确保只在服务器端执行
     if (!isServer) {
-      console.error('尝试在客户端创建预签名POST，这应该只在服务器端执行');
-      throw new Error('此操作仅在服务器端可用');
+      console.error('尝试在客户端创建预签名POST，这应该只在服务器端执行')
+      throw new Error('此操作仅在服务器端可用')
     }
-    
+
     if (!S3_CONFIG.bucket) {
       throw new Error('S3 bucket not configured')
     }
 
     // 这里不使用getFullS3Key，因为params.Key应该已经是完整路径
-    const {url, fields} = await createPresignedPost(s3Client, {
+    const { url, fields } = await createPresignedPost(s3Client, {
       Bucket: S3_CONFIG.bucket,
       Key: params.Key,
       Conditions: [
@@ -99,7 +95,7 @@ export class S3StorageService {
       Expires: params.Expires
     })
 
-    return {url, fields}
+    return { url, fields }
   }
 
   /**
@@ -110,26 +106,29 @@ export class S3StorageService {
   async deleteFile(s3BasePath: string, relativePath: string): Promise<void> {
     // 确保只在服务器端执行
     if (!isServer) {
-      console.error('尝试在客户端删除S3文件，这应该只在服务器端执行');
-      throw new Error('此操作仅在服务器端可用');
+      console.error('尝试在客户端删除S3文件，这应该只在服务器端执行')
+      throw new Error('此操作仅在服务器端可用')
     }
-    
+
     if (!S3_CONFIG.bucket) {
-      console.error('S3 bucket not configured');
-      return; // 不抛出错误，允许数据库清理继续进行
+      console.error('S3 bucket not configured')
+      return // 不抛出错误，允许数据库清理继续进行
     }
-    
-    const s3Key = this.getFullS3Key(s3BasePath, relativePath);
-    console.log(`Deleting single file: ${s3Key}`);
-    
+
+    const s3Key = this.getFullS3Key(s3BasePath, relativePath)
+    console.log(`Deleting single file: ${s3Key}`)
+
     try {
       const command = new DeleteObjectCommand({
         Bucket: S3_CONFIG.bucket,
-        Key: s3Key,
-      });
-      await s3Client.send(command);
+        Key: s3Key
+      })
+      await s3Client.send(command)
     } catch (error) {
-      console.error(`Failed to delete file ${s3Key}:`, error instanceof Error ? error.message : 'Unknown error');
+      console.error(
+        `Failed to delete file ${s3Key}:`,
+        error instanceof Error ? error.message : 'Unknown error'
+      )
       // 不抛出错误，允许继续
     }
   }
@@ -138,115 +137,119 @@ export class S3StorageService {
    * 批量删除文件
    * @param files 文件路径数组，每项包含 s3BasePath 和 relativePath
    */
-  async deleteFiles(files: { s3BasePath: string, relativePath: string }[]): Promise<void> {
+  async deleteFiles(files: { s3BasePath: string; relativePath: string }[]): Promise<void> {
     // 确保只在服务器端执行
     if (!isServer) {
-      console.error('尝试在客户端批量删除S3文件，这应该只在服务器端执行');
-      throw new Error('此操作仅在服务器端可用');
+      console.error('尝试在客户端批量删除S3文件，这应该只在服务器端执行')
+      throw new Error('此操作仅在服务器端可用')
     }
-    
+
     if (files.length === 0) return
-    
+
     // 确保 S3 bucket 已配置
     if (!S3_CONFIG.bucket) {
-      console.error('S3 bucket not configured');
+      console.error('S3 bucket not configured')
       // 不抛出错误，允许继续执行数据库清理
-      return;
+      return
     }
-    
+
     // 验证参数
     const validFiles = files.filter(file => {
       if (!file.s3BasePath) {
-        console.warn(`Invalid S3 file path: Missing or invalid s3BasePath`, file);
-        return false;
+        console.warn(`Invalid S3 file path: Missing or invalid s3BasePath`, file)
+        return false
       }
-      
+
       if (!file.relativePath) {
-        console.warn(`Invalid S3 file path: Missing or invalid relativePath`, file);
-        return false;
+        console.warn(`Invalid S3 file path: Missing or invalid relativePath`, file)
+        return false
       }
-      
-      return true;
-    });
-    
+
+      return true
+    })
+
     if (validFiles.length === 0) {
-      console.warn('No valid files to delete');
-      return;
+      console.warn('No valid files to delete')
+      return
     }
-    
+
     // 使用单个文件删除方法作为备选方案
-    const useSingleDelete = validFiles.length < 5; // 少量文件时直接使用单个删除
-    
+    const useSingleDelete = validFiles.length < 5 // 少量文件时直接使用单个删除
+
     if (useSingleDelete) {
-      console.log(`Using individual delete for ${validFiles.length} files`);
+      console.log(`Using individual delete for ${validFiles.length} files`)
       // 单个文件逐个删除
       for (const file of validFiles) {
         try {
-          await this.deleteFile(file.s3BasePath, file.relativePath);
+          await this.deleteFile(file.s3BasePath, file.relativePath)
         } catch (error) {
-          console.error(`Error deleting individual file ${file.s3BasePath}/${file.relativePath}:`, 
-                       error instanceof Error ? error.message : 'Unknown error');
+          console.error(
+            `Error deleting individual file ${file.s3BasePath}/${file.relativePath}:`,
+            error instanceof Error ? error.message : 'Unknown error'
+          )
           // 继续处理其他文件
         }
       }
-      return;
+      return
     }
-    
+
     // 多文件批量删除
     // AWS S3 批量删除限制为一次最多 1000 个对象
-    const batchSize = 1000;
-    const batches = [];
-    
+    const batchSize = 1000
+    const batches = []
+
     // 将文件按批次分组
     for (let i = 0; i < validFiles.length; i += batchSize) {
-      batches.push(validFiles.slice(i, i + batchSize));
+      batches.push(validFiles.slice(i, i + batchSize))
     }
-    
-    console.log(`Batch deleting ${validFiles.length} files in ${batches.length} batches`);
-    
+
+    console.log(`Batch deleting ${validFiles.length} files in ${batches.length} batches`)
+
     // 逐批处理删除
-    let hasError = false;
-    
+    let hasError = false
+
     for (const batch of batches) {
       const objects = batch.map(file => {
-        const key = this.getFullS3Key(file.s3BasePath, file.relativePath);
-        return { Key: key };
-      });
-      
+        const key = this.getFullS3Key(file.s3BasePath, file.relativePath)
+        return { Key: key }
+      })
+
       // 打印第一个对象的信息以便调试
       if (objects.length > 0) {
-        console.log(`Sample delete object: ${JSON.stringify(objects[0])}`);
+        console.log(`Sample delete object: ${JSON.stringify(objects[0])}`)
       }
-      
+
       try {
         const command = new DeleteObjectsCommand({
           Bucket: S3_CONFIG.bucket,
           Delete: { Objects: objects }
-        });
-        
-        await s3Client.send(command);
-        console.log(`Successfully deleted batch of ${objects.length} objects`);
+        })
+
+        await s3Client.send(command)
+        console.log(`Successfully deleted batch of ${objects.length} objects`)
       } catch (error) {
-        hasError = true;
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`Failed to delete S3 batch: ${errorMsg}`);
-        
+        hasError = true
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+        console.error(`Failed to delete S3 batch: ${errorMsg}`)
+
         // 尝试使用单个删除作为备选
-        console.log('Falling back to individual delete for failed batch');
+        console.log('Falling back to individual delete for failed batch')
         for (const file of batch) {
           try {
-            await this.deleteFile(file.s3BasePath, file.relativePath);
+            await this.deleteFile(file.s3BasePath, file.relativePath)
           } catch (singleError) {
-            console.error(`Error in fallback delete for ${file.s3BasePath}/${file.relativePath}:`, 
-                         singleError instanceof Error ? singleError.message : 'Unknown error');
+            console.error(
+              `Error in fallback delete for ${file.s3BasePath}/${file.relativePath}:`,
+              singleError instanceof Error ? singleError.message : 'Unknown error'
+            )
           }
         }
       }
     }
-    
+
     // 不再抛出异常，这样不会阻止数据库清理操作
     if (hasError) {
-      console.warn('Some S3 delete operations failed, but we will proceed with database cleanup');
+      console.warn('Some S3 delete operations failed, but we will proceed with database cleanup')
     }
   }
-} 
+}
