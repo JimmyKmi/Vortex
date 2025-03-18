@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef, useMemo } from 'react'
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useMemo, useCallback } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -162,7 +162,6 @@ function FileTreeComponent<T extends FileTreeItem>(
     disabled = false,
     customHeaders,
     getFolderCheckState: externalGetFolderCheckState,
-    getAllFileIds: externalGetAllFileIds
   }: FileTreeProps<T>,
   ref: React.ForwardedRef<FileTreeRef>
 ) {
@@ -171,40 +170,40 @@ function FileTreeComponent<T extends FileTreeItem>(
   const [internalExpandedFolders, setInternalExpandedFolders] = useState<Set<string>>(defaultExpandedFolders)
 
   // 实际使用的状态 - 根据模式选择内部或外部状态
-  const selectedFiles = useMemo(
+  const selectedFiles = useMemo<Set<string>>(
     () => (mode === 'controlled' ? externalSelectedFiles || new Set() : internalSelectedFiles),
     [mode, externalSelectedFiles, internalSelectedFiles]
   )
 
-  const expandedFolders = useMemo(
+  const expandedFolders = useMemo<Set<string>>(
     () => (mode === 'controlled' ? externalExpandedFolders || new Set() : internalExpandedFolders),
     [mode, externalExpandedFolders, internalExpandedFolders]
   )
 
   // 避免在渲染过程中调用父组件的回调函数
-  const notifySelectionChange = (newSelection: Set<string>) => {
+  const notifySelectionChange = useCallback((newSelection: Set<string>) => {
     if (onSelectionChange) {
       // 使用setTimeout将回调推迟到渲染完成后执行
       setTimeout(() => {
         onSelectionChange(newSelection)
       }, 0)
     }
-  }
+  }, [onSelectionChange])
 
-  const notifyExpandChange = (newExpanded: Set<string>) => {
+  const notifyExpandChange = useCallback((newExpanded: Set<string>) => {
     if (onExpandChange) {
       setTimeout(() => {
         onExpandChange(newExpanded)
       }, 0)
     }
-  }
+  }, [onExpandChange])
 
   // 内部实现的通用操作方法
 
   /**
    * 获取所有叶子节点（文件）的ID
    */
-  const getAllFileOnlyIds = (currentFiles: T[]): string[] => {
+  const getAllFileOnlyIds = useCallback((currentFiles: T[]): string[] => {
     return currentFiles.reduce((acc: string[], file) => {
       if (file.type === 'file') {
         acc.push(file.id)
@@ -213,42 +212,12 @@ function FileTreeComponent<T extends FileTreeItem>(
       }
       return acc
     }, [])
-  }
-
-  /**
-   * 获取所有文件ID（包括文件夹内的文件）
-   */
-  const getAllFileIds = (currentFiles: T[]): string[] => {
-    if (mode === 'controlled' && externalGetAllFileIds) {
-      return externalGetAllFileIds(currentFiles)
-    }
-
-    return currentFiles.reduce((acc: string[], file) => {
-      acc.push(file.id)
-      if (file.type === 'folder' && file.children) {
-        acc.push(...getAllFileIds(file.children as T[]))
-      }
-      return acc
-    }, [])
-  }
-
-  /**
-   * 获取文件夹的所有子文件ID（包括子文件夹的文件）
-   */
-  const getFolderChildrenIds = (folder: T): string[] => {
-    return (
-      folder.children?.reduce((ids: string[], child) => {
-        ids.push(child.id)
-        if (child.type === 'folder') ids.push(...getFolderChildrenIds(child as T))
-        return ids
-      }, [] as string[]) || []
-    )
-  }
+  }, [])
 
   /**
    * 获取文件夹的选中状态
    */
-  const getFolderCheckState = (folder: T, selectedSet: Set<string>): boolean => {
+  const getFolderCheckState = useCallback((folder: T, selectedSet: Set<string>): boolean => {
     if (mode === 'controlled' && externalGetFolderCheckState) {
       return externalGetFolderCheckState(folder, selectedSet)
     }
@@ -262,12 +231,12 @@ function FileTreeComponent<T extends FileTreeItem>(
 
     // 只要有任何子项被选中，就返回true
     return selectedChildren.length > 0
-  }
+  }, [mode, externalGetFolderCheckState])
 
   /**
    * 查找并更新所有父文件夹的状态
    */
-  const updateParentFoldersState = (fileId: string, selectedSet: Set<string>) => {
+  const updateParentFoldersState = useCallback((fileId: string, selectedSet: Set<string>) => {
     const updateFolder = (currentFiles: T[], parentPath: T[] = []): boolean => {
       for (const file of currentFiles) {
         if (file.type === 'folder' && file.children) {
@@ -292,12 +261,12 @@ function FileTreeComponent<T extends FileTreeItem>(
     }
 
     updateFolder(files)
-  }
+  }, [files, getFolderCheckState])
 
   /**
    * 处理文件选择状态变更
    */
-  const handleFileSelect = (fileId: string, checked: boolean, file: T) => {
+  const handleFileSelect = useCallback((fileId: string, checked: boolean, file: T) => {
     if (mode === 'controlled' && externalFileSelect) {
       return externalFileSelect(fileId, checked, file)
     }
@@ -333,12 +302,12 @@ function FileTreeComponent<T extends FileTreeItem>(
 
       return newSet
     })
-  }
+  }, [mode, externalFileSelect, updateParentFoldersState, notifySelectionChange])
 
   /**
    * 处理文件夹切换展开/折叠
    */
-  const handleToggleFolder = (folderId: string) => {
+  const handleToggleFolder = useCallback((folderId: string) => {
     if (mode === 'controlled' && externalToggleFolder) {
       return externalToggleFolder(folderId)
     }
@@ -356,12 +325,12 @@ function FileTreeComponent<T extends FileTreeItem>(
 
       return newSet
     })
-  }
+  }, [mode, externalToggleFolder, notifyExpandChange])
 
   /**
    * 处理全选/全不选
    */
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = useCallback((checked: boolean) => {
     if (mode === 'controlled' && externalSelectAll) {
       return externalSelectAll(checked)
     }
@@ -386,12 +355,12 @@ function FileTreeComponent<T extends FileTreeItem>(
 
       return newSet
     })
-  }
+  }, [mode, externalSelectAll, files, notifySelectionChange])
 
   /**
    * 处理反选
    */
-  const handleInvertSelection = () => {
+  const handleInvertSelection = useCallback(() => {
     if (mode === 'controlled') {
       // 在受控模式下，反选操作应由父组件处理
       return
@@ -423,14 +392,7 @@ function FileTreeComponent<T extends FileTreeItem>(
 
       return newSet
     })
-  }
-
-  // 当文件列表变化时，更新父文件夹的状态
-  useEffect(() => {
-    if (mode === 'uncontrolled') {
-      updateParentFoldersState(files, internalSelectedFiles, setInternalSelectedFiles)
-    }
-  }, [files, mode, internalSelectedFiles, updateParentFoldersState])
+  }, [mode, files, getAllFileOnlyIds, updateParentFoldersState, notifySelectionChange])
 
   // 当初始选择状态变化时，通知父组件，但确保在渲染完成后
   useEffect(() => {
