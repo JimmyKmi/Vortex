@@ -153,8 +153,7 @@ export async function validateTransferSession(
     }
 
     return { valid: true, session }
-  } catch (error) {
-    console.error('Validate transfer session error:', error)
+  } catch {
     return { valid: false, code: 'ServerError' }
   }
 }
