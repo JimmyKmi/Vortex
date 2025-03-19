@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { DataTable } from '@/components/ui/data-table'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,7 +32,7 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
   const [searchQuery, setSearchQuery] = useState('') // 搜索查询
 
   // 获取传输码数据
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       const response = await axios.get(`/api/transfer-codes?type=${type}`)
@@ -46,17 +46,17 @@ export function TransferCodeList({ type, getColumnsAction, onRefreshRef }: Trans
     } finally {
       setLoading(false)
     }
-  }
+  }, [type])
 
   // 暴露刷新方法给父组件
   useEffect(() => {
     if (onRefreshRef) onRefreshRef.current = fetchData
-  }, [onRefreshRef])
+  }, [onRefreshRef, fetchData])
 
   // 组件挂载时获取数据
   useEffect(() => {
     void fetchData()
-  }, [type])
+  }, [fetchData])
 
   // 批量删除处理
   const handleBatchDelete = async () => {

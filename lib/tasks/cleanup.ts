@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { isSessionExpired } from '@/lib/utils/transfer-session'
 import { S3StorageService } from '@/lib/s3/storage'
+import logger from '@/lib/utils/logger'
 
 /**
  * 清理过期和无用的数据
@@ -8,11 +9,13 @@ import { S3StorageService } from '@/lib/s3/storage'
  * 1. 过期的会话
  * 2. 过期的传输码
  * 3. 孤立的文件记录（没有关联的传输码）
+ * @param silent 是否静默执行（不输出详细日志），默认为false
  */
-export async function cleanupTask() {
+export async function cleanupTask(silent: boolean = false) {
   try {
-    console.log('执行清理任务')
+    if (!silent) logger.info('Starting cleanup task')
     const now = new Date()
+    const results: Record<string, number> = {}
 
     // 1. 清理过期会话
     const sessions = await prisma.transferSession.findMany({
@@ -34,7 +37,8 @@ export async function cleanupTask() {
           }
         }
       })
-      console.log(`清理过期会话: ${deletedSessions.count}个`)
+      results.expiredSessions = deletedSessions.count
+      if (!silent) logger.info(`Removed ${deletedSessions.count} expired sessions`)
     }
 
     // 2. 清理过期的传输码
@@ -51,7 +55,10 @@ export async function cleanupTask() {
       }
     })
 
-    if (expiredCodes.count) console.log(`禁用过期传输码: ${expiredCodes.count}个`)
+    if (expiredCodes.count) {
+      results.expiredCodes = expiredCodes.count
+      if (!silent) logger.info(`Disabled ${expiredCodes.count} expired transfer codes`)
+    }
 
     // 3. 清理孤立的文件记录
     // 首先找出没有关联传输码的文件
@@ -83,10 +90,11 @@ export async function cleanupTask() {
 
         if (filesToDelete.length > 0) {
           await s3Service.deleteFiles(filesToDelete)
-          console.log(`删除S3文件: ${filesToDelete.length}个`)
+          results.s3Files = filesToDelete.length
+          if (!silent) logger.info(`Deleted ${filesToDelete.length} S3 files`)
         }
       } catch (error) {
-        console.error(`S3文件删除错误:`, error instanceof Error ? error.message : '未知错误')
+        logger.error({ err: error }, 'Failed to delete S3 files')
       }
 
       // 删除数据库中的孤立文件记录
@@ -97,11 +105,21 @@ export async function cleanupTask() {
           }
         }
       })
-      console.log(`清理孤立文件记录: ${orphanedFiles.length}个`)
+      results.orphanedRecords = orphanedFiles.length
+      if (!silent) logger.info(`Deleted ${orphanedFiles.length} orphaned file records`)
     }
 
-    console.log('清理任务完成')
+    if (!silent) {
+      if (Object.keys(results).length === 0) {
+        logger.info('Cleanup task completed - nothing to clean')
+      } else {
+        logger.info({ results }, 'Cleanup task completed successfully')
+      }
+    }
+
+    return results
   } catch (error) {
-    console.error('清理任务错误:', error)
+    logger.error({ err: error }, 'Cleanup task failed')
+    throw error
   }
 }

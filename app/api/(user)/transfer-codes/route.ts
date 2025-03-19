@@ -145,7 +145,7 @@ export async function DELETE(request: Request) {
     let json
     try {
       json = await request.json()
-    } catch (_parseError) {
+    } catch {
       return ResponseThrow('InvalidParams')
     }
 
@@ -204,10 +204,9 @@ export async function DELETE(request: Request) {
                 Key: compressKey
               })
               await s3Client.send(command)
-              console.log(`已删除传输码 ${transferCodeId} 的压缩包`)
             } catch (compressError) {
               // 压缩包可能不存在，忽略该错误
-              console.log(
+              console.warn(
                 `传输码 ${transferCodeId} 的压缩包删除失败或不存在:`,
                 compressError instanceof Error ? compressError.message : 'Unknown error'
               )
@@ -225,12 +224,11 @@ export async function DELETE(request: Request) {
             const fileIds = fileRelations.map((relation) => relation.file.id)
 
             // 删除文件与传输码的关联
-            const deletedRelations = await tx.fileToTransferCode.deleteMany({
+            await tx.fileToTransferCode.deleteMany({
               where: {
                 transferCodeId
               }
             })
-            console.log(`已删除 ${deletedRelations.count} 个文件关联记录`)
 
             // 检查这些文件是否还被其他传输码使用
             const stillInUseFiles = await tx.fileToTransferCode.findMany({
@@ -244,21 +242,18 @@ export async function DELETE(request: Request) {
 
             // 如果某些文件仍在使用，则从删除列表中移除
             const stillInUseFileIds = stillInUseFiles.map((f) => f.fileId)
-            console.log(`仍在使用的文件IDs: ${stillInUseFileIds.join(', ')}`)
 
             // 只删除不再被其他传输码使用的文件
             const fileIdsToDelete = fileIds.filter((id) => !stillInUseFileIds.includes(id))
-            console.log(`最终需要删除的文件IDs: ${fileIdsToDelete.join(', ')}`)
 
             if (fileIdsToDelete.length > 0) {
-              const deletedFiles = await tx.file.deleteMany({
+              await tx.file.deleteMany({
                 where: {
                   id: {
                     in: fileIdsToDelete
                   }
                 }
               })
-              console.log(`已删除 ${deletedFiles.count} 个文件记录`)
             }
           }
 
@@ -307,7 +302,7 @@ export async function DELETE(request: Request) {
     try {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.error(`Failed to batch delete transfer codes: ${errorMessage}`)
-    } catch (_loggingError) {
+    } catch {
       console.error('Error while logging')
     }
     return ResponseThrow('DatabaseError')

@@ -45,7 +45,7 @@ export default function SystemSettingsPage() {
           return acc
         }, {})
         setSystemSettings(settings)
-      } catch (_error) {
+      } catch {
         toast.error('获取系统设置失败', {
           description: '无法加载系统设置'
         })

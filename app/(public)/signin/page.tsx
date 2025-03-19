@@ -173,7 +173,7 @@ export default function SignInPage() {
         toast.success('登录成功')
         router.push(result.url || '/')
       }
-    } catch (_error) {
+    } catch {
       setError('网络错误，请稍后重试')
     } finally {
       setIsPending(false)
@@ -188,7 +188,7 @@ export default function SignInPage() {
         redirect: true,
         redirectTo: window.location.origin
       })
-    } catch (_error) {
+    } catch {
       toast.error('Zitadel登录失败', {
         description: '登录过程中发生错误，请稍后重试'
       })

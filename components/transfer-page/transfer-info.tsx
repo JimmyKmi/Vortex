@@ -18,7 +18,7 @@ export function TransferInfo({ transferInfo, className }: TransferInfoProps) {
       setIsCopied(true)
       toast.success('传输码已复制到剪贴板')
       setTimeout(() => setIsCopied(false), 2000)
-    } catch (_err) {
+    } catch {
       toast.error('复制失败，请手动复制')
     }
   }

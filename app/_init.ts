@@ -3,6 +3,29 @@
 
 // 强制导入初始化模块
 import { initApp, isInitialized } from './api/init'
+import logger from '@/lib/utils/logger'
 
-// 仅在服务器端运行且未初始化时执行初始化
-if (typeof window === 'undefined') if (!isInitialized) initApp()
+// 使用全局标记记录是否已经执行过初始化检查
+declare global {
+  // eslint-disable-next-line no-var
+  var __initCheckDone: boolean | undefined
+}
+
+// 初始化全局检查标记
+if (typeof global.__initCheckDone === 'undefined') {
+  global.__initCheckDone = false
+}
+
+// 仅在服务器端运行且未执行过初始化检查时执行
+if (typeof window === 'undefined' && !global.__initCheckDone) {
+  global.__initCheckDone = true
+  logger.info('Server-side startup detected, checking application initialization...')
+
+  if (!isInitialized) {
+    logger.info('Application not initialized, starting initialization process')
+    // 使用void操作符忽略Promise结果，因为这是应用启动时的初始化
+    void initApp()
+  } else {
+    logger.info('Application already initialized, skipping startup initialization')
+  }
+}

@@ -156,8 +156,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return ResponseThrow('InvalidSession')
     }
 
-    console.log('Fetching session:', sessionId)
-
     // 获取会话信息
     const session = await prisma.transferSession
       .findUnique({
@@ -232,27 +230,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return ResponseThrow('InvalidSession')
     }
 
-    console.log('Transfer code found:', {
-      id: transferCode.id,
-      type: transferCode.type,
-      filesCount: transferCode.files.length
-    })
-
     // 如果没有文件，返回空数组
     if (!transferCode.files.length) {
-      console.log('No files found for transfer code:', {
-        sessionId,
-        transferCodeId: session.transferCodeId,
-        transferCodeType: transferCode.type
-      })
       return ResponseSuccess([])
     }
-
-    // 构建文件树
-    console.log('Building file tree for files:', {
-      sessionId,
-      filesCount: transferCode.files.length
-    })
 
     const fileTree = buildFileTree(
       transferCode.files.map((f) => ({

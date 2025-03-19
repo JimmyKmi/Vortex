@@ -144,19 +144,6 @@ export default function DownloadPage({ params }: PageProps) {
   }, [downloadMode, downloadProgress])
 
   /**
-   * 获取所有文件ID（包括文件夹内的文件）
-   */
-  const getAllFileIds = (files: DownloadFile[]): string[] => {
-    return files.reduce((acc: string[], file) => {
-      acc.push(file.id)
-      if (file.type === 'folder' && file.children) {
-        acc.push(...getAllFileIds(file.children))
-      }
-      return acc
-    }, [])
-  }
-
-  /**
    * 处理反选
    */
   const handleInvertSelection = () => {
@@ -288,10 +275,10 @@ export default function DownloadPage({ params }: PageProps) {
                 onError: () => console.error(`下载URL生成失败，重试次数: ${retryCount + 1}`)
               }
             )
-          } catch (_error) {
+          } catch (error) {
+            console.error('Error when generating download URLs:', error)
             // 处理错误
             retryCount++
-
             // 显示重试提示
             if (retryCount < maxRetries) {
               toast.error(`${batchFileNames.join('、')} 文件下载通道建立失败，正在重试 (${retryCount}/${maxRetries})`)

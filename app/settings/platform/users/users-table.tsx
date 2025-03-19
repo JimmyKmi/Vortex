@@ -80,7 +80,7 @@ export function UsersTable({ session }: UsersTableProps) {
       toast.success('用户状态已更新', {
         description: `用户 ${targetUser ? formatUserIdentifier(targetUser) : userId} 的角色已更改为 ${ROLE_DEFINITIONS[newRole].name}`
       })
-    } catch (_error) {
+    } catch {
       toast.error('更新失败', {
         description: '无法更新用户角色'
       })
@@ -116,7 +116,7 @@ export function UsersTable({ session }: UsersTableProps) {
       toast.success('用户状态已更新', {
         description: `用户 ${targetUser ? formatUserIdentifier(targetUser) : userId} 已${enabled ? '启用' : '禁用'}`
       })
-    } catch (_error) {
+    } catch {
       toast.error('更新失败', {
         description: '无法更新用户状态'
       })
@@ -138,7 +138,7 @@ export function UsersTable({ session }: UsersTableProps) {
       toast.success('用户已删除', {
         description: `用户 ${targetUser ? formatUserIdentifier(targetUser) : userId} 已成功删除`
       })
-    } catch (_error) {
+    } catch {
       toast.error('删除失败', {
         description: '无法删除用户'
       })

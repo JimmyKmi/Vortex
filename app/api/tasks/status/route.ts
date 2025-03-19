@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { getSchedulerStatus } from '@/app/api/init'
+import logger from '@/lib/utils/logger'
 
 // 全局状态追踪
 const apiStats = {
@@ -14,6 +15,7 @@ const apiStats = {
 export function recordHealthCheck() {
   apiStats.lastHealthCheck = new Date()
   apiStats.healthCheckCount++
+  logger.debug(`Health check recorded (total: ${apiStats.healthCheckCount})`)
 }
 
 /**
@@ -21,14 +23,16 @@ export function recordHealthCheck() {
  */
 export function recordCleanupTask() {
   apiStats.cleanupTaskCount++
+  logger.debug(`Cleanup task recorded (total: ${apiStats.cleanupTaskCount})`)
 }
 
 export async function GET() {
   try {
+    logger.debug('Getting task status')
     // 获取调度器状态
     const schedulerStatus = getSchedulerStatus()
 
-    return NextResponse.json({
+    return ResponseSuccess({
       scheduler: schedulerStatus,
       stats: {
         lastHealthCheck: apiStats.lastHealthCheck,
@@ -38,15 +42,8 @@ export async function GET() {
       time: new Date().toISOString()
     })
   } catch (error) {
-    console.error('获取任务状态错误:', error)
-    return NextResponse.json(
-      {
-        status: 'error',
-        message: error instanceof Error ? error.message : '未知错误',
-        time: new Date().toISOString()
-      },
-      { status: 500 }
-    )
+    logger.error({ err: error }, 'Failed to get task status')
+    return ResponseThrow('InternalServerError')
   }
 }
 

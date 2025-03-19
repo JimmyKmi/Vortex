@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { getSchedulerStatus, initScheduler } from '@/app/api/init'
 import { recordHealthCheck } from '@/app/api/tasks/status/route'
+import logger from '@/lib/utils/logger'
 
 export const runtime = 'nodejs'
 
@@ -12,31 +13,38 @@ export async function GET() {
     // 获取调度器状态
     const schedulerStatus = getSchedulerStatus()
 
-    // 如果调度器未运行，尝试启动
-    if (!schedulerStatus.isRunning) {
-      console.log('健康检查：调度器未运行，尝试启动')
-      const started = initScheduler()
+    // 如果调度器未初始化或未运行并且超过5分钟，尝试启动
+    // 避免在短时间内频繁尝试启动调度器
+    const initAge = schedulerStatus.initTime ? Date.now() - schedulerStatus.initTime : Number.MAX_SAFE_INTEGER
+
+    if (!schedulerStatus.isRunning && (!schedulerStatus.isInitialized || initAge > 5 * 60 * 1000)) {
+      logger.info('Health check: scheduler not running, attempting to start')
+      const started = await initScheduler()
       if (started) {
-        console.log('健康检查：调度器启动成功')
+        logger.info('Health check: scheduler started successfully')
       } else {
-        console.log('健康检查：调度器启动失败或已在运行')
+        logger.info('Health check: scheduler startup failed or already running')
       }
     }
 
-    return NextResponse.json({
-      status: 'ok',
+    // 计算上次执行时间
+    let lastExecutionInfo = 'never'
+    if (schedulerStatus.lastExecutionTime) {
+      const lastExecAge = Date.now() - new Date(schedulerStatus.lastExecutionTime).getTime()
+      const minutes = Math.floor(lastExecAge / (60 * 1000))
+      const seconds = Math.floor((lastExecAge % (60 * 1000)) / 1000)
+      lastExecutionInfo = `${minutes}m ${seconds}s ago`
+    }
+
+    return ResponseSuccess({
       time: new Date().toISOString(),
-      scheduler: schedulerStatus
+      scheduler: {
+        ...schedulerStatus,
+        lastExecutionInfo
+      }
     })
   } catch (error) {
-    console.error('健康检查错误:', error)
-    return NextResponse.json(
-      {
-        status: 'error',
-        message: error instanceof Error ? error.message : '未知错误',
-        time: new Date().toISOString()
-      },
-      { status: 500 }
-    )
+    logger.error({ err: error }, 'Health check error')
+    return ResponseThrow('HealthCheckError', 500)
   }
 }
