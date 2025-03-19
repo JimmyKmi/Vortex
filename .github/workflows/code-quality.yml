@@ -9,16 +9,22 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v3
+      - name: 初检
+        uses: actions/checkout@v3
       
-      - name: 设置 Node.js
+      - name: 配置环境
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
-      
-      - run: npm ci --legacy-peer-deps
-      - run: npm run check-lint
-      - run: npm run check-prettier
-      - run: npm run check-test
-      - run: npm run check-security
+
+      - name: 配置环境
+        run: npm ci --legacy-peer-deps
+      - name: 检查质量
+        run: npm run check-lint
+      - name: 检查格式
+        run: npm run check-prettier
+      - name: 运行测试
+        run: npm run check-jest
+      - name: 依赖检查
+        run: npm run check-security
