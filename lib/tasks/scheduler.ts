@@ -31,8 +31,8 @@ function getTaskInterval(): number {
   // 检查是否为开发环境
   const isDev = process.env.NODE_ENV === 'development'
 
-  // 开发环境下1分钟执行一次，生产环境10分钟执行一次
-  return isDev ? 1 * 60 * 1000 : 10 * 60 * 1000
+  // 开发环境下2分钟执行一次，生产环境10分钟执行一次
+  return isDev ? 2 * 60 * 1000 : 10 * 60 * 1000
 }
 
 /**
