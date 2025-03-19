@@ -16,14 +16,14 @@ try {
 // 配置日志文件路径
 const LOG_FILE = path.join(LOG_DIR, `app-${new Date().toISOString().split('T')[0]}.log`)
 
-// 创建格式化流
-const prettyStream = pretty({
+// 创建控制台格式化流 - 不包含时间戳
+const consoleStream = pretty({
   colorize: true,
-  translateTime: 'SYS:HH:MM:ss.l',
   messageFormat: '{msg}',
-  ignore: 'pid,hostname',
+  ignore: 'pid,hostname,time',
+  levelFirst: true,
   customPrettifiers: {
-    time: (timestamp) => `[${timestamp}]`
+    level: (level) => ` □ ${(level as string).toUpperCase()}`
   }
 })
 
@@ -37,7 +37,7 @@ const logger = pino({
   messageKey: 'msg',
   timestamp: true
 }, pino.multistream([
-  { stream: prettyStream },
+  { stream: consoleStream },
   { stream: fs.createWriteStream(LOG_FILE, { flags: 'a' }) }
 ]))
 
