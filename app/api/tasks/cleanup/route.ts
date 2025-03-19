@@ -22,7 +22,7 @@ export const GET = async () => {
     })
   } catch (error) {
     apiLogger.error({ err: error }, 'Failed to execute cleanup task via API')
-    
+
     return ResponseThrow('CleanupTaskFailed', 500)
   }
 }

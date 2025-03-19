@@ -15,10 +15,8 @@ export async function GET() {
 
     // 如果调度器未初始化或未运行并且超过5分钟，尝试启动
     // 避免在短时间内频繁尝试启动调度器
-    const initAge = schedulerStatus.initTime 
-      ? Date.now() - schedulerStatus.initTime 
-      : Number.MAX_SAFE_INTEGER
-    
+    const initAge = schedulerStatus.initTime ? Date.now() - schedulerStatus.initTime : Number.MAX_SAFE_INTEGER
+
     if (!schedulerStatus.isRunning && (!schedulerStatus.isInitialized || initAge > 5 * 60 * 1000)) {
       apiLogger.info('Health check: scheduler not running, attempting to start')
       const started = await initScheduler()

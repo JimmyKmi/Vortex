@@ -38,9 +38,11 @@ export async function initApp(): Promise<boolean> {
   // 如果已初始化且未过期（30分钟内），跳过
   const now = Date.now()
   const initAge = global.__initTimestamp ? now - global.__initTimestamp : null
-  
+
   if (global.__isInitialized && initAge !== null && initAge < 30 * 60 * 1000) {
-    systemLogger.info(`Application already initialized (${Math.floor(initAge / 1000)}s ago), skipping re-initialization`)
+    systemLogger.info(
+      `Application already initialized (${Math.floor(initAge / 1000)}s ago), skipping re-initialization`
+    )
     return true
   }
 
@@ -58,18 +60,18 @@ export async function initApp(): Promise<boolean> {
 
   // 创建初始化锁并存储解析/拒绝函数
   const lockState: {
-    resolve: (() => void) | null;
-    reject: ((err: Error) => void) | null;
+    resolve: (() => void) | null
+    reject: ((err: Error) => void) | null
   } = {
     resolve: null,
     reject: null
   }
-  
+
   global.__initLock = new Promise<void>((resolve, reject) => {
     lockState.resolve = resolve
     lockState.reject = reject
   })
-  
+
   // 标记开始初始化
   global.__isInitializing = true
 
@@ -130,7 +132,7 @@ export function getSchedulerStatus(): {
 export async function initScheduler(): Promise<boolean> {
   // 检查调度器是否需要初始化
   const status = getTaskSchedulerStatus()
-  
+
   if (status.isRunning) {
     // 调度器已在运行，无需操作
     return false

@@ -12,9 +12,6 @@ try {
   console.error('Failed to create log directory:', err)
 }
 
-// 日志级别类型
-export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'
-
 // 日志配置
 const defaultLogOptions = {
   level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
@@ -59,28 +56,3 @@ export const systemLogger = createLogger('system')
 
 // API日志
 export const apiLogger = createLogger('api')
-
-/**
- * 配置日志级别
- * @param level 日志级别
- */
-export function setLogLevel(level: LogLevel) {
-  logger.level = level
-}
-
-/**
- * 获取当前日志级别
- */
-export function getLogLevel(): string {
-  return logger.level
-}
-
-// 导出日志级别常量，方便使用
-export const LogLevels = {
-  TRACE: 'trace' as LogLevel, 
-  DEBUG: 'debug' as LogLevel,
-  INFO: 'info' as LogLevel,
-  WARN: 'warn' as LogLevel,
-  ERROR: 'error' as LogLevel,
-  FATAL: 'fatal' as LogLevel
-} 

@@ -20,11 +20,11 @@ if (typeof global.__initCheckDone === 'undefined') {
 if (typeof window === 'undefined' && !global.__initCheckDone) {
   global.__initCheckDone = true
   systemLogger.info('Server-side startup detected, checking application initialization...')
-  
+
   if (!isInitialized) {
     systemLogger.info('Application not initialized, starting initialization process')
     // 使用void操作符忽略Promise结果，因为这是应用启动时的初始化
-    void initApp() 
+    void initApp()
   } else {
     systemLogger.info('Application already initialized, skipping startup initialization')
   }

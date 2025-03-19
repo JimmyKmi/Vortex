@@ -30,9 +30,9 @@ if (typeof global.__schedulerStatus === 'undefined') {
 function getTaskInterval(): number {
   // 检查是否为开发环境
   const isDev = process.env.NODE_ENV === 'development'
-  
+
   // 开发环境下1分钟执行一次，生产环境10分钟执行一次
-  return isDev ? 1 * 60 * 1000 : 10 * 60 * 1000
+  return isDev ? 60 * 1000 : 10 * 60 * 1000
 }
 
 /**
@@ -42,17 +42,16 @@ async function executeScheduledTask(): Promise<void> {
   // 记录执行开始时间
   const now = new Date()
   const isDev = process.env.NODE_ENV === 'development'
-  
+
   // 只在开发环境下打印时间戳
   if (isDev) {
     taskLogger.debug('Executing scheduled cleanup task')
   }
-  
+
   try {
     // 执行清理任务
-    // 在调度器调用时不输出详细日志，减少日志污染
     await cleanupTask(true)
-    
+
     // 更新最后执行时间
     global.__schedulerStatus.lastExecutionTime = now
     taskLogger.debug('Scheduled cleanup task completed')
@@ -83,7 +82,7 @@ export function startScheduler() {
     // 获取任务执行间隔
     const interval = getTaskInterval()
     const intervalMinutes = interval / (60 * 1000)
-    
+
     // 设置定时执行
     global.__cleanupInterval = setInterval(executeScheduledTask, interval)
 

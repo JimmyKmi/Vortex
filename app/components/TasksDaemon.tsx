@@ -22,7 +22,7 @@ export function TasksDaemon() {
         // 尝试调用健康检查API以启动定时任务
         const response = await fetch('/api/health')
         const data = await response.json()
-        
+
         setStatus(data.scheduler === 'running' ? 'running' : 'inactive')
       } catch (error) {
         console.error('Failed to call health check API', error)
