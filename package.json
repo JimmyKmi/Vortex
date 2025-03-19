@@ -11,7 +11,7 @@
     "format": "npx prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "check-lint": "next lint",
     "check-prettier": "npx prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
-    "check-test": "npx jest",
+    "check-jest": "npx jest",
     "check-security": "node scripts/security-check.js"
   },
   "dependencies": {

@@ -1,5 +1,10 @@
 ---
 description: 
+globs: 
+alwaysApply: false
+---
+---
+description: 
 globs: *.ts, src/app/api/*
 ---
 ---
@@ -9,4 +14,7 @@ globs: src/app/api/*
 - The `schema.prisma` file is located in @/prisma, prisma is in "@/lib/prisma".
 - APIs always follow the **RESTFUL** style.
 - All api response should use `lib\utils\response.ts` function to generate response.
+- All console message should use `lib\utils\logger.ts` function to generate log.
 - Should not include any translate or explanation of error in api, this should be done in front-end.
+- The environment configuration reader is located at `lib\env.ts`.
+- The system configuration/settings reader is located at `lib\config\system-settings.ts`.
