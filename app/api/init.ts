@@ -40,9 +40,7 @@ export async function initApp(): Promise<boolean> {
   const initAge = global.__initTimestamp ? now - global.__initTimestamp : null
 
   if (global.__isInitialized && initAge !== null && initAge < 30 * 60 * 1000) {
-    logger.info(
-      `Application already initialized (${Math.floor(initAge / 1000)}s ago), skipping re-initialization`
-    )
+    logger.info(`Application already initialized (${Math.floor(initAge / 1000)}s ago), skipping re-initialization`)
     return true
   }
 

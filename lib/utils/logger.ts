@@ -28,18 +28,18 @@ const consoleStream = pretty({
 })
 
 // 配置logger
-const logger = pino({
-  level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
-  formatters: {
-    level: (label) => ({ level: label }),
-    bindings: () => ({})
+const logger = pino(
+  {
+    level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+    formatters: {
+      level: (label) => ({ level: label }),
+      bindings: () => ({})
+    },
+    messageKey: 'msg',
+    timestamp: true
   },
-  messageKey: 'msg',
-  timestamp: true
-}, pino.multistream([
-  { stream: consoleStream },
-  { stream: fs.createWriteStream(LOG_FILE, { flags: 'a' }) }
-]))
+  pino.multistream([{ stream: consoleStream }, { stream: fs.createWriteStream(LOG_FILE, { flags: 'a' }) }])
+)
 
 // 导出
 export default logger

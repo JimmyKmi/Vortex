@@ -116,7 +116,7 @@ export async function cleanupTask(silent: boolean = false) {
         logger.info({ results }, 'Cleanup task completed successfully')
       }
     }
-    
+
     return results
   } catch (error) {
     logger.error({ err: error }, 'Cleanup task failed')
