@@ -1,5 +1,5 @@
 import { startScheduler, getSchedulerStatus as getTaskSchedulerStatus } from '@/lib/tasks/scheduler'
-import { systemLogger } from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 // 使用全局变量来保持初始化状态
 // 注意：在全局声明中必须使用var，因为这些属性将附加到global对象上
@@ -40,7 +40,7 @@ export async function initApp(): Promise<boolean> {
   const initAge = global.__initTimestamp ? now - global.__initTimestamp : null
 
   if (global.__isInitialized && initAge !== null && initAge < 30 * 60 * 1000) {
-    systemLogger.info(
+    logger.info(
       `Application already initialized (${Math.floor(initAge / 1000)}s ago), skipping re-initialization`
     )
     return true
@@ -48,12 +48,12 @@ export async function initApp(): Promise<boolean> {
 
   // 如果已有初始化过程在进行，等待其完成
   if (global.__initLock) {
-    systemLogger.info('Application is being initialized by another process, waiting for completion')
+    logger.info('Application is being initialized by another process, waiting for completion')
     try {
       await global.__initLock
       return global.__isInitialized === true
     } catch (error) {
-      systemLogger.error({ err: error }, 'Failed waiting for other initialization process')
+      logger.error({ err: error }, 'Failed waiting for other initialization process')
       return false
     }
   }
@@ -76,7 +76,7 @@ export async function initApp(): Promise<boolean> {
   global.__isInitializing = true
 
   try {
-    systemLogger.info('Starting application initialization')
+    logger.info('Starting application initialization')
 
     // 启动任务调度器
     const result = startScheduler()
@@ -85,22 +85,22 @@ export async function initApp(): Promise<boolean> {
       // 设置初始化完成标志
       global.__isInitialized = true
       global.__initTimestamp = Date.now()
-      systemLogger.info('Application initialization completed')
+      logger.info('Application initialization completed')
     } else {
       // 调度器可能已在运行，也视为初始化成功
       if (getTaskSchedulerStatus().isRunning) {
         global.__isInitialized = true
         global.__initTimestamp = Date.now()
-        systemLogger.info('Scheduler already running, considering initialization complete')
+        logger.info('Scheduler already running, considering initialization complete')
       } else {
-        systemLogger.error('Application initialization failed: unable to start scheduler')
+        logger.error('Application initialization failed: unable to start scheduler')
       }
     }
 
     if (lockState.resolve) lockState.resolve()
     return global.__isInitialized === true
   } catch (error) {
-    systemLogger.error({ err: error }, 'Application initialization failed')
+    logger.error({ err: error }, 'Application initialization failed')
     if (lockState.reject) lockState.reject(error instanceof Error ? error : new Error(String(error)))
     return false
   } finally {

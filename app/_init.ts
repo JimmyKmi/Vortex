@@ -3,7 +3,7 @@
 
 // 强制导入初始化模块
 import { initApp, isInitialized } from './api/init'
-import { systemLogger } from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 // 使用全局标记记录是否已经执行过初始化检查
 declare global {
@@ -19,13 +19,13 @@ if (typeof global.__initCheckDone === 'undefined') {
 // 仅在服务器端运行且未执行过初始化检查时执行
 if (typeof window === 'undefined' && !global.__initCheckDone) {
   global.__initCheckDone = true
-  systemLogger.info('Server-side startup detected, checking application initialization...')
+  logger.info('Server-side startup detected, checking application initialization...')
 
   if (!isInitialized) {
-    systemLogger.info('Application not initialized, starting initialization process')
+    logger.info('Application not initialized, starting initialization process')
     // 使用void操作符忽略Promise结果，因为这是应用启动时的初始化
     void initApp()
   } else {
-    systemLogger.info('Application already initialized, skipping startup initialization')
+    logger.info('Application already initialized, skipping startup initialization')
   }
 }

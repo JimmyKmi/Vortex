@@ -1,7 +1,7 @@
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { getSchedulerStatus, initScheduler } from '@/app/api/init'
 import { recordHealthCheck } from '@/app/api/tasks/status/route'
-import { apiLogger } from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 export const runtime = 'nodejs'
 
@@ -18,12 +18,12 @@ export async function GET() {
     const initAge = schedulerStatus.initTime ? Date.now() - schedulerStatus.initTime : Number.MAX_SAFE_INTEGER
 
     if (!schedulerStatus.isRunning && (!schedulerStatus.isInitialized || initAge > 5 * 60 * 1000)) {
-      apiLogger.info('Health check: scheduler not running, attempting to start')
+      logger.info('Health check: scheduler not running, attempting to start')
       const started = await initScheduler()
       if (started) {
-        apiLogger.info('Health check: scheduler started successfully')
+        logger.info('Health check: scheduler started successfully')
       } else {
-        apiLogger.info('Health check: scheduler startup failed or already running')
+        logger.info('Health check: scheduler startup failed or already running')
       }
     }
 
@@ -44,7 +44,7 @@ export async function GET() {
       }
     })
   } catch (error) {
-    apiLogger.error({ err: error }, 'Health check error')
+    logger.error({ err: error }, 'Health check error')
     return ResponseThrow('HealthCheckError', 500)
   }
 }

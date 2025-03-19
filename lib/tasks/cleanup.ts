@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { isSessionExpired } from '@/lib/utils/transfer-session'
 import { S3StorageService } from '@/lib/s3/storage'
-import { taskLogger } from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 /**
  * 清理过期和无用的数据
@@ -13,7 +13,7 @@ import { taskLogger } from '@/lib/utils/logger'
  */
 export async function cleanupTask(silent: boolean = false) {
   try {
-    if (!silent) taskLogger.info('Starting cleanup task')
+    if (!silent) logger.info('Starting cleanup task')
     const now = new Date()
     const results: Record<string, number> = {}
 
@@ -38,7 +38,7 @@ export async function cleanupTask(silent: boolean = false) {
         }
       })
       results.expiredSessions = deletedSessions.count
-      if (!silent) taskLogger.info(`Removed ${deletedSessions.count} expired sessions`)
+      if (!silent) logger.info(`Removed ${deletedSessions.count} expired sessions`)
     }
 
     // 2. 清理过期的传输码
@@ -57,7 +57,7 @@ export async function cleanupTask(silent: boolean = false) {
 
     if (expiredCodes.count) {
       results.expiredCodes = expiredCodes.count
-      if (!silent) taskLogger.info(`Disabled ${expiredCodes.count} expired transfer codes`)
+      if (!silent) logger.info(`Disabled ${expiredCodes.count} expired transfer codes`)
     }
 
     // 3. 清理孤立的文件记录
@@ -91,10 +91,10 @@ export async function cleanupTask(silent: boolean = false) {
         if (filesToDelete.length > 0) {
           await s3Service.deleteFiles(filesToDelete)
           results.s3Files = filesToDelete.length
-          if (!silent) taskLogger.info(`Deleted ${filesToDelete.length} S3 files`)
+          if (!silent) logger.info(`Deleted ${filesToDelete.length} S3 files`)
         }
       } catch (error) {
-        taskLogger.error({ err: error }, 'Failed to delete S3 files')
+        logger.error({ err: error }, 'Failed to delete S3 files')
       }
 
       // 删除数据库中的孤立文件记录
@@ -106,20 +106,20 @@ export async function cleanupTask(silent: boolean = false) {
         }
       })
       results.orphanedRecords = orphanedFiles.length
-      if (!silent) taskLogger.info(`Deleted ${orphanedFiles.length} orphaned file records`)
+      if (!silent) logger.info(`Deleted ${orphanedFiles.length} orphaned file records`)
     }
 
     if (!silent) {
       if (Object.keys(results).length === 0) {
-        taskLogger.info('Cleanup task completed - nothing to clean')
+        logger.info('Cleanup task completed - nothing to clean')
       } else {
-        taskLogger.info({ results }, 'Cleanup task completed successfully')
+        logger.info({ results }, 'Cleanup task completed successfully')
       }
     }
-
+    
     return results
   } catch (error) {
-    taskLogger.error({ err: error }, 'Cleanup task failed')
+    logger.error({ err: error }, 'Cleanup task failed')
     throw error
   }
 }

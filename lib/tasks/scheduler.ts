@@ -1,5 +1,5 @@
 import { cleanupTask } from './cleanup'
-import { taskLogger } from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 // 全局变量，存储定时器的引用和状态
 // 使用global确保在各个实例间共享
@@ -32,7 +32,7 @@ function getTaskInterval(): number {
   const isDev = process.env.NODE_ENV === 'development'
 
   // 开发环境下1分钟执行一次，生产环境10分钟执行一次
-  return isDev ? 60 * 1000 : 10 * 60 * 1000
+  return isDev ? 1 * 60 * 1000 : 10 * 60 * 1000
 }
 
 /**
@@ -45,7 +45,7 @@ async function executeScheduledTask(): Promise<void> {
 
   // 只在开发环境下打印时间戳
   if (isDev) {
-    taskLogger.debug('Executing scheduled cleanup task')
+    logger.debug('Executing scheduled cleanup task')
   }
 
   try {
@@ -54,9 +54,9 @@ async function executeScheduledTask(): Promise<void> {
 
     // 更新最后执行时间
     global.__schedulerStatus.lastExecutionTime = now
-    taskLogger.debug('Scheduled cleanup task completed')
+    logger.debug('Scheduled cleanup task completed')
   } catch (error) {
-    taskLogger.error({ err: error }, 'Scheduled cleanup task failed')
+    logger.error({ err: error }, 'Scheduled cleanup task failed')
   }
 }
 
@@ -65,7 +65,7 @@ async function executeScheduledTask(): Promise<void> {
  */
 export function startScheduler() {
   if (global.__schedulerStatus.isRunning) {
-    taskLogger.info('Scheduler is already running')
+    logger.info('Scheduler is already running')
     return false
   }
 
@@ -90,10 +90,10 @@ export function startScheduler() {
     global.__schedulerStatus.isRunning = true
     global.__schedulerStatus.startedAt = new Date()
 
-    taskLogger.info(`Task scheduler started, executing every ${intervalMinutes} minutes`)
+    logger.info(`Task scheduler started, executing every ${intervalMinutes} minutes`)
     return true
   } catch (error) {
-    taskLogger.error({ err: error }, 'Failed to start scheduler')
+    logger.error({ err: error }, 'Failed to start scheduler')
     return false
   }
 }
@@ -103,7 +103,7 @@ export function startScheduler() {
  */
 export function stopScheduler() {
   if (!global.__schedulerStatus.isRunning) {
-    taskLogger.info('Scheduler is not running')
+    logger.info('Scheduler is not running')
     return false
   }
 
@@ -116,10 +116,10 @@ export function stopScheduler() {
     // 更新调度器状态
     global.__schedulerStatus.isRunning = false
 
-    taskLogger.info('Task scheduler stopped')
+    logger.info('Task scheduler stopped')
     return true
   } catch (error) {
-    taskLogger.error({ err: error }, 'Failed to stop scheduler')
+    logger.error({ err: error }, 'Failed to stop scheduler')
     return false
   }
 }
