@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { cleanupTask } from '@/lib/tasks/cleanup'
 import { recordCleanupTask } from '@/app/api/tasks/status/route'
 
@@ -9,24 +9,17 @@ export const GET = async () => {
     // 记录清理任务执行
     recordCleanupTask()
 
-    await cleanupTask()
+    // 手动触发的任务显示详细日志(silent=false)
+    await cleanupTask(false)
 
-    return NextResponse.json({
-      success: true,
+    return ResponseSuccess({
       message: '清理任务执行成功',
       time: new Date().toISOString()
     })
   } catch (error) {
     console.error('清理任务执行失败:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: '清理任务执行失败',
-        error: error instanceof Error ? error.message : '未知错误',
-        time: new Date().toISOString()
-      },
-      { status: 500 }
-    )
+    
+    return ResponseThrow('CleanupTaskFailed', 500)
   }
 }
 

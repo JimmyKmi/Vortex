@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { getSchedulerStatus } from '@/app/api/init'
 
 // 全局状态追踪
@@ -28,7 +28,7 @@ export async function GET() {
     // 获取调度器状态
     const schedulerStatus = getSchedulerStatus()
 
-    return NextResponse.json({
+    return ResponseSuccess({
       scheduler: schedulerStatus,
       stats: {
         lastHealthCheck: apiStats.lastHealthCheck,
@@ -39,14 +39,7 @@ export async function GET() {
     })
   } catch (error) {
     console.error('获取任务状态错误:', error)
-    return NextResponse.json(
-      {
-        status: 'error',
-        message: error instanceof Error ? error.message : '未知错误',
-        time: new Date().toISOString()
-      },
-      { status: 500 }
-    )
+    return ResponseThrow('InternalServerError')
   }
 }
 
