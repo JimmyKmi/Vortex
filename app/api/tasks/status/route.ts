@@ -1,5 +1,6 @@
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { getSchedulerStatus } from '@/app/api/init'
+import { apiLogger } from '@/lib/utils/logger'
 
 // 全局状态追踪
 const apiStats = {
@@ -14,6 +15,7 @@ const apiStats = {
 export function recordHealthCheck() {
   apiStats.lastHealthCheck = new Date()
   apiStats.healthCheckCount++
+  apiLogger.debug(`Health check recorded (total: ${apiStats.healthCheckCount})`)
 }
 
 /**
@@ -21,10 +23,12 @@ export function recordHealthCheck() {
  */
 export function recordCleanupTask() {
   apiStats.cleanupTaskCount++
+  apiLogger.debug(`Cleanup task recorded (total: ${apiStats.cleanupTaskCount})`)
 }
 
 export async function GET() {
   try {
+    apiLogger.debug('Getting task status')
     // 获取调度器状态
     const schedulerStatus = getSchedulerStatus()
 
@@ -38,7 +42,7 @@ export async function GET() {
       time: new Date().toISOString()
     })
   } catch (error) {
-    console.error('获取任务状态错误:', error)
+    apiLogger.error({ err: error }, 'Failed to get task status')
     return ResponseThrow('InternalServerError')
   }
 }

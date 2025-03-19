@@ -9,7 +9,7 @@ import { NODE_ENV } from '@/lib/env'
  * 添加在根布局中以确保每次应用启动都会执行
  */
 export function TasksDaemon() {
-  const [, setStatus] = useState<string>('未启动')
+  const [, setStatus] = useState<string>('inactive')
   const hasChecked = useRef(false)
 
   useEffect(() => {
@@ -22,17 +22,18 @@ export function TasksDaemon() {
         // 尝试调用健康检查API以启动定时任务
         const response = await fetch('/api/health')
         const data = await response.json()
-
-        console.log('定时任务守护进程 - 健康检查API响应:', data)
-        setStatus(data.scheduler === 'running' ? '运行中' : '未启动')
+        
+        setStatus(data.scheduler === 'running' ? 'running' : 'inactive')
       } catch (error) {
-        console.error('定时任务守护进程 - 健康检查API调用失败:', error)
-        setStatus('启动失败')
+        console.error('Failed to call health check API', error)
+        setStatus('failed')
       }
     }
 
     // 只在生产环境执行
-    if (NODE_ENV !== 'production') console.log('定时任务守护进程：开发环境下不自动启动')
+    if (NODE_ENV !== 'production') {
+      console.warn('Task daemon auto-start disabled in development')
+    }
     void startTasks()
   }, [])
 

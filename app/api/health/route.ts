@@ -1,6 +1,7 @@
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { getSchedulerStatus, initScheduler } from '@/app/api/init'
 import { recordHealthCheck } from '@/app/api/tasks/status/route'
+import { apiLogger } from '@/lib/utils/logger'
 
 export const runtime = 'nodejs'
 
@@ -19,22 +20,22 @@ export async function GET() {
       : Number.MAX_SAFE_INTEGER
     
     if (!schedulerStatus.isRunning && (!schedulerStatus.isInitialized || initAge > 5 * 60 * 1000)) {
-      console.log('健康检查：调度器未运行，尝试启动')
+      apiLogger.info('Health check: scheduler not running, attempting to start')
       const started = await initScheduler()
       if (started) {
-        console.log('健康检查：调度器启动成功')
+        apiLogger.info('Health check: scheduler started successfully')
       } else {
-        console.log('健康检查：调度器启动失败或已在运行')
+        apiLogger.info('Health check: scheduler startup failed or already running')
       }
     }
 
     // 计算上次执行时间
-    let lastExecutionInfo = '未执行'
+    let lastExecutionInfo = 'never'
     if (schedulerStatus.lastExecutionTime) {
       const lastExecAge = Date.now() - new Date(schedulerStatus.lastExecutionTime).getTime()
       const minutes = Math.floor(lastExecAge / (60 * 1000))
       const seconds = Math.floor((lastExecAge % (60 * 1000)) / 1000)
-      lastExecutionInfo = `${minutes}分${seconds}秒前`
+      lastExecutionInfo = `${minutes}m ${seconds}s ago`
     }
 
     return ResponseSuccess({
@@ -45,7 +46,7 @@ export async function GET() {
       }
     })
   } catch (error) {
-    console.error('健康检查错误:', error)
+    apiLogger.error({ err: error }, 'Health check error')
     return ResponseThrow('HealthCheckError', 500)
   }
 }
