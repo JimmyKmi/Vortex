@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SYSTEM_SETTINGS } from '@/lib/config/system-settings'
 import { prisma } from '@/lib/prisma'
+import logger from '@/lib/utils/logger'
 
 export async function GET() {
   try {
     const settings = await prisma.systemSettings.findMany()
     return NextResponse.json(settings)
   } catch (error) {
-    console.error('获取系统设置失败:', error)
+    logger.error('获取系统设置失败:', error)
     return NextResponse.json({ error: '获取系统设置失败' }, { status: 500 })
   }
 }
@@ -50,7 +51,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json(updatedSetting)
   } catch (error) {
-    console.error('更新系统设置失败:', error)
+    logger.error('更新系统设置失败:', error)
     return NextResponse.json({ error: '更新系统设置失败' }, { status: 500 })
   }
 }

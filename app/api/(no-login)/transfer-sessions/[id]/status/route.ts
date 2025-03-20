@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { TransferCodeType } from '@/types/transfer-session'
+import logger from '@/lib/utils/logger'
 
 interface StatusResponse {
   id: string
@@ -85,7 +86,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       status: session.status
     })
   } catch (error) {
-    console.error('Get session status error:', error)
+    logger.error('Get session status error:', error)
     return ResponseThrow('InternalServerError')
   }
 }

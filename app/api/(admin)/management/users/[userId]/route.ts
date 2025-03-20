@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
+import logger from '@/lib/utils/logger'
 
 // 删除用户
 export const DELETE = auth(async (req) => {
@@ -35,7 +36,7 @@ export const DELETE = auth(async (req) => {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('删除用户失败:', error)
+    logger.error('删除用户失败:', error)
     return NextResponse.json({ error: '删除用户失败' }, { status: 500 })
   }
 })

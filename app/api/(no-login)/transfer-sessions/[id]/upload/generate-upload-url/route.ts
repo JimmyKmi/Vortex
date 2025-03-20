@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
+import logger from '@/lib/utils/logger'
 
 const fileService = new FileService()
 
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     return ResponseSuccess(uploadData)
   } catch (error: any) {
     // 记录详细的错误信息
-    console.error('Get upload URL error:', {
+    logger.error('Get upload URL error:', {
       message: error?.message || 'Unknown error',
       stack: error?.stack,
       cause: error?.cause,

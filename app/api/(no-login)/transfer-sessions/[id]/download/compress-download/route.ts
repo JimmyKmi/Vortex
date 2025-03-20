@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { FileService } from '@/lib/services/file-service'
+import logger from '@/lib/utils/logger'
 
 const fileService = new FileService()
 
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         })
     }
   } catch (error) {
-    console.error('Compress download error:', error)
+    logger.error('Compress download error:', error)
     return ResponseThrow('InternalServerError')
   }
 }

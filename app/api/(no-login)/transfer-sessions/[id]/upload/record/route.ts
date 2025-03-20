@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
+import logger from '@/lib/utils/logger'
 
 const fileService = new FileService()
 
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return ResponseSuccess(file)
   } catch (error) {
     // 记录详细错误信息
-    console.error('Create file record error:', {
+    logger.error('Create file record error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       cause: error instanceof Error ? error.cause : undefined

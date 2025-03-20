@@ -5,7 +5,7 @@ import pretty from 'pino-pretty'
 
 // Logger is for server side only! Useage:
 //
-// import logger from '@/utils/logger'
+// import logger from '@/lib/utils/logger'
 //
 // logger.debug('debug info')
 // logger.info('info')

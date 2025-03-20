@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSystemSetting } from '@/lib/config/system-settings'
+import logger from '@/lib/utils/logger'
 
 // 定义可以公开访问的设置项
 const PUBLIC_SETTINGS = ['ALLOW_ZITADEL_LOGIN', 'ALLOW_REGISTRATION', 'ZITADEL_IDP_NAME']
@@ -25,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json(settingsObject)
   } catch (error) {
-    console.error('获取公开设置失败:', error)
+    logger.error('获取公开设置失败:', error)
     return NextResponse.json({ error: 'ServerError' }, { status: 500 })
   }
 }

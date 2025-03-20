@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { generateTransferCode } from '@/lib/utils/generate-transfer-code'
+import logger from '@/lib/utils/logger'
 
 /**
  * 开始上传接口
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return ResponseSuccess()
   } catch (error) {
-    console.error('Start upload error:', error)
+    logger.error('Start upload error:', error)
     return ResponseThrow('InternalServerError')
   }
 }
