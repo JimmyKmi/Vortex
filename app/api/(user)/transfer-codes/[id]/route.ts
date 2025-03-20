@@ -7,6 +7,7 @@ import { S3_CONFIG } from '@/lib/env'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { s3Client } from '@/lib/s3/client'
 import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
+import  logger  from '@/lib/utils/logger'
 
 const updateTransferCodeSchema = z.object({
   comment: z.string().max(100, '描述最多100个字符').optional().nullable(),
@@ -89,7 +90,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (error instanceof z.ZodError) {
       return ResponseThrow('InvalidParams')
     }
-    console.error('Failed to update transfer code:', error)
+    logger.error('Failed to update transfer code:', error)
     return ResponseThrow('DatabaseError')
   }
 }
@@ -122,7 +123,7 @@ export async function PUT(_request: Request, { params }: { params: { id: string 
 
     return ResponseSuccess(updated)
   } catch (error) {
-    console.error('Failed to toggle transfer code:', error)
+    logger.error('Failed to toggle transfer code:', error)
     return ResponseThrow('DatabaseError')
   }
 }
@@ -256,9 +257,9 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     // 安全地记录错误
     try {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error(`Failed to delete transfer code: ${errorMessage}`)
+      logger.error(`Failed to delete transfer code: ${errorMessage}`)
     } catch {
-      console.error('Error while logging')
+      logger.error('Error while logging')
     }
     return ResponseThrow('DatabaseError')
   }

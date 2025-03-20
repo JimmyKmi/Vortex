@@ -44,7 +44,7 @@ export async function GET() {
       }
     })
   } catch (error) {
-    logger.error({ err: error }, 'Health check error')
+    logger.error('Health check error:', error)
     return ResponseThrow('HealthCheckError', 500)
   }
 }

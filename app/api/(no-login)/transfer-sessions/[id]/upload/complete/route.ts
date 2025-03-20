@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
+import  logger  from '@/lib/utils/logger'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return ResponseSuccess({ downloadCode: session.linkedTransferCode.code })
   } catch (error) {
-    console.error('Complete upload error:', error)
+    logger.error('Complete upload error:', error)
     return ResponseThrow('InternalServerError')
   }
 }

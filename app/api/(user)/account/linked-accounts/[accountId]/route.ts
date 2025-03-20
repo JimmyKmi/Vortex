@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import  logger  from '@/lib/utils/logger'
 
 export async function DELETE(request: Request, { params }: { params: { accountId: string } }) {
   try {
@@ -68,7 +69,7 @@ export async function DELETE(request: Request, { params }: { params: { accountId
       message: '账号已删除'
     })
   } catch (error) {
-    console.error('[DELETE_LINKED_ACCOUNT]', error)
+    logger.error('[DELETE_LINKED_ACCOUNT]', error)
     return new NextResponse(
       JSON.stringify({
         code: 'InternalServerError',

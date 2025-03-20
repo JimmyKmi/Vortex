@@ -7,6 +7,7 @@ import { ZodError } from 'zod'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
+import  logger  from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
       if (error instanceof ZodError) return ResponseThrow('InvalidParams')
     }
   } catch (error) {
-    console.error('注册错误:', error)
+    logger.error('注册错误:', error)
     return ResponseThrow('InternalServerError')
   }
 }

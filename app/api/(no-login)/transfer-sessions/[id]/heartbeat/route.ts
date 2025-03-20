@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession, setSessionCookie, getSessionCookie } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { TransferSession } from '@/types/transfer-session'
+import  logger  from '@/lib/utils/logger'
 
 /**
  * 创建心跳响应并更新会话cookie
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return createHeartbeatResponse(session, req)
   } catch (error) {
-    console.error('Session heartbeat error:', error)
+    logger.error('Session heartbeat error:', error)
     return ResponseThrow('InternalServerError')
   }
 }

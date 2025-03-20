@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { ResponseThrow } from '@/lib/utils/response'
+import  logger  from '@/lib/utils/logger'
 
 // 获取用户总览信息
 export async function GET() {
@@ -215,7 +216,7 @@ export async function GET() {
       }
     })
   } catch (error) {
-    console.error('获取用户总览统计失败:', error)
+    logger.error('获取用户总览统计失败:', error)
     return NextResponse.json({ code: 'ServerError', message: '服务器错误' }, { status: 500 })
   }
 }

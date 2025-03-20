@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { setSessionCookie } from '@/lib/utils/transfer-session'
 import { v4 as uuidv4 } from 'uuid'
+import  logger  from '@/lib/utils/logger'
 
 // 获取客户端真实IP
 function getClientIp(req: NextRequest): string | null {
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     return response
   } catch (error: any) {
-    console.error('Verify transfer code error:', error)
+    logger.error('Verify transfer code error:', error)
     return NextResponse.json({ code: 'ServerError' })
   }
 }

@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { transferSessionConfigSchema } from '@/lib/zod'
+import  logger  from '@/lib/utils/logger'
 
 /**
  * 更新传输会话配置
@@ -58,7 +59,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     return ResponseSuccess()
   } catch (error) {
-    console.error('Update session config error:', error)
+    logger.error('Update session config error:', error)
     return ResponseThrow('InternalServerError')
   }
 }

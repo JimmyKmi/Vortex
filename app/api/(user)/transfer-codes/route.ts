@@ -9,6 +9,7 @@ import { S3StorageService } from '@/lib/s3/storage'
 import { S3_CONFIG } from '@/lib/env'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { s3Client } from '@/lib/s3/client'
+import  logger  from '@/lib/utils/logger'
 
 // 创建传输码的请求体验证
 const createTransferCodeSchema = z.object({
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
 
     return ResponseSuccess(transferCodes)
   } catch (error) {
-    console.error('Failed to fetch transfer codes:', error)
+    logger.error('Failed to fetch transfer codes:', error)
     return ResponseThrow('DatabaseError')
   }
 }
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return ResponseThrow('InvalidParams')
     }
-    console.error('Create transfer code error:', error)
+    logger.error('Create transfer code error:', error)
     return ResponseThrow('DatabaseError')
   }
 }
@@ -129,7 +130,7 @@ export async function PUT(request: Request) {
     if (error instanceof z.ZodError) {
       return ResponseThrow('InvalidParams')
     }
-    console.error('Failed to batch update transfer codes:', error)
+    logger.error('Failed to batch update transfer codes:', error)
     return ResponseThrow('DatabaseError')
   }
 }
@@ -301,9 +302,9 @@ export async function DELETE(request: Request) {
     // 安全地记录错误
     try {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error(`Failed to batch delete transfer codes: ${errorMessage}`)
+      logger.error(`Failed to batch delete transfer codes: ${errorMessage}`)
     } catch {
-      console.error('Error while logging')
+      logger.error('Error while logging')
     }
     return ResponseThrow('DatabaseError')
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import  logger  from '@/lib/utils/logger'
 
 export async function GET() {
   try {
@@ -34,7 +35,7 @@ export async function GET() {
       data: accounts
     })
   } catch (error) {
-    console.error('[GET_LINKED_ACCOUNTS]', error)
+    logger.error('[GET_LINKED_ACCOUNTS]', error)
     return new NextResponse(
       JSON.stringify({
         code: 'InternalServerError'

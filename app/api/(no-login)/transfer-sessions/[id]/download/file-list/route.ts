@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { formatFileSize } from '@/lib/utils/file'
+import  logger  from '@/lib/utils/logger'
 
 interface FileNode {
   id: string
@@ -243,7 +244,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     )
     return ResponseSuccess(fileTree)
   } catch (error) {
-    console.error('Get download file list error:', error)
+    logger.error('Get download file list error:', error)
     return ResponseThrow('InternalServerError')
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
+import  logger  from '@/lib/utils/logger'
 
 // 获取用户列表
 export const GET = auth(async () => {
@@ -20,7 +21,7 @@ export const GET = auth(async () => {
 
     return NextResponse.json(users)
   } catch (error) {
-    console.error('获取用户列表失败:', error)
+    logger.error('获取用户列表失败:', error)
     return NextResponse.json({ error: '获取用户列表失败' }, { status: 500 })
   }
 })
@@ -45,7 +46,7 @@ export const PUT = auth(async (req) => {
 
     return NextResponse.json(user)
   } catch (error) {
-    console.error('更新用户失败:', error)
+    logger.error('更新用户失败:', error)
     return NextResponse.json({ error: '更新用户失败' }, { status: 500 })
   }
 })
