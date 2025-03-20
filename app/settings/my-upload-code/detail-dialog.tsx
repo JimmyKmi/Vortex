@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dialog'
 import type { UploadCode } from './columns'
 import { Badge } from '@/components/ui/badge'
+import { Copy } from 'lucide-react'
+import { HiddenText } from '@/components/jimmy-ui/hidden-text'
 
 interface DetailDialogProps {
   open: boolean
@@ -41,6 +43,13 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
 
   const { status, label } = getStatusInfo()
 
+  const handleCopyCode = () => {
+    void navigator.clipboard.writeText(data.code)
+    void import('sonner').then(({ toast }) => {
+      toast.success('已复制到剪贴板')
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChangeAction}>
       <DialogContent className="sm:max-w-[500px]">
@@ -51,7 +60,12 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
         <div className="space-y-4">
           <div className="grid grid-cols-[100px_1fr] gap-2">
             <div className="text-muted-foreground">传输码</div>
-            <div className="font-mono">{data.code}</div>
+            <div className="flex items-center space-x-2">
+              <HiddenText text={data.code} />
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopyCode} title="复制到剪贴板">
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
 
             <div className="text-muted-foreground">状态</div>
             <div>

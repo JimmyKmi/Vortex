@@ -93,10 +93,25 @@ export function ActionColumn<T extends TransferCode>({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {DetailDialogComponent && (
-            <DropdownMenuItem onClick={() => setDetailDialogOpen(true)}>查看详情</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setTimeout(() => {
+                  setDetailDialogOpen(true)
+                }, 0)
+              }}
+            >
+              查看详情
+            </DropdownMenuItem>
           )}
           {EditDialogComponent && (
-            <DropdownMenuItem disabled={isDisabled} onClick={() => setEditDialogOpen(true)}>
+            <DropdownMenuItem
+              disabled={isDisabled}
+              onClick={() => {
+                setTimeout(() => {
+                  setEditDialogOpen(true)
+                }, 0)
+              }}
+            >
               编辑
             </DropdownMenuItem>
           )}

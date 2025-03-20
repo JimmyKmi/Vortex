@@ -13,6 +13,7 @@ import {
 import type { TransferCode } from '@/components/settings/transfer-code-list'
 import { Copy } from 'lucide-react'
 import { toast } from 'sonner'
+import { HiddenText } from '@/components/jimmy-ui/hidden-text'
 
 interface DetailDialogProps {
   open: boolean
@@ -37,7 +38,9 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
           <div>
             <div className="text-sm font-medium mb-1">传输码</div>
             <div className="flex items-center gap-2">
-              <code className="bg-muted px-2 py-1 rounded text-lg font-mono">{data.code}</code>
+              <div className="bg-muted px-2 py-1 rounded text-lg">
+                <HiddenText text={data.code} />
+              </div>
               <Button variant="outline" size="icon" onClick={handleCopyCode}>
                 <Copy className="h-4 w-4" />
               </Button>

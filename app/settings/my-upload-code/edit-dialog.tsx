@@ -21,7 +21,7 @@ import axios from 'axios'
 import { format } from 'date-fns'
 import type { UploadCode } from './columns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { SPEED_LIMIT_OPTIONS } from '@/app/api/(user)/transfer-codes/[id]/route'
+import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
 
 const formSchema = z.object({
   comment: z.string().max(100, '描述最多100个字符').optional(),
