@@ -2,7 +2,7 @@
 const ADMIN_PATH_PREFIXES = ['/api/management', '/settings/platform'] as const
 
 // 用户路径
-const USER_PATH_PREFIXES = ['/api/account', '/api/transfer-codes', '/settings'] as const
+const USER_PATH_PREFIXES = ['/api/account', '/api/transfer-codes', '/api/my-dashboard', '/settings'] as const
 
 // 认证路径
 const AUTH_PATHS_PREFIXES = ['/signin', '/signup'] as const

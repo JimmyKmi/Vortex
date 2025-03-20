@@ -234,7 +234,7 @@ export default function SettingsPage() {
       setLoading(true)
       
       // 获取总览数据，修正API路径
-      const overviewRes = await fetch('/api/user-dashboard/overview')
+      const overviewRes = await fetch('/api/my-dashboard/overview')
       const overviewData = await overviewRes.json()
       
       if (overviewData.data) {

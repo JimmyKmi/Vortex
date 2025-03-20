@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import {ResponseThrow} from "@/lib/utils/response";
 
 // 获取过去7天每天创建的传输码数量
 export async function GET(req: NextRequest) {
   try {
     const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json({ code: 'Unauthorized', message: '未登录' }, { status: 401 })
-    }
+    if (!session?.user) return ResponseThrow('Unauthorized')
 
     const userId = session.user.id
 
