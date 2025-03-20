@@ -122,9 +122,8 @@ export async function GET(req: NextRequest) {
     }).reverse()
 
     // 为图表准备数据
-    const dateStrings = dateList.map((date) => date.toISOString().split('T')[0])
-
-    // 统计每天的传输码创建数量
+    dateList.map((date) => date.toISOString().split('T')[0]);
+// 统计每天的传输码创建数量
     const transferCodesStats = await Promise.all(
       dateList.map(async (date) => {
         const nextDay = new Date(date)
