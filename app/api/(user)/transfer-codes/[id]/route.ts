@@ -6,17 +6,7 @@ import { S3StorageService } from '@/lib/s3/storage'
 import { S3_CONFIG } from '@/lib/env'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { s3Client } from '@/lib/s3/client'
-
-// 速度限制选项（单位：KB/s）
-export const SPEED_LIMIT_OPTIONS: number[] = [
-  3072, // 3Mbps
-  5120, // 5Mbps
-  10240, // 10Mbps
-  15360, // 15Mbps
-  30720, // 30Mbps
-  51200, // 50Mbps
-  102400 // 100Mbps
-]
+import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
 
 const updateTransferCodeSchema = z.object({
   comment: z.string().max(100, '描述最多100个字符').optional().nullable(),
