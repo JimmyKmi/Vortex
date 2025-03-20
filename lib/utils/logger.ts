@@ -3,6 +3,15 @@ import path from 'path'
 import fs from 'fs'
 import pretty from 'pino-pretty'
 
+// Logger is for server side only! Useage:
+//
+// import logger from '@/utils/logger'
+//
+// logger.debug('debug info')
+// logger.info('info')
+// logger.warn('warning')
+// logger.error('error', new Error('error info'))
+
 // 确保日志目录存在
 const LOG_DIR = path.join(process.cwd(), 'data', 'logs')
 try {
