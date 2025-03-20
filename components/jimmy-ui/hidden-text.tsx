@@ -14,12 +14,6 @@ interface HiddenTextProps {
   placeholder?: string
   
   /**
-   * 模糊度，数值越大越模糊
-   * @default 3
-   */
-  blurAmount?: number
-  
-  /**
    * 自定义类名
    */
   className?: string
@@ -38,7 +32,6 @@ interface HiddenTextProps {
 export function HiddenText({
   text,
   placeholder,
-  blurAmount = 3,
   className = ''
 }: HiddenTextProps) {
   const [isVisible, setIsVisible] = useState(false)
@@ -64,7 +57,7 @@ export function HiddenText({
   return (
     <span 
       className={`font-mono select-none transition-all duration-300 ${
-        !isVisible ? `blur-[${blurAmount}px] select-none cursor-pointer` : ''
+        !isVisible ? `blur-[3px] select-none cursor-pointer` : ''
       } ${className}`}
       onClick={showText}
       title={isVisible ? "" : "点击显示"}
