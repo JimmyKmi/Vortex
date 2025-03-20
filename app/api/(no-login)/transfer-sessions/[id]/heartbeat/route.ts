@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession, setSessionCookie, getSessionCookie } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { TransferSession } from '@/types/transfer-session'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 /**
  * 创建心跳响应并更新会话cookie

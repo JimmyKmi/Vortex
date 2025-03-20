@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { generateTransferCode } from '@/lib/utils/generate-transfer-code'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 /**
  * 开始上传接口

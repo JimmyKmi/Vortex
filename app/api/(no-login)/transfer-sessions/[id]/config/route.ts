@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { transferSessionConfigSchema } from '@/lib/zod'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 /**
  * 更新传输会话配置

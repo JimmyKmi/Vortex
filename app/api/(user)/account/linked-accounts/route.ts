@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 export async function GET() {
   try {

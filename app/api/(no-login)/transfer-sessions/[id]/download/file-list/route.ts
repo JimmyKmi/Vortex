@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { formatFileSize } from '@/lib/utils/file'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 interface FileNode {
   id: string

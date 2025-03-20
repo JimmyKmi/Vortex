@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {

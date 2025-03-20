@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { ResponseThrow } from '@/lib/utils/response'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 // 获取用户总览信息
 export async function GET() {

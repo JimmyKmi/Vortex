@@ -8,7 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { TransferCodeType } from '@/types/transfer-session'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 interface StatusResponse {
   id: string

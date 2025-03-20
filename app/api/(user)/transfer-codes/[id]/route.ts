@@ -7,7 +7,7 @@ import { S3_CONFIG } from '@/lib/env'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { s3Client } from '@/lib/s3/client'
 import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 const updateTransferCodeSchema = z.object({
   comment: z.string().max(100, '描述最多100个字符').optional().nullable(),

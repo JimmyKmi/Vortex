@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSystemSetting } from '@/lib/config/system-settings'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 // 定义可以公开访问的设置项
 const PUBLIC_SETTINGS = ['ALLOW_ZITADEL_LOGIN', 'ALLOW_REGISTRATION', 'ZITADEL_IDP_NAME']

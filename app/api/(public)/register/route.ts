@@ -7,7 +7,7 @@ import { ZodError } from 'zod'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   try {

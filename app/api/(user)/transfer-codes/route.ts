@@ -9,7 +9,7 @@ import { S3StorageService } from '@/lib/s3/storage'
 import { S3_CONFIG } from '@/lib/env'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { s3Client } from '@/lib/s3/client'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 // 创建传输码的请求体验证
 const createTransferCodeSchema = z.object({

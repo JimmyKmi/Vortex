@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
-import  logger  from '@/lib/utils/logger'
+import logger from '@/lib/utils/logger'
 
 // 删除用户
 export const DELETE = auth(async (req) => {
