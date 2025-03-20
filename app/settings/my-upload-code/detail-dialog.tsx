@@ -42,7 +42,7 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
   }
 
   const { status, label } = getStatusInfo()
-  
+
   const handleCopyCode = () => {
     void navigator.clipboard.writeText(data.code)
     void import('sonner').then(({ toast }) => {
@@ -62,13 +62,7 @@ export function DetailDialog({ open, onOpenChangeAction, data }: DetailDialogPro
             <div className="text-muted-foreground">传输码</div>
             <div className="flex items-center space-x-2">
               <HiddenText text={data.code} />
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6" 
-                onClick={handleCopyCode}
-                title="复制到剪贴板"
-              >
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopyCode} title="复制到剪贴板">
                 <Copy className="h-3 w-3" />
               </Button>
             </div>

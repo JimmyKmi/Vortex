@@ -93,7 +93,7 @@ export function ActionColumn<T extends TransferCode>({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {DetailDialogComponent && (
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={() => {
                 setTimeout(() => {
                   setDetailDialogOpen(true)
@@ -104,8 +104,8 @@ export function ActionColumn<T extends TransferCode>({
             </DropdownMenuItem>
           )}
           {EditDialogComponent && (
-            <DropdownMenuItem 
-              disabled={isDisabled} 
+            <DropdownMenuItem
+              disabled={isDisabled}
               onClick={() => {
                 setTimeout(() => {
                   setEditDialogOpen(true)

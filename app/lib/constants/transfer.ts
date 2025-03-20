@@ -7,4 +7,4 @@ export const SPEED_LIMIT_OPTIONS: number[] = [
   30720, // 30Mbps
   51200, // 50Mbps
   102400 // 100Mbps
-] 
+]

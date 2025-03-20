@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
-import {ResponseThrow} from "@/lib/utils/response";
+import { ResponseThrow } from '@/lib/utils/response'
 
 // 获取用户总览信息
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const session = await auth()
     if (!session?.user) return ResponseThrow('Unauthorized')
@@ -120,8 +120,8 @@ export async function GET(req: NextRequest) {
     }).reverse()
 
     // 为图表准备数据
-    dateList.map((date) => date.toISOString().split('T')[0]);
-// 统计每天的传输码创建数量
+    dateList.map((date) => date.toISOString().split('T')[0])
+    // 统计每天的传输码创建数量
     const transferCodesStats = await Promise.all(
       dateList.map(async (date) => {
         const nextDay = new Date(date)

@@ -143,49 +143,59 @@ const DashboardSkeleton = () => (
       </Card>
 
       {/* 三个统计图表的骨架 */}
-      {Array(3).fill(0).map((_, index) => (
-        <Card key={index} className="h-full">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-4 w-[100px]" />
-              <Skeleton className="h-4 w-4 rounded-full" />
-            </div>
-            <Skeleton className="h-8 w-[70px] mt-2" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-[120px] w-full">
-              <Skeleton className="h-full w-full" />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {Array(3)
+        .fill(0)
+        .map((_, index) => (
+          <Card key={index} className="h-full">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-[100px]" />
+                <Skeleton className="h-4 w-4 rounded-full" />
+              </div>
+              <Skeleton className="h-8 w-[70px] mt-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-[120px] w-full">
+                <Skeleton className="h-full w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
     </div>
 
     {/* 第二行：最活跃传输码表格骨架 */}
     <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-6">
-      {Array(2).fill(0).map((_, index) => (
-        <Card key={index}>
-          <CardHeader>
-            <Skeleton className="h-5 w-[150px]" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex space-x-4 py-2 border-b">
-                {Array(4).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-4 w-[80px]" />
-                ))}
-              </div>
-              {Array(5).fill(0).map((_, i) => (
-                <div key={i} className="flex space-x-4 py-2">
-                  {Array(4).fill(0).map((_, j) => (
-                    <Skeleton key={j} className="h-4 w-[80px]" />
-                  ))}
+      {Array(2)
+        .fill(0)
+        .map((_, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <Skeleton className="h-5 w-[150px]" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex space-x-4 py-2 border-b">
+                  {Array(4)
+                    .fill(0)
+                    .map((_, i) => (
+                      <Skeleton key={i} className="h-4 w-[80px]" />
+                    ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                {Array(5)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div key={i} className="flex space-x-4 py-2">
+                      {Array(4)
+                        .fill(0)
+                        .map((_, j) => (
+                          <Skeleton key={j} className="h-4 w-[80px]" />
+                        ))}
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
     </div>
 
     {/* 第三行：本账号的传输日志骨架 */}
@@ -196,17 +206,23 @@ const DashboardSkeleton = () => (
       <CardContent>
         <div className="space-y-2">
           <div className="flex space-x-4 py-2 border-b">
-            {Array(5).fill(0).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-[80px]" />
-            ))}
-          </div>
-          {Array(8).fill(0).map((_, i) => (
-            <div key={i} className="flex space-x-4 py-2">
-              {Array(5).fill(0).map((_, j) => (
-                <Skeleton key={j} className="h-4 w-[80px]" />
+            {Array(5)
+              .fill(0)
+              .map((_, i) => (
+                <Skeleton key={i} className="h-4 w-[80px]" />
               ))}
-            </div>
-          ))}
+          </div>
+          {Array(8)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="flex space-x-4 py-2">
+                {Array(5)
+                  .fill(0)
+                  .map((_, j) => (
+                    <Skeleton key={j} className="h-4 w-[80px]" />
+                  ))}
+              </div>
+            ))}
         </div>
       </CardContent>
     </Card>
@@ -232,11 +248,11 @@ export default function SettingsPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      
+
       // 获取总览数据，修正API路径
       const overviewRes = await fetch('/api/my-dashboard/overview')
       const overviewData = await overviewRes.json()
-      
+
       if (overviewData.data) {
         // 处理日期格式
         if (overviewData.data.transferCodesStats) {
@@ -245,14 +261,14 @@ export default function SettingsPage() {
             date: formatDate(item.date)
           }))
         }
-        
+
         if (overviewData.data.filesStats) {
           overviewData.data.filesStats = overviewData.data.filesStats.map((item: ChartData) => ({
             ...item,
             date: formatDate(item.date)
           }))
         }
-        
+
         if (overviewData.data.usageStats) {
           overviewData.data.usageStats = overviewData.data.usageStats.map((item: ChartData) => ({
             ...item,
@@ -260,7 +276,7 @@ export default function SettingsPage() {
             name: 'usage'
           }))
         }
-        
+
         setOverviewData(overviewData.data)
       }
     } catch (error) {
@@ -310,7 +326,7 @@ export default function SettingsPage() {
   return (
     <SettingsLayout title="总览">
       <SettingsTitle title="总览" description="统计信息" />
-      
+
       {loading ? (
         <DashboardSkeleton />
       ) : (
@@ -324,14 +340,19 @@ export default function SettingsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={overviewData.userInfo.image || ''} alt={overviewData.userInfo.name || '用户'} />
+                        <AvatarImage
+                          src={overviewData.userInfo.image || ''}
+                          alt={overviewData.userInfo.name || '用户'}
+                        />
                         <AvatarFallback>
                           {getInitials(overviewData.userInfo.name || overviewData.userInfo.email || 'U')}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">{overviewData.userInfo.name || '未设置昵称'}</div>
-                        <div className="text-sm text-muted-foreground flex items-center">{overviewData.userInfo.id}</div>
+                        <div className="text-sm text-muted-foreground flex items-center">
+                          {overviewData.userInfo.id}
+                        </div>
                       </div>
                     </div>
 
@@ -486,9 +507,7 @@ export default function SettingsPage() {
                         <TableRow key={code.id}>
                           <TableCell className="font-medium">{code.comment || '未备注'}</TableCell>
                           <TableCell>
-                            <HiddenText 
-                              text={code.code}
-                            />
+                            <HiddenText text={code.code} />
                           </TableCell>
                           <TableCell>{code._count.usages}</TableCell>
                           <TableCell>{formatDateTime(code.updatedAt)}</TableCell>
@@ -527,9 +546,7 @@ export default function SettingsPage() {
                         <TableRow key={code.id}>
                           <TableCell className="font-medium">{code.comment || '未备注'}</TableCell>
                           <TableCell>
-                            <HiddenText 
-                              text={code.code}
-                            />
+                            <HiddenText text={code.code} />
                           </TableCell>
                           <TableCell>{code._count.usages}</TableCell>
                           <TableCell>{formatDateTime(code.updatedAt)}</TableCell>
@@ -571,9 +588,7 @@ export default function SettingsPage() {
                         <TableCell>{translateTransferType(log.transferCode.type)}</TableCell>
                         <TableCell className="font-medium">{log.transferCode.comment || '未备注'}</TableCell>
                         <TableCell>
-                          <HiddenText 
-                            text={log.transferCode.code}
-                          />
+                          <HiddenText text={log.transferCode.code} />
                         </TableCell>
                         <TableCell>{log.ip || '未知'}</TableCell>
                         <TableCell>{formatDateTime(log.createdAt)}</TableCell>
