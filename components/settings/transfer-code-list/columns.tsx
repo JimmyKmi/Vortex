@@ -3,10 +3,11 @@
 import { ColumnDef, Row } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Copy } from 'lucide-react'
 import { format } from 'date-fns'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TransferCode } from './types'
+import { HiddenText } from '@/components/jimmy-ui/hidden-text'
 
 // 创建基础列定义，这部分在不同的传输码类型之间是共享的
 export function createBaseColumns<T extends TransferCode>() {
@@ -35,18 +36,23 @@ export function createBaseColumns<T extends TransferCode>() {
       cell: ({ row }) => {
         const code = row.getValue('code') as string
         return (
-          <Button
-            variant="ghost"
-            className="p-0 font-mono hover:bg-transparent hover:underline"
-            onClick={() => {
-              void navigator.clipboard.writeText(code)
-              return import('sonner').then(({ toast }) => {
-                toast.success('已复制到剪贴板')
-              })
-            }}
-          >
-            {code}
-          </Button>
+          <div className="flex items-center space-x-2">
+            <HiddenText text={code} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => {
+                void navigator.clipboard.writeText(code)
+                return import('sonner').then(({ toast }) => {
+                  toast.success('已复制到剪贴板')
+                })
+              }}
+              title="复制到剪贴板"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
         )
       }
     },
