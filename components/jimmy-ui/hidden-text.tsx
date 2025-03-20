@@ -26,8 +26,9 @@ interface HiddenTextProps {
 }
 
 /**
- * HiddenText组件 - 用于显示/隐藏敏感文本，点击时切换显示状态
+ * HiddenText组件 - 用于显示敏感文本，点击后永久显示
  * 默认为隐藏状态，占位符为随机数字，长度自动跟随真实值变化
+ * 注意: 一旦显示后不能再次隐藏
  * 
  * @example
  * ```tsx
@@ -54,22 +55,24 @@ export function HiddenText({
     return result;
   }, [text, placeholder]);
   
-  const toggleVisibility = () => {
-    setIsVisible(!isVisible)
+  const showText = () => {
+    if (!isVisible) {
+      setIsVisible(true)
+    }
   }
   
   return (
     <span 
-      className={`font-mono cursor-pointer select-none transition-all duration-300 ${
-        !isVisible ? `blur-[${blurAmount}px] select-none` : ''
+      className={`font-mono select-none transition-all duration-300 ${
+        !isVisible ? `blur-[${blurAmount}px] select-none cursor-pointer` : ''
       } ${className}`}
-      onClick={toggleVisibility}
-      title={isVisible ? "点击隐藏" : "点击显示"}
-      role="button"
-      tabIndex={0}
+      onClick={showText}
+      title={isVisible ? "" : "点击显示"}
+      role={isVisible ? undefined : "button"}
+      tabIndex={isVisible ? undefined : 0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          toggleVisibility()
+        if (!isVisible && (e.key === 'Enter' || e.key === ' ')) {
+          showText()
         }
       }}
     >
