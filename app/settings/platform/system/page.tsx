@@ -21,6 +21,7 @@ export default function SystemSettingsPage() {
   const [system_settings, setSystemSettings] = useState<Record<string, string>>({})
   const [editedSettings, setEditedSettings] = useState<Record<string, string>>({})
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
 
   // 如果不是管理员，显示 404
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function SystemSettingsPage() {
   useEffect(() => {
     const fetchSystemSettings = async () => {
       try {
+        setIsLoadingSettings(true)
         const response = await axios.get('/api/management/system-settings')
         const settings = response.data.reduce((acc: Record<string, string>, setting: any) => {
           const settingDefinition = SYSTEM_SETTINGS.find((s) => s.key === setting.key)
@@ -49,6 +51,9 @@ export default function SystemSettingsPage() {
         toast.error('获取系统设置失败', {
           description: '无法加载系统设置'
         })
+      } finally {
+        // 确保在数据处理完成后再关闭加载状态
+        setIsLoadingSettings(false)
       }
     }
     void fetchSystemSettings()
@@ -155,8 +160,8 @@ export default function SystemSettingsPage() {
 
   const hasChanges = Object.keys(editedSettings).length > 0
 
-  // 如果正在加载，显示加载状态
-  if (status === 'loading') {
+  // 如果正在加载会话或系统设置，显示加载状态
+  if (status === 'loading' || isLoadingSettings) {
     return (
       <SettingsLayout title="系统设置">
         <div className="space-y-4">

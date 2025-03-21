@@ -3,7 +3,7 @@ import { getSystemSetting } from '@/lib/config/system-settings'
 import logger from '@/lib/utils/logger'
 
 // 定义可以公开访问的设置项
-const PUBLIC_SETTINGS = ['ALLOW_ZITADEL_LOGIN', 'ALLOW_REGISTRATION', 'ZITADEL_IDP_NAME']
+const PUBLIC_SETTINGS = ['ALLOW_ZITADEL_LOGIN', 'ALLOW_REGISTRATION', 'ZITADEL_IDP_NAME', 'MOTD']
 
 export async function GET() {
   try {
@@ -11,7 +11,9 @@ export async function GET() {
       PUBLIC_SETTINGS.map(async (key) => {
         // 根据设置项的类型获取值
         const value =
-          key === 'ZITADEL_IDP_NAME' ? await getSystemSetting<string>(key) : await getSystemSetting<boolean>(key)
+          key === 'ZITADEL_IDP_NAME' || key === 'MOTD'
+            ? await getSystemSetting<string>(key)
+            : await getSystemSetting<boolean>(key)
         return { key, value }
       })
     )

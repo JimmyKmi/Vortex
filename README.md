@@ -1,130 +1,121 @@
-# VORTËX 文件快传系统
+# VORTËX - 极速文件传输系统
 
-目前此项目仍处于开发阶段，请勿应用于生产。
+[English](README_en.md) | 简体中文
 
-## 项目概述
+> 📝 该文档由 LLM 生成，如有纰漏请提 [Issue](https://github.com/JimmyKmi/vortex/issues)
 
-VORTËX 是一个简洁的文件快传系统，允许用户在未登录的情况下上传和下载文件，并提供文件分享和简单管理功能。该系统适用于需要文件快传的个人与小型团队。
+![Docker Pulls](https://img.shields.io/docker/pulls/jimmykmi/vortex)
+![Docker Latest Version](https://img.shields.io/docker/v/jimmykmi/vortex/latest)
+![License](https://img.shields.io/github/license/JimmyKmi/vortex)
 
-## 主要功能
+> ⚠️ **Beta 版提示**：VORTËX 目前处于 Beta 开发阶段，可能存在不稳定性。建议仅用于测试和个人用途，暂不建议用于生产环境。
 
-1. **文件上传**：
+VORTËX 是一个高效、简洁的文件传输平台，专为快速文件分享与协作设计。基于现代 Web 技术栈构建，提供安全可靠的文件共享服务。
 
-   - 支持拖放和选择文件上传
-   - 支持文件夹保留目录结构上传
-   - 使用传输码进行上传
-   - 个人上传可设置分享参数
+> 🌟 喜欢这个项目？点个 Star 呗！这对我们真的很重要，就像咖啡对程序员一样重要~
 
-2. **文件下载**：
+## ✨ 核心特性
 
-   - 使用下载码获取文件
-   - 支持文件列表浏览和选择下载
-   - 文件的打包下载
+- **简单高效的文件传输**：支持拖拽上传，保留目录结构
+- **无需注册即可使用**：使用传输码快速分享和接收文件
+- **灵活的共享控制**：自定义下载权限和分享参数
+- **企业级身份验证**：支持 Zitadel SSO 和用户权限管理
+- **现代化界面设计**：基于 Next.js 15 和 shadcn/ui 构建的响应式界面
 
-3. **用户管理**：
+## 🚀 快速部署
 
-   - 支持用户登录、注册
-   - 支持 Zitadel SSO
-   - 区分普通用户和管理员权限
+### Docker Compose 方式（推荐）
 
-4. **平台管理**：
-   - 用户管理
-   - OIDC 设置
-   - 系统设置
-
-## 使用说明
-
-1. **文件上传**：
-
-   - 在主界面输入传输码
-   - 选择或拖放文件到上传区域
-   - 点击"开始上传"按钮
-   - 编辑分享信息，获得下载码
-
-2. **文件下载**：
-
-   - 在主界面输入下载码
-   - 在文件列表中选择要下载的文件或点击打包下载
-   - 点击"下载选中项目"按钮
-
-3. **设置分享参数**：
-
-   - 设置下载次数限制（可选）
-   - 设置有效期（可选）
-   - 点击"保存设置"按钮
-
-4. **平台管理**（仅限管理员）：
-   - 登录管理员账户
-   - 进入设置
-   - 选择相应的管理选项（用户管理、权限设置等）
-
-## 开发指南
-
-### 环境设置
-
-1. 克隆仓库
+1. 创建部署目录并进入：
 
    ```bash
-   git clone <repository-url>
+   mkdir vortex && cd vortex
+   ```
+
+2. 创建 `docker-compose.yml` 文件：
+
+   ```yaml
+   services:
+     vortex:
+       image: jimmykmi/vortex:latest # 或使用 dogfood 标签获取测试版
+       env_file: ./.env
+       container_name: vortex
+       ports:
+         - '21330:3000' # 将端口 21330 映射到容器的 3000 端口
+       volumes:
+         - ./data:/app/data # 持久化数据存储
+       restart: unless-stopped
+   ```
+
+3. 从示例创建环境配置文件：
+
+   ```bash
+   # 下载环境变量模板并重命名
+   curl -o .env https://raw.githubusercontent.com/JimmyKmi/vortex/main/.env.example
+
+   # 编辑配置文件，设置必要的环境变量
+   nano .env
+   ```
+
+4. 启动服务：
+
+   ```bash
+   docker-compose up -d
+   ```
+
+5. 访问服务：
+   浏览器打开 `http://localhost:21330`
+
+### Docker 标签说明
+
+- `latest`: 最新稳定版本
+- `dogfood`: 最新测试版本（包含实验性功能）
+- `x.y.z`: 特定版本号
+
+## 🛠️ 开发指南
+
+### 环境准备
+
+1. 克隆仓库并安装依赖：
+
+   ```bash
+   git clone https://github.com/JimmyKmi/vortex.git
    cd vortex
+   npm install --legacy-peer-deps  # 使用 legacy-peer-deps 解决依赖兼容性问题
    ```
 
-2. 安装依赖
+2. 配置环境变量（复制示例文件）：
 
    ```bash
-   npm install
+   cp .env.example .env.local
    ```
 
-3. 安装开发工具
-
-   ```bash
-   node scripts/setup-dev-tools.js
-   ```
-
-4. 运行开发服务器
+3. 启动开发服务器：
    ```bash
    npm run dev
    ```
 
-### 代码质量和安全检查
+### 常用开发命令
 
-项目集成了多种代码质量和安全检查工具：
+- `npm run dev` - 启动开发服务器
+- `npm run build` - 构建生产版本
+- `npm run format` - 格式化代码
+- `npm run check-lint` - 检查代码质量
+- `npm run check-prettier` - 检查代码格式
+- `npm run check-jest` - 运行测试
 
-1. **代码格式检查**
+## 🤝 贡献指南
 
+感谢您对 VORTËX 项目的兴趣！以下是参与贡献的步骤：
+
+### 开发流程
+
+1. Fork 仓库并克隆到本地
+2. 创建新分支：`git checkout -b feature/your-feature-name`
+3. 开发并测试您的功能
+4. 确保代码通过所有检查：
    ```bash
-   # 检查代码格式
-   npm run lint
-
-   # 自动格式化代码
-   npm run format
+   npm run check-lint
+   npm run check-prettier
+   npm run check-jest
    ```
-
-2. **依赖安全检查**
-
-   ```bash
-   # 检查依赖中的安全漏洞
-   npm run security-check
-   ```
-
-3. **运行测试**
-   ```bash
-   npm test
-   ```
-
-### CI/CD
-
-项目使用 GitHub Actions 自动运行代码质量检查和测试。每次提交都会执行以下检查：
-
-- ESLint 代码检查
-- Prettier 格式检查
-- 依赖安全检查
-- 自动化测试
-
-# NEXT TO DO
-
-- [ ] 文件图
-  - [ ] 图标自动适配
-  - [ ] 文件缩略图
-  - [ ] 文件预览
-- [ ] 支持上传空的文件夹

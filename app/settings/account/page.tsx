@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
 import { Loader2, Trash2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface LinkedAccount {
   id: string
@@ -44,6 +45,7 @@ export default function AccountSettings() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([])
+  const [loadingAccounts, setLoadingAccounts] = useState(true)
   const [errors, setErrors] = useState<{
     newPassword?: string
     confirmPassword?: string
@@ -59,6 +61,7 @@ export default function AccountSettings() {
 
   const fetchLinkedAccounts = async () => {
     try {
+      setLoadingAccounts(true)
       const response = await axios.get('/api/account/linked-accounts')
       if (response.data.code === 'Success') {
         setLinkedAccounts(response.data.data)
@@ -66,6 +69,8 @@ export default function AccountSettings() {
     } catch (error) {
       console.error('Failed to fetch linked accounts:', error)
       toast.error('获取关联账号失败')
+    } finally {
+      setLoadingAccounts(false)
     }
   }
 
@@ -129,6 +134,14 @@ export default function AccountSettings() {
 
   const handleDeleteAccount = async (accountId: string) => {
     try {
+      // 确保不会删除最后一个关联账号
+      if (linkedAccounts.length <= 1) {
+        toast.error('操作失败', {
+          description: '必须至少保留一个登录方式'
+        })
+        return
+      }
+
       setDeletingAccount(accountId)
       const response = await axios.delete(`/api/account/linked-accounts/${accountId}`)
       if (response.data.code === 'Success') {
@@ -147,8 +160,59 @@ export default function AccountSettings() {
     }
   }
 
+  // 完整页面骨架屏
   if (status === 'loading') {
-    return null
+    return (
+      <SettingsLayout title="账号设置">
+        <div className="space-y-2 mb-6">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+
+        <div className="space-y-8">
+          <div>
+            <Skeleton className="h-6 w-20 mb-4" />
+            <div className="rounded-md border p-4">
+              <div className="flex mb-4 pb-2 border-b">
+                {Array(5)
+                  .fill(0)
+                  .map((_, i) => (
+                    <Skeleton key={i} className="h-4 w-24 mr-6" />
+                  ))}
+              </div>
+              {Array(3)
+                .fill(0)
+                .map((_, i) => (
+                  <div key={i} className="flex items-center py-3 border-b last:border-0">
+                    {Array(5)
+                      .fill(0)
+                      .map((_, j) => (
+                        <Skeleton key={j} className="h-4 w-24 mr-6" />
+                      ))}
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          <div>
+            <Skeleton className="h-6 w-20 mb-4" />
+            <div className="flex flex-col sm:flex-row gap-4 w-full max-w-3xl">
+              <div className="w-full sm:max-w-[280px] grid gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="w-full sm:max-w-[280px] grid gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="flex items-end">
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </SettingsLayout>
+    )
   }
 
   return (
@@ -170,61 +234,99 @@ export default function AccountSettings() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {linkedAccounts.map((account) => (
-                  <TableRow key={account.id} className={`${deletingAccount === account.id ? 'opacity-50' : ''}`}>
-                    <TableCell className="font-medium capitalize">
-                      {account.provider === 'zitadel' ? zitadelIdpName : account.provider}
-                    </TableCell>
-                    <TableCell>{account.providerAccountId}</TableCell>
-                    <TableCell className="capitalize">{account.type}</TableCell>
-                    <TableCell>{format(new Date(account.createdAt), 'yyyy-MM-dd HH:mm:ss')}</TableCell>
-                    <TableCell>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                            disabled={deletingAccount === account.id}
-                          >
-                            {deletingAccount === account.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>确认删除登录方式？</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              删除后将无法使用该方式登录，如需使用需要重新关联。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteAccount(account.id)}
-                              className="bg-destructive hover:bg-destructive/90"
-                            >
-                              删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {linkedAccounts.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      暂无关联账号
-                    </TableCell>
-                  </TableRow>
+                {loadingAccounts ? (
+                  // 关联账号加载时的骨架屏
+                  <>
+                    {Array(3)
+                      .fill(0)
+                      .map((_, index) => (
+                        <TableRow key={`skeleton-${index}`}>
+                          <TableCell>
+                            <Skeleton className="h-4 w-24" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-32" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-16" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-36" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </>
+                ) : (
+                  <>
+                    {linkedAccounts.map((account) => (
+                      <TableRow key={account.id} className={`${deletingAccount === account.id ? 'opacity-50' : ''}`}>
+                        <TableCell className="font-medium capitalize">
+                          {account.provider === 'zitadel' ? zitadelIdpName : account.provider}
+                        </TableCell>
+                        <TableCell>{account.providerAccountId}</TableCell>
+                        <TableCell className="capitalize">{account.type}</TableCell>
+                        <TableCell>{format(new Date(account.createdAt), 'yyyy-MM-dd HH:mm:ss')}</TableCell>
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                disabled={deletingAccount === account.id || linkedAccounts.length <= 1}
+                                title={linkedAccounts.length <= 1 ? '至少保留一个登录方式' : '删除此登录方式'}
+                              >
+                                {deletingAccount === account.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>确认删除登录方式？</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  删除后将无法使用该方式登录，如需使用需要重新关联。
+                                  {linkedAccounts.length <= 2 && (
+                                    <div className="mt-2 text-amber-600 font-medium">
+                                      删除此登录方式后，您将只剩下最后一个登录方式。
+                                    </div>
+                                  )}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>取消</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteAccount(account.id)}
+                                  className="bg-destructive hover:bg-destructive/90"
+                                >
+                                  删除
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!loadingAccounts && linkedAccounts.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">
+                          暂无关联账号
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 )}
               </TableBody>
             </Table>
           </div>
+          {!loadingAccounts && linkedAccounts.length === 1 && (
+            <div className="mt-2 text-sm text-amber-600">注意：必须至少保留一个登录方式，否则将无法登录系统。</div>
+          )}
         </div>
 
         <div>

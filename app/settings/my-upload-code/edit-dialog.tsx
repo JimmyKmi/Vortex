@@ -25,6 +25,7 @@ import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
 
 const formSchema = z.object({
   comment: z.string().max(100, '描述最多100个字符').optional(),
+  // TODO: 这些功能尚未完成开发
   expires: z.string().optional(),
   speedLimit: z.string(),
   usageLimit: z.string().optional()
@@ -54,9 +55,10 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccess }: EditDi
       setIsSubmitting(true)
       await axios.patch(`/api/transfer-codes/${data.id}`, {
         comment: values.comment || null,
-        expires: values.expires || null,
-        speedLimit: values.speedLimit === '0' ? null : parseInt(values.speedLimit),
-        usageLimit: values.usageLimit ? parseInt(values.usageLimit) : null
+        // TODO: 这些功能尚未完成开发，暂时统一设置为null
+        expires: null, // values.expires || null
+        speedLimit: null, // values.speedLimit === '0' ? null : parseInt(values.speedLimit)
+        usageLimit: null // values.usageLimit ? parseInt(values.usageLimit) : null
       })
 
       toast.success('保存成功')
@@ -95,6 +97,7 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccess }: EditDi
                 </FormItem>
               )}
             />
+            {/* TODO: 这些功能尚未完成开发，暂时隐藏
             <FormField
               control={form.control}
               name="expires"
@@ -156,6 +159,7 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccess }: EditDi
                 </FormItem>
               )}
             />
+            */}
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? '更新中...' : '更新'}

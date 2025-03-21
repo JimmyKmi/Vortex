@@ -94,6 +94,7 @@ export async function GET() {
         userId: true,
         transferCodeId: true,
         createdAt: true,
+        ipAddress: true,
         transferCode: {
           select: {
             code: true,

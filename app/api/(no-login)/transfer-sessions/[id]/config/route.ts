@@ -9,6 +9,7 @@ import { validateTransferSession } from '@/lib/utils/transfer-session'
 import { ResponseSuccess, ResponseThrow } from '@/lib/utils/response'
 import { transferSessionConfigSchema } from '@/lib/zod'
 import logger from '@/lib/utils/logger'
+import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
 
 /**
  * 更新传输会话配置
@@ -22,6 +23,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // 验证请求参数
     const result = transferSessionConfigSchema.safeParse(body)
     if (!result.success) return ResponseThrow('InvalidParams')
+
+    // 额外验证速度限制
+    const speedLimit = result.data.speedLimit
+    if (speedLimit && speedLimit !== '0' && !SPEED_LIMIT_OPTIONS.map(String).includes(speedLimit)) {
+      return ResponseThrow('InvalidSpeedLimit')
+    }
 
     // 验证会话
     const validationResult = await validateTransferSession(req, sessionId, ['CONFIGURING'], ['UPLOAD'])
@@ -45,7 +52,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         data: {
           comment: result.data.comment ?? null,
           expires: result.data.expires ? new Date(result.data.expires) : null,
-          speedLimit: result.data.speedLimit ? Number(result.data.speedLimit) : null
+          speedLimit: result.data.speedLimit && result.data.speedLimit !== '0' ? Number(result.data.speedLimit) : null
         }
       }),
       // 更新会话状态为已完成

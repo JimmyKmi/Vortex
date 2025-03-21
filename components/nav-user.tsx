@@ -1,4 +1,4 @@
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Sun, Moon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useTheme } from '@/contexts/theme-context'
 
 export function NavUser({
   user
@@ -23,6 +24,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
+  const { theme, toggleTheme } = useTheme()
 
   return (
     <SidebarMenu>
@@ -53,6 +55,10 @@ export function NavUser({
               <DropdownMenuItem onClick={() => router.push('/settings/account')}>
                 <User className="mr-2 h-4 w-4" />
                 账号设置
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleTheme}>
+                {theme === 'light' ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                {theme === 'light' ? '夜间模式' : '日间模式'}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

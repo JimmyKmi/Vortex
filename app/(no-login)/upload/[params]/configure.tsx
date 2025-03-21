@@ -18,6 +18,8 @@ import axios from 'axios'
 import Layout from '@/components/layout'
 import { getApiErrorMessage } from '@/lib/utils/error-messages'
 import { TransferSessionStatus } from '@/types/transfer-session'
+import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 /**
  * 传输信息接口定义
@@ -77,7 +79,7 @@ export default function UploadConfigure({
         usageLimit: settings.usageLimit ? parseInt(settings.usageLimit) : null,
         comment: settings.comment || null,
         expires: settings.expires || null,
-        speedLimit: settings.speedLimit ? parseInt(settings.speedLimit) : null
+        speedLimit: settings.speedLimit === '0' || !settings.speedLimit ? null : settings.speedLimit
       })
 
       if (response.data.code === 'Success') {
@@ -151,14 +153,24 @@ export default function UploadConfigure({
             <Label htmlFor="speedLimit" className="text-right">
               速度限制
             </Label>
-            <Input
-              id="speedLimit"
-              type="number"
-              className="col-span-3"
-              placeholder="KB/s，留空表示不限制"
-              value={settings.speedLimit}
-              onChange={(e) => setSettings((prev) => ({ ...prev, speedLimit: e.target.value }))}
-            />
+            <div className="col-span-3">
+              <Select
+                value={settings.speedLimit?.toString() ?? '0'}
+                onValueChange={(value) => setSettings((prev) => ({ ...prev, speedLimit: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="不限制" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">不限制</SelectItem>
+                  {SPEED_LIMIT_OPTIONS.map((speed) => (
+                    <SelectItem key={speed} value={speed.toString()}>
+                      {speed / 1024} Mbps
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           {/* 过期时间设置 */}
           <div className="grid grid-cols-4 items-center gap-4">

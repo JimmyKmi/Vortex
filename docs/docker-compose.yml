@@ -1,0 +1,16 @@
+services:
+  vortex:
+    image: jimmykmi/vortex:latest  # 稳定版，可替换为 dogfood 获取测试版
+    env_file: ./.env
+    container_name: vortex
+    ports:
+      - "21330:3000"  # 将本地端口21330映射到容器的3000端口
+    volumes:
+      - ./data:/app/data  # 数据持久化存储
+    restart: unless-stopped
+    # 可选：资源限制
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 1G 
