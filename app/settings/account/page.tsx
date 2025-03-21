@@ -138,10 +138,10 @@ export default function AccountSettings() {
       if (linkedAccounts.length <= 1) {
         toast.error('操作失败', {
           description: '必须至少保留一个登录方式'
-        });
-        return;
+        })
+        return
       }
-      
+
       setDeletingAccount(accountId)
       const response = await axios.delete(`/api/account/linked-accounts/${accountId}`)
       if (response.data.code === 'Success') {
@@ -168,26 +168,32 @@ export default function AccountSettings() {
           <Skeleton className="h-7 w-48" />
           <Skeleton className="h-4 w-64" />
         </div>
-        
+
         <div className="space-y-8">
           <div>
             <Skeleton className="h-6 w-20 mb-4" />
             <div className="rounded-md border p-4">
               <div className="flex mb-4 pb-2 border-b">
-                {Array(5).fill(0).map((_, i) => (
-                  <Skeleton key={i} className="h-4 w-24 mr-6" />
-                ))}
-              </div>
-              {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="flex items-center py-3 border-b last:border-0">
-                  {Array(5).fill(0).map((_, j) => (
-                    <Skeleton key={j} className="h-4 w-24 mr-6" />
+                {Array(5)
+                  .fill(0)
+                  .map((_, i) => (
+                    <Skeleton key={i} className="h-4 w-24 mr-6" />
                   ))}
-                </div>
-              ))}
+              </div>
+              {Array(3)
+                .fill(0)
+                .map((_, i) => (
+                  <div key={i} className="flex items-center py-3 border-b last:border-0">
+                    {Array(5)
+                      .fill(0)
+                      .map((_, j) => (
+                        <Skeleton key={j} className="h-4 w-24 mr-6" />
+                      ))}
+                  </div>
+                ))}
             </div>
           </div>
-          
+
           <div>
             <Skeleton className="h-6 w-20 mb-4" />
             <div className="flex flex-col sm:flex-row gap-4 w-full max-w-3xl">
@@ -231,15 +237,27 @@ export default function AccountSettings() {
                 {loadingAccounts ? (
                   // 关联账号加载时的骨架屏
                   <>
-                    {Array(3).fill(0).map((_, index) => (
-                      <TableRow key={`skeleton-${index}`}>
-                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                        <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-8 rounded-md" /></TableCell>
-                      </TableRow>
-                    ))}
+                    {Array(3)
+                      .fill(0)
+                      .map((_, index) => (
+                        <TableRow key={`skeleton-${index}`}>
+                          <TableCell>
+                            <Skeleton className="h-4 w-24" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-32" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-16" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-4 w-36" />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton className="h-8 w-8 rounded-md" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </>
                 ) : (
                   <>
@@ -259,7 +277,7 @@ export default function AccountSettings() {
                                 size="icon"
                                 className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                 disabled={deletingAccount === account.id || linkedAccounts.length <= 1}
-                                title={linkedAccounts.length <= 1 ? "至少保留一个登录方式" : "删除此登录方式"}
+                                title={linkedAccounts.length <= 1 ? '至少保留一个登录方式' : '删除此登录方式'}
                               >
                                 {deletingAccount === account.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -307,9 +325,7 @@ export default function AccountSettings() {
             </Table>
           </div>
           {!loadingAccounts && linkedAccounts.length === 1 && (
-            <div className="mt-2 text-sm text-amber-600">
-              注意：必须至少保留一个登录方式，否则将无法登录系统。
-            </div>
+            <div className="mt-2 text-sm text-amber-600">注意：必须至少保留一个登录方式，否则将无法登录系统。</div>
           )}
         </div>
 

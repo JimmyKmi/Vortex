@@ -329,34 +329,32 @@ export default function SettingsPage() {
   // 分页处理函数
   const getPaginatedLogs = () => {
     if (!overviewData?.transferLogs) return []
-    
+
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
-    
+
     return overviewData.transferLogs.slice(startIndex, endIndex)
   }
-  
-  const totalPages = overviewData?.transferLogs 
-    ? Math.ceil(overviewData.transferLogs.length / itemsPerPage)
-    : 0
-    
+
+  const totalPages = overviewData?.transferLogs ? Math.ceil(overviewData.transferLogs.length / itemsPerPage) : 0
+
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1)
     }
   }
-  
+
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1)
     }
   }
-  
+
   // 生成页码导航
   const getPageNumbers = () => {
     const maxPagesToShow = 5
     const pageNumbers = []
-    
+
     if (totalPages <= maxPagesToShow) {
       // 如果总页数少于或等于要显示的最大页数，显示所有页码
       for (let i = 1; i <= totalPages; i++) {
@@ -366,19 +364,19 @@ export default function SettingsPage() {
       // 计算页码导航的起始和结束
       let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2))
       let endPage = startPage + maxPagesToShow - 1
-      
+
       // 调整结束页码，确保不超过总页数
       if (endPage > totalPages) {
         endPage = totalPages
         startPage = Math.max(1, endPage - maxPagesToShow + 1)
       }
-      
+
       // 填充页码数组
       for (let i = startPage; i <= endPage; i++) {
         pageNumbers.push(i)
       }
     }
-    
+
     return pageNumbers
   }
 
@@ -585,13 +583,15 @@ export default function SettingsPage() {
                     )}
                   </TableBody>
                 </Table>
-                {overviewData?.mostActiveTransferCodes && overviewData.mostActiveTransferCodes.filter(code => code.type.toLowerCase() === 'upload').length > 5 && (
-                  <div className="flex justify-end mt-4">
-                    <Button variant="outline" size="sm" onClick={() => router.push('/settings/my-upload-code')}>
-                      查看更多 <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                {overviewData?.mostActiveTransferCodes &&
+                  overviewData.mostActiveTransferCodes.filter((code) => code.type.toLowerCase() === 'upload').length >
+                    5 && (
+                    <div className="flex justify-end mt-4">
+                      <Button variant="outline" size="sm" onClick={() => router.push('/settings/my-upload-code')}>
+                        查看更多 <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
               </CardContent>
             </Card>
 
@@ -631,13 +631,15 @@ export default function SettingsPage() {
                     )}
                   </TableBody>
                 </Table>
-                {overviewData?.mostActiveTransferCodes && overviewData.mostActiveTransferCodes.filter(code => code.type.toLowerCase() === 'download').length > 5 && (
-                  <div className="flex justify-end mt-4">
-                    <Button variant="outline" size="sm" onClick={() => router.push('/settings/my-quick-transfer')}>
-                      查看更多 <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                {overviewData?.mostActiveTransferCodes &&
+                  overviewData.mostActiveTransferCodes.filter((code) => code.type.toLowerCase() === 'download').length >
+                    5 && (
+                    <div className="flex justify-end mt-4">
+                      <Button variant="outline" size="sm" onClick={() => router.push('/settings/my-quick-transfer')}>
+                        查看更多 <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
               </CardContent>
             </Card>
           </div>
@@ -680,25 +682,20 @@ export default function SettingsPage() {
                   )}
                 </TableBody>
               </Table>
-              
+
               {overviewData?.transferLogs && overviewData.transferLogs.length > 0 && (
                 <div className="flex items-center justify-end space-x-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePrevPage}
-                    disabled={currentPage === 1}
-                  >
+                  <Button variant="outline" size="sm" onClick={handlePrevPage} disabled={currentPage === 1}>
                     <ChevronLeft className="h-4 w-4" />
                     上一页
                   </Button>
-                  
+
                   {/* 页码导航 */}
                   <div className="flex items-center space-x-1">
                     {getPageNumbers().map((page) => (
                       <Button
                         key={page}
-                        variant={currentPage === page ? "default" : "outline"}
+                        variant={currentPage === page ? 'default' : 'outline'}
                         size="sm"
                         className="w-8 h-8 p-0"
                         onClick={() => setCurrentPage(page)}
@@ -707,13 +704,8 @@ export default function SettingsPage() {
                       </Button>
                     ))}
                   </div>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNextPage}
-                    disabled={currentPage === totalPages}
-                  >
+
+                  <Button variant="outline" size="sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
                     下一页
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
