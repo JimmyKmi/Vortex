@@ -25,6 +25,7 @@ import { SPEED_LIMIT_OPTIONS } from '@/app/lib/constants/transfer'
 
 const formSchema = z.object({
   comment: z.string().max(100, '描述最多100个字符').optional().nullable(),
+  // TODO: 这些功能尚未完成开发
   expires: z.string().optional(),
   speedLimit: z.string(),
   usageLimit: z.string().optional()
@@ -55,9 +56,10 @@ export function CreateDialog({ onSuccess }: CreateDialogProps) {
       const response = await axios.post('/api/transfer-codes', {
         ...data,
         type: 'UPLOAD' as const,
-        expires: data.expires || null,
-        speedLimit: data.speedLimit === '0' ? null : parseInt(data.speedLimit),
-        usageLimit: data.usageLimit ? parseInt(data.usageLimit) : null
+        // TODO: 这些功能尚未完成开发，暂时统一设置为null
+        expires: null, // data.expires || null
+        speedLimit: null, // data.speedLimit === '0' ? null : parseInt(data.speedLimit)
+        usageLimit: null, // data.usageLimit ? parseInt(data.usageLimit) : null
       })
 
       setCreatedCode(response.data.data.code)
@@ -107,6 +109,7 @@ export function CreateDialog({ onSuccess }: CreateDialogProps) {
                   </FormItem>
                 )}
               />
+              {/* TODO: 这些功能尚未完成开发，暂时隐藏
               <FormField
                 control={form.control}
                 name="expires"
@@ -168,6 +171,7 @@ export function CreateDialog({ onSuccess }: CreateDialogProps) {
                   </FormItem>
                 )}
               />
+              */}
               <DialogFooter>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting ? '创建中...' : '创建'}
