@@ -1111,7 +1111,7 @@ export default function UploadPage({ params }: PageProps) {
       <input type="file" multiple onChange={handleFileChangeCallback} className="hidden" id="file-upload" />
 
       {files.length === 0 && (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <div className="border-2 border-dashed border-gray-400/50 rounded-lg p-8 text-center">
           <label htmlFor="file-upload" className="cursor-pointer">
             <div className="text-gray-500">先添加文件再上传，可拖拽文件到页面添加</div>
           </label>
