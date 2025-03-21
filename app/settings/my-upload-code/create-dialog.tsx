@@ -59,7 +59,7 @@ export function CreateDialog({ onSuccess }: CreateDialogProps) {
         // TODO: 这些功能尚未完成开发，暂时统一设置为null
         expires: null, // data.expires || null
         speedLimit: null, // data.speedLimit === '0' ? null : parseInt(data.speedLimit)
-        usageLimit: null, // data.usageLimit ? parseInt(data.usageLimit) : null
+        usageLimit: null // data.usageLimit ? parseInt(data.usageLimit) : null
       })
 
       setCreatedCode(response.data.data.code)

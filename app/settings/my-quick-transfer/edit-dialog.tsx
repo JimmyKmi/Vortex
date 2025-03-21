@@ -68,7 +68,7 @@ export function EditDialog({ open, onOpenChangeAction, data, onSuccessAction }: 
         // TODO: 这些功能尚未完成开发，暂时统一设置为null
         expires: null, // values.expires || null
         speedLimit: null, // values.speedLimit === '0' ? null : parseInt(values.speedLimit)
-        usageLimit: null, // values.usageLimit ? parseInt(values.usageLimit) : null
+        usageLimit: null // values.usageLimit ? parseInt(values.usageLimit) : null
       })
 
       toast.success('保存成功')
