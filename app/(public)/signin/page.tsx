@@ -28,6 +28,17 @@ export default function SignInPage() {
   const [error, setError] = useState<string>('')
   const [isPending, setIsPending] = useState(false)
   const [isZitadelLoading, setIsZitadelLoading] = useState(false)
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+
+  useEffect(() => {
+    // 模拟请求系统设置
+    const fetchSettings = async () => {
+      // 这里可以添加实际的请求逻辑
+      await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟延迟
+      setIsLoadingSettings(false) // 请求完成后更新状态
+    }
+    fetchSettings()
+  }, [])
 
   // 使用Suspense包装SearchParamsProvider
   const SignInContent = ({ searchParams }: { searchParams: ReturnType<typeof useSearchParams> }) => {
@@ -195,6 +206,18 @@ export default function SignInPage() {
     } finally {
       setIsZitadelLoading(false)
     }
+  }
+
+  if (isLoadingSettings) {
+    return (
+      <Layout width="min" title="登录" buttonType="home" backPath="/">
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-300 rounded mb-4"></div>
+          <div className="h-10 bg-gray-300 rounded mb-4"></div>
+          <div className="h-10 bg-gray-300 rounded mb-4"></div>
+        </div>
+      </Layout>
+    )
   }
 
   return (

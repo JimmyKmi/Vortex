@@ -87,16 +87,16 @@ export default function Page() {
     <>
       {announcement && isAnnouncementVisible && (
         <div className="fixed bottom-6 left-4 z-[70] max-w-[calc(100vw-2rem)] sm:max-w-xs">
-          <Alert className="bg-white/90 dark:bg-black/90 border-blue-200 dark:border-blue-800 shadow-md pr-8 relative">
+          <Alert className="bg-white/90 dark:bg-black/90 border-blue-200 dark:border-blue-800 shadow-md pr-10 relative">
             <InfoIcon className="h-4 w-4 min-w-4 text-blue-500 dark:text-blue-400" />
             <AlertDescription className="break-words whitespace-normal">{announcement}</AlertDescription>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="w-7 h-7 absolute top-0 right-0 p-4 hover:bg-slate-200 dark:hover:bg-slate-800" 
+              className="w-7 h-7 absolute top-0 right-0 m-1 hover:bg-slate-200 dark:hover:bg-slate-800"
               onClick={closeAnnouncement}
             >
-              <X className="h-3 w-3" />
+              <X className="h-3 w-3 -translate-x-3.5" />
               <span className="sr-only">关闭</span>
             </Button>
           </Alert>
