@@ -72,7 +72,7 @@ VORTËX 是一个简洁的文件快传系统，允许用户在未登录的情况
 2. 安装依赖
 
    ```bash
-   npm install
+   npm run install-package
    ```
 
 3. 安装开发工具
