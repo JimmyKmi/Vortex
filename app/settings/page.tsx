@@ -452,7 +452,7 @@ export default function SettingsPage() {
                           <stop offset="95%" stopColor={CHART_COLORS.transferCode} stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#bbbbbb" />
                       <XAxis dataKey="date" tickLine={false} axisLine={false} />
                       <YAxis hide allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} />
@@ -490,7 +490,7 @@ export default function SettingsPage() {
                           <stop offset="95%" stopColor={CHART_COLORS.files} stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#bbbbbb" />
                       <XAxis dataKey="date" tickLine={false} axisLine={false} />
                       <YAxis hide allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} />
@@ -528,7 +528,7 @@ export default function SettingsPage() {
                           <stop offset="95%" stopColor={CHART_COLORS.usage} stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#bbbbbb" />
                       <XAxis dataKey="date" tickLine={false} axisLine={false} />
                       <YAxis hide allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} />
@@ -552,7 +552,7 @@ export default function SettingsPage() {
             {/* 最活跃上传码 */}
             <Card>
               <CardHeader>
-                <CardTitle>最近活跃的上传码</CardTitle>
+                <CardTitle>我的上传</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -598,7 +598,7 @@ export default function SettingsPage() {
             {/* 最活跃下载码 */}
             <Card>
               <CardHeader>
-                <CardTitle>最近活跃的下载码</CardTitle>
+                <CardTitle>活跃的快传</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -645,7 +645,7 @@ export default function SettingsPage() {
           {/* 第三行：本账号的传输日志 */}
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle>本账号的传输日志</CardTitle>
+              <CardTitle>传输日志</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
