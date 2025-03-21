@@ -11,7 +11,9 @@ export async function GET() {
       PUBLIC_SETTINGS.map(async (key) => {
         // 根据设置项的类型获取值
         const value =
-          key === 'ZITADEL_IDP_NAME' || key === 'MOTD' ? await getSystemSetting<string>(key) : await getSystemSetting<boolean>(key)
+          key === 'ZITADEL_IDP_NAME' || key === 'MOTD'
+            ? await getSystemSetting<string>(key)
+            : await getSystemSetting<boolean>(key)
         return { key, value }
       })
     )

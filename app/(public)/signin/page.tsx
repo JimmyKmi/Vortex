@@ -34,7 +34,7 @@ export default function SignInPage() {
     // 模拟请求系统设置
     const fetchSettings = async () => {
       // 这里可以添加实际的请求逻辑
-      await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟延迟
+      await new Promise((resolve) => setTimeout(resolve, 1000)) // 模拟延迟
       setIsLoadingSettings(false) // 请求完成后更新状态
     }
     fetchSettings()

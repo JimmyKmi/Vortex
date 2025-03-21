@@ -95,16 +95,16 @@ VORTËX 是一个简洁的文件快传系统，允许用户在未登录的情况
    ```bash
    # 自动格式化代码
    npm run format
-   
+
    # 检查代码质量
    npm run check-lint
-   
+
    # 检查代码格式
    npm run check-prettier
-   
+
    # 检查依赖中的安全漏洞
    npm run check-security
-   
+
    # 运行测试
    npm run check-jest
    ```

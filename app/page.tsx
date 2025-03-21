@@ -90,9 +90,9 @@ export default function Page() {
           <Alert className="bg-white/90 dark:bg-black/90 border-blue-200 dark:border-blue-800 shadow-md pr-10 relative">
             <InfoIcon className="h-4 w-4 min-w-4 text-blue-500 dark:text-blue-400" />
             <AlertDescription className="break-words whitespace-normal">{announcement}</AlertDescription>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="w-7 h-7 absolute top-0 right-0 m-1 hover:bg-slate-200 dark:hover:bg-slate-800"
               onClick={closeAnnouncement}
             >
@@ -102,7 +102,7 @@ export default function Page() {
           </Alert>
         </div>
       )}
-      
+
       <Layout onLoginClick={handleLoginClick} onLogout={handleLogout} width="min" bgTransparent>
         <div className="space-y-4">
           <div className="space-y-4">
