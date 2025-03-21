@@ -8,10 +8,11 @@ import { SettingsTitle } from '@/components/settings/settings-title'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
-import { FileClock, FileUp, Code, Calendar, IdCard } from 'lucide-react'
+import { FileClock, FileUp, Code, Calendar, IdCard, ChevronRight, ChevronLeft, MoreHorizontal } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { HiddenText } from '@/components/jimmy-ui/hidden-text'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 
 // 定义接口
 interface ChartData {
@@ -35,7 +36,7 @@ interface TransferLog {
   userId: string
   transferCodeId: string
   createdAt: string
-  ip: string
+  ipAddress: string | null
   transferCode: {
     code: string
     type: string
@@ -234,6 +235,8 @@ export default function SettingsPage() {
   const router = useRouter()
   const [overviewData, setOverviewData] = useState<OverviewData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
 
   useEffect(() => {
     if (status === 'loading') return
@@ -287,7 +290,7 @@ export default function SettingsPage() {
   }
 
   // 将最活跃传输码按类型分组并限制数量
-  const getGroupedActiveCodes = (limit = 10) => {
+  const getGroupedActiveCodes = (limit = 5) => {
     if (!overviewData?.mostActiveTransferCodes) return { upload: [], download: [] }
 
     const result = overviewData.mostActiveTransferCodes.reduce(
@@ -323,6 +326,62 @@ export default function SettingsPage() {
     return name.charAt(0).toUpperCase()
   }
 
+  // 分页处理函数
+  const getPaginatedLogs = () => {
+    if (!overviewData?.transferLogs) return []
+    
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    
+    return overviewData.transferLogs.slice(startIndex, endIndex)
+  }
+  
+  const totalPages = overviewData?.transferLogs 
+    ? Math.ceil(overviewData.transferLogs.length / itemsPerPage)
+    : 0
+    
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
+  
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+  
+  // 生成页码导航
+  const getPageNumbers = () => {
+    const maxPagesToShow = 5
+    const pageNumbers = []
+    
+    if (totalPages <= maxPagesToShow) {
+      // 如果总页数少于或等于要显示的最大页数，显示所有页码
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i)
+      }
+    } else {
+      // 计算页码导航的起始和结束
+      let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2))
+      let endPage = startPage + maxPagesToShow - 1
+      
+      // 调整结束页码，确保不超过总页数
+      if (endPage > totalPages) {
+        endPage = totalPages
+        startPage = Math.max(1, endPage - maxPagesToShow + 1)
+      }
+      
+      // 填充页码数组
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(i)
+      }
+    }
+    
+    return pageNumbers
+  }
+
   return (
     <SettingsLayout title="总览">
       <SettingsTitle title="总览" description="统计信息" />
@@ -356,6 +415,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
+                    {/* TODO 展示最近登录历史 */}
                     <div className="flex items-center">
                       <IdCard className="mr-2 h-4 w-4 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground mr-2">ID:</span>
@@ -380,6 +440,7 @@ export default function SettingsPage() {
                   <Code className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="text-2xl font-bold">{overviewData?.totalTransferCodes || 0}</div>
+                <div className="text-xs text-muted-foreground mt-1">近30天趋势图</div>
               </CardHeader>
               <CardContent>
                 <div className="h-[120px] w-full">
@@ -417,6 +478,7 @@ export default function SettingsPage() {
                   <FileClock className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="text-2xl font-bold">{overviewData?.totalFiles || 0}</div>
+                <div className="text-xs text-muted-foreground mt-1">近30天趋势图</div>
               </CardHeader>
               <CardContent>
                 <div className="h-[120px] w-full">
@@ -454,6 +516,7 @@ export default function SettingsPage() {
                   <FileUp className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="text-2xl font-bold">{overviewData?.totalUsages || 0}</div>
+                <div className="text-xs text-muted-foreground mt-1">近30天趋势图</div>
               </CardHeader>
               <CardContent>
                 <div className="h-[120px] w-full">
@@ -522,6 +585,13 @@ export default function SettingsPage() {
                     )}
                   </TableBody>
                 </Table>
+                {overviewData?.mostActiveTransferCodes && overviewData.mostActiveTransferCodes.filter(code => code.type.toLowerCase() === 'upload').length > 5 && (
+                  <div className="flex justify-end mt-4">
+                    <Button variant="outline" size="sm" onClick={() => router.push('/settings/my-upload-code')}>
+                      查看更多 <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -561,6 +631,13 @@ export default function SettingsPage() {
                     )}
                   </TableBody>
                 </Table>
+                {overviewData?.mostActiveTransferCodes && overviewData.mostActiveTransferCodes.filter(code => code.type.toLowerCase() === 'download').length > 5 && (
+                  <div className="flex justify-end mt-4">
+                    <Button variant="outline" size="sm" onClick={() => router.push('/settings/my-quick-transfer')}>
+                      查看更多 <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -583,14 +660,14 @@ export default function SettingsPage() {
                 </TableHeader>
                 <TableBody>
                   {overviewData?.transferLogs && overviewData.transferLogs.length > 0 ? (
-                    overviewData.transferLogs.slice(0, 100).map((log) => (
+                    getPaginatedLogs().map((log) => (
                       <TableRow key={log.id}>
                         <TableCell>{translateTransferType(log.transferCode.type)}</TableCell>
                         <TableCell className="font-medium">{log.transferCode.comment || '未备注'}</TableCell>
                         <TableCell>
                           <HiddenText text={log.transferCode.code} />
                         </TableCell>
-                        <TableCell>{log.ip || '未知'}</TableCell>
+                        <TableCell>{log.ipAddress || '未知'}</TableCell>
                         <TableCell>{formatDateTime(log.createdAt)}</TableCell>
                       </TableRow>
                     ))
@@ -603,6 +680,45 @@ export default function SettingsPage() {
                   )}
                 </TableBody>
               </Table>
+              
+              {overviewData?.transferLogs && overviewData.transferLogs.length > 0 && (
+                <div className="flex items-center justify-end space-x-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    上一页
+                  </Button>
+                  
+                  {/* 页码导航 */}
+                  <div className="flex items-center space-x-1">
+                    {getPageNumbers().map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    下一页
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </>
