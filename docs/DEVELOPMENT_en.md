@@ -18,22 +18,25 @@ This document provides guidance on development environment setup, testing, and c
 ### Environment Setup
 
 1. **Clone repository**:
+
    ```bash
    git clone https://github.com/JimmyKmi/vortex.git
    cd vortex
    ```
 
 2. **Install dependencies**:
+
    ```bash
    # Use --legacy-peer-deps to resolve dependency compatibility issues
    npm install --legacy-peer-deps
    ```
 
 3. **Configure environment variables**:
+
    ```bash
    # Copy environment template
    cp .env.example .env.local
-   
+
    # Edit .env.local to configure development parameters
    ```
 
@@ -130,6 +133,7 @@ npm start
 Project uses GitHub Actions for continuous integration and deployment:
 
 1. **Code Quality Checks**:
+
    - ESLint code check
    - Prettier format check
    - Dependency security check
@@ -180,6 +184,7 @@ Project uses semantic commit messages:
 - `chore`: Build process or auxiliary tool changes
 
 Example:
+
 ```
 feat: Add file expiration setting feature
 fix: Fix large file upload crash
@@ -191,4 +196,4 @@ docs: Update API documentation
 1. PR title should use semantic commit message format
 2. PR description should detail changes and reasons
 3. PR should include appropriate test cases
-4. PR will be reviewed before merging to main branch 
+4. PR will be reviewed before merging to main branch

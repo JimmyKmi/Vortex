@@ -18,22 +18,25 @@
 ### 环境准备
 
 1. **克隆代码仓库**:
+
    ```bash
    git clone https://github.com/JimmyKmi/vortex.git
    cd vortex
    ```
 
 2. **安装依赖**:
+
    ```bash
    # 使用 --legacy-peer-deps 解决依赖兼容性问题
    npm install --legacy-peer-deps
    ```
 
 3. **配置环境变量**:
+
    ```bash
    # 复制环境变量模板
    cp .env.example .env.local
-   
+
    # 编辑 .env.local 配置开发环境参数
    ```
 
@@ -130,6 +133,7 @@ npm start
 项目使用 GitHub Actions 进行持续集成和部署：
 
 1. **代码质量检查**:
+
    - ESLint 代码检查
    - Prettier 格式检查
    - 依赖安全检查
@@ -180,6 +184,7 @@ npm start
 - `chore`: 构建过程或辅助工具变动
 
 例如：
+
 ```
 feat: 添加文件有效期设置功能
 fix: 修复大文件上传崩溃问题
@@ -191,4 +196,4 @@ docs: 更新 API 文档
 1. PR 标题应使用语义化提交消息格式
 2. PR 描述应详细说明变更内容和原因
 3. PR 应该包含适当的测试用例
-4. PR 将经过代码评审后合并到主分支 
+4. PR 将经过代码评审后合并到主分支

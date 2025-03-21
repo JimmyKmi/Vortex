@@ -12,7 +12,7 @@ English | [简体中文](README.md)
 
 VORTËX is an efficient and streamlined file transfer platform designed for rapid file sharing and collaboration. Built on modern web technology stack, it provides secure and reliable file sharing services.
 
-> 🌟 Love this project? Give it a star! It means a lot to us, just like coffee means to programmers~ 
+> 🌟 Love this project? Give it a star! It means a lot to us, just like coffee means to programmers~
 
 ## ✨ Core Features
 
@@ -27,34 +27,38 @@ VORTËX is an efficient and streamlined file transfer platform designed for rapi
 ### Docker Compose (Recommended)
 
 1. Create and enter deployment directory:
+
    ```bash
    mkdir vortex && cd vortex
    ```
 
 2. Create `docker-compose.yml`:
+
    ```yaml
    services:
      vortex:
-       image: jimmykmi/vortex:latest  # Use dogfood tag for testing version
+       image: jimmykmi/vortex:latest # Use dogfood tag for testing version
        env_file: ./.env
        container_name: vortex
        ports:
-         - "21330:3000"  # Map port 21330 to container's 3000
+         - '21330:3000' # Map port 21330 to container's 3000
        volumes:
-         - ./data:/app/data  # Persistent data storage
+         - ./data:/app/data # Persistent data storage
        restart: unless-stopped
    ```
 
 3. Create environment configuration:
+
    ```bash
    # Download environment template
    curl -o .env https://raw.githubusercontent.com/JimmyKmi/vortex/main/.env.example
-   
+
    # Edit configuration file
    nano .env
    ```
 
 4. Start service:
+
    ```bash
    docker-compose up -d
    ```
@@ -73,6 +77,7 @@ VORTËX is an efficient and streamlined file transfer platform designed for rapi
 ### Environment Setup
 
 1. Clone repository and install dependencies:
+
    ```bash
    git clone https://github.com/JimmyKmi/vortex.git
    cd vortex
@@ -80,6 +85,7 @@ VORTËX is an efficient and streamlined file transfer platform designed for rapi
    ```
 
 2. Configure environment variables:
+
    ```bash
    cp .env.example .env.local
    ```
@@ -144,4 +150,4 @@ This project is licensed under the [Apache-2.0 License](LICENSE).
 
 - [Docker Image](https://hub.docker.com/r/jimmykmi/vortex)
 - [Issue Tracker](https://github.com/JimmyKmi/vortex/issues)
-- [中文文档](README.md) 
+- [中文文档](README.md)

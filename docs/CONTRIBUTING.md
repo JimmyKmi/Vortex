@@ -37,24 +37,28 @@
 
 1. **Fork 仓库**
 2. **克隆到本地**：
+
    ```bash
    git clone https://github.com/YOUR-USERNAME/vortex.git
    cd vortex
    ```
 
 3. **添加上游仓库**：
+
    ```bash
    git remote add upstream https://github.com/JimmyKmi/vortex.git
    ```
 
 4. **安装依赖**：
+
    ```bash
    npm install --legacy-peer-deps
    ```
-   
+
    > **注意**：使用 `--legacy-peer-deps` 是必要的，因为项目使用了一些测试版的包依赖。
 
 5. **配置环境变量**：
+
    ```bash
    cp .env.example .env.local
    ```
@@ -69,17 +73,20 @@
 ### 分支管理
 
 1. **保持本地 main 分支与上游同步**：
+
    ```bash
    git checkout main
    git pull upstream main
    ```
 
 2. **创建功能分支**：
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
-   
+
    分支命名规范：
+
    - `feature/*`：新功能
    - `fix/*`：bug 修复
    - `docs/*`：文档更新
@@ -141,6 +148,7 @@ npm run check-security
 ```
 
 **类型**：
+
 - `feat`：新功能
 - `fix`：bug 修复
 - `docs`：文档变更
@@ -151,6 +159,7 @@ npm run check-security
 - `chore`：其他不修改源代码或测试的变更
 
 **示例**：
+
 ```
 feat(auth): 添加OAuth2登录支持
 
@@ -163,6 +172,7 @@ Closes #123
 ### 提交前检查
 
 在提交前，请运行：
+
 ```bash
 npm run format
 npm run check-lint
@@ -172,23 +182,27 @@ npm run check-jest
 ## Pull Request 流程
 
 1. **确保本地代码已更新**：
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **推送到 Fork 仓库**：
+
    ```bash
    git push origin feature/your-feature-name
    ```
 
 3. **创建 Pull Request**：
+
    - 前往 GitHub 上的仓库
    - 点击 "Compare & pull request"
    - 填写详细的 PR 描述
    - 点击 "Create pull request"
 
 4. **应对评审意见**：
+
    - 耐心等待和回应评审意见
    - 根据反馈进行必要的修改
    - 推送更新后的代码到相同分支
@@ -231,4 +245,4 @@ npm run check-jest
 - GitHub Issues
 - 项目讨论区
 
-感谢您的贡献！ 
+感谢您的贡献！

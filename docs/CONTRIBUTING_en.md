@@ -37,24 +37,28 @@ We use GitHub Issues to track issues and feature requests. Before creating a new
 
 1. **Fork repository**
 2. **Clone locally**:
+
    ```bash
    git clone https://github.com/YOUR-USERNAME/vortex.git
    cd vortex
    ```
 
 3. **Add upstream repository**:
+
    ```bash
    git remote add upstream https://github.com/JimmyKmi/vortex.git
    ```
 
 4. **Install dependencies**:
+
    ```bash
    npm install --legacy-peer-deps
    ```
-   
+
    > **Note**: Using `--legacy-peer-deps` is necessary as the project uses some beta package dependencies.
 
 5. **Configure environment variables**:
+
    ```bash
    cp .env.example .env.local
    ```
@@ -69,17 +73,20 @@ We use GitHub Issues to track issues and feature requests. Before creating a new
 ### Branch Management
 
 1. **Keep local main branch in sync with upstream**:
+
    ```bash
    git checkout main
    git pull upstream main
    ```
 
 2. **Create feature branch**:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
-   
+
    Branch naming convention:
+
    - `feature/*`: New features
    - `fix/*`: Bug fixes
    - `docs/*`: Documentation updates
@@ -141,6 +148,7 @@ Project uses [Conventional Commits](https://www.conventionalcommits.org/) specif
 ```
 
 **Types**:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -151,6 +159,7 @@ Project uses [Conventional Commits](https://www.conventionalcommits.org/) specif
 - `chore`: Other changes that don't modify source or test files
 
 **Example**:
+
 ```
 feat(auth): Add OAuth2 login support
 
@@ -163,6 +172,7 @@ Closes #123
 ### Pre-commit Checks
 
 Before committing, run:
+
 ```bash
 npm run format
 npm run check-lint
@@ -172,23 +182,27 @@ npm run check-jest
 ## Pull Request Process
 
 1. **Ensure local code is up-to-date**:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Push to Fork repository**:
+
    ```bash
    git push origin feature/your-feature-name
    ```
 
 3. **Create Pull Request**:
+
    - Go to repository on GitHub
    - Click "Compare & pull request"
    - Fill in detailed PR description
    - Click "Create pull request"
 
 4. **Handle review feedback**:
+
    - Wait for and respond to review comments
    - Make necessary changes based on feedback
    - Push updated code to same branch
@@ -231,4 +245,4 @@ For any questions, please reach out through:
 - GitHub Issues
 - Project Discussions
 
-Thank you for your contributions! 
+Thank you for your contributions!
