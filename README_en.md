@@ -14,6 +14,13 @@ VORTËX is an efficient and streamlined file transfer platform designed for rapi
 
 > 🌟 Love this project? Give it a star! It means a lot to us, just like coffee means to programmers~
 
+## 📚 Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT_en.md) - Detailed deployment and configuration instructions
+- [Development Guide](docs/DEVELOPMENT_en.md) - Development environment setup and workflow
+- [Contributing Guide](docs/CONTRIBUTING_en.md) - How to participate in project development
+- [Project Wiki](https://github.com/JimmyKmi/vortex/wiki) - More detailed documentation
+
 ## ✨ Core Features
 
 - **Simple & Efficient File Transfer**: Supports drag-and-drop uploads while preserving directory structure
