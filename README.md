@@ -14,6 +14,13 @@ VORTËX 是一个高效、简洁的文件传输平台，专为快速文件分享
 
 > 🌟 喜欢这个项目？点个 Star 呗！这对我们真的很重要，就像咖啡对程序员一样重要~
 
+## 📚 项目文档
+
+- [部署指南](docs/DEPLOYMENT.md) - 详细的部署和配置说明
+- [开发指南](docs/DEVELOPMENT.md) - 开发环境设置和工作流程
+- [贡献指南](docs/CONTRIBUTING.md) - 如何参与项目开发
+- [项目 Wiki](https://github.com/JimmyKmi/vortex/wiki) - 更多详细文档
+
 ## ✨ 核心特性
 
 - **简单高效的文件传输**：支持拖拽上传，保留目录结构
