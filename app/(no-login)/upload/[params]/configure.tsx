@@ -134,57 +134,57 @@ export default function UploadConfigure({
 
         {/* 设置表单区域 */}
         <div className="space-y-4">
-          {/* 使用次数限制设置 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="usageLimit" className="text-right">
-              使用次数
-            </Label>
-            <Input
-              id="usageLimit"
-              type="number"
-              className="col-span-3"
-              placeholder="留空表示不限制"
-              value={settings.usageLimit}
-              onChange={(e) => setSettings((prev) => ({ ...prev, usageLimit: e.target.value }))}
-            />
-          </div>
-          {/* 速度限制设置 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="speedLimit" className="text-right">
-              速度限制
-            </Label>
-            <div className="col-span-3">
-              <Select
-                value={settings.speedLimit?.toString() ?? '0'}
-                onValueChange={(value) => setSettings((prev) => ({ ...prev, speedLimit: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="不限制" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">不限制</SelectItem>
-                  {SPEED_LIMIT_OPTIONS.map((speed) => (
-                    <SelectItem key={speed} value={speed.toString()}>
-                      {speed / 1024} Mbps
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          {/* 过期时间设置 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="expires" className="text-right">
-              过期时间
-            </Label>
-            <Input
-              id="expires"
-              type="datetime-local"
-              className="col-span-3"
-              value={settings.expires}
-              onChange={(e) => setSettings((prev) => ({ ...prev, expires: e.target.value }))}
-            />
-          </div>
+          {/* TODO 使用次数限制设置 */}
+          {/*<div className="grid grid-cols-4 items-center gap-4">*/}
+          {/*  <Label htmlFor="usageLimit" className="text-right">*/}
+          {/*    使用次数*/}
+          {/*  </Label>*/}
+          {/*  <Input*/}
+          {/*    id="usageLimit"*/}
+          {/*    type="number"*/}
+          {/*    className="col-span-3"*/}
+          {/*    placeholder="留空表示不限制"*/}
+          {/*    value={settings.usageLimit}*/}
+          {/*    onChange={(e) => setSettings((prev) => ({ ...prev, usageLimit: e.target.value }))}*/}
+          {/*  />*/}
+          {/*</div>*/}
+          {/* TODO 速度限制设置 */}
+          {/*<div className="grid grid-cols-4 items-center gap-4">*/}
+          {/*  <Label htmlFor="speedLimit" className="text-right">*/}
+          {/*    速度限制*/}
+          {/*  </Label>*/}
+          {/*  <div className="col-span-3">*/}
+          {/*    <Select*/}
+          {/*      value={settings.speedLimit?.toString() ?? '0'}*/}
+          {/*      onValueChange={(value) => setSettings((prev) => ({ ...prev, speedLimit: value }))}*/}
+          {/*    >*/}
+          {/*      <SelectTrigger>*/}
+          {/*        <SelectValue placeholder="不限制" />*/}
+          {/*      </SelectTrigger>*/}
+          {/*      <SelectContent>*/}
+          {/*        <SelectItem value="0">不限制</SelectItem>*/}
+          {/*        {SPEED_LIMIT_OPTIONS.map((speed) => (*/}
+          {/*          <SelectItem key={speed} value={speed.toString()}>*/}
+          {/*            {speed / 1024} Mbps*/}
+          {/*          </SelectItem>*/}
+          {/*        ))}*/}
+          {/*      </SelectContent>*/}
+          {/*    </Select>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
+          {/* TODO 过期时间设置 */}
+          {/*<div className="grid grid-cols-4 items-center gap-4">*/}
+          {/*  <Label htmlFor="expires" className="text-right">*/}
+          {/*    过期时间*/}
+          {/*  </Label>*/}
+          {/*  <Input*/}
+          {/*    id="expires"*/}
+          {/*    type="datetime-local"*/}
+          {/*    className="col-span-3"*/}
+          {/*    value={settings.expires}*/}
+          {/*    onChange={(e) => setSettings((prev) => ({ ...prev, expires: e.target.value }))}*/}
+          {/*  />*/}
+          {/*</div>*/}
           {/* 描述信息设置 */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="comment" className="text-right">
