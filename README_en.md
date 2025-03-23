@@ -1,4 +1,4 @@
-# VORTËX - High-Speed File Transfer Solution
+# VORTËX - File Transfer Solution
 
 English | [简体中文](README.md)
 

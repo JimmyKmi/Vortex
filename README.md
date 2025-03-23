@@ -1,4 +1,4 @@
-# VORTËX - 极速文件传输系统
+# VORTËX - 文件快传
 
 [English](README_en.md) | 简体中文
 
