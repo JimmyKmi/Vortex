@@ -50,7 +50,7 @@ export function SettingsLayout({ children, title }: SettingsLayoutProps) {
       <SidebarInset>
         <header
           className="flex fixed h-14 w-full top-0 shrink-0 items-center gap-2 transition-[width,height] ease-linear
-           group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12
+           group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-50
             bg-white/80 dark:bg-black/80 backdrop-blur-lg shadow-sm"
         >
           <div className="flex items-center gap-2 px-4">
